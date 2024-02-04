@@ -14,7 +14,7 @@ height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
 # Create VideoWriter object
 fourcc = cv2.VideoWriter_fourcc(*'MP4V')  # You can also use 'MJPG' or 'MP4V'
-out = cv2.VideoWriter("color_v1.mp4", fourcc, fps, (640, 640))  # Adjust the resolution if needed
+out = cv2.VideoWriter("color_v1.mp4", fourcc, fps, (320, 320))  # Adjust the resolution if needed
 
 # Load model
 model = YOLO("color_model.pt")
@@ -37,7 +37,7 @@ while True:
     frame = np.array(frame)[:, :, ::-1]
 
     # Resize frame directly using the interpolation method for better quality
-    frame = cv2.resize(frame, (640, 640), interpolation=cv2.INTER_LINEAR)
+    frame = cv2.resize(frame, (320, 320), interpolation=cv2.INTER_LINEAR)
 
     # Detect notes
     results = model(frame, show=show)
