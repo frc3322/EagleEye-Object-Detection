@@ -40,7 +40,7 @@ while True:
     frame = cv2.resize(frame, (640, 640), interpolation=cv2.INTER_LINEAR)
 
     # Detect notes
-    results = model(frame, show=show, device=0)
+    results = model(frame, show=show)
 
     print(f"Time taken in ms: {(time() - start) * 1000}ms")
 
