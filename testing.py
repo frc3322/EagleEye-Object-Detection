@@ -19,7 +19,7 @@ out = cv2.VideoWriter("color_v1.mp4", fourcc, fps, (320, 320))  # Adjust the res
 # Load model
 model = YOLO("color_model.pt")
 
-show = False
+show = True
 
 # Loop through video
 while True:
