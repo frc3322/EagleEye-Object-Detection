@@ -4,6 +4,22 @@ from ultralytics import YOLO
 from PIL import Image
 import numpy as np
 
+
+# @profile
+def detect(frame):
+    start = time()
+
+    # Resize frame directly using the interpolation method for better quality
+    frame = cv2.resize(frame, (640, 640))
+
+    # Detect notes
+    results = model(frame, show=show)
+
+    print(f"Time taken in ms: {(time() - start) * 1000}ms")
+
+    return results
+
+
 # Load video
 cap = cv2.VideoCapture("IMG_1273.MOV")
 
@@ -28,21 +44,7 @@ while True:
     if not ret:
         break
 
-    start = time()
-
-    # Convert frame to PIL image directly without unnecessary conversion steps
-    frame = Image.fromarray(frame).convert("RGB")
-
-    # Swap blue and red channels using numpy for better performance
-    frame = np.array(frame)[:, :, ::-1]
-
-    # Resize frame directly using the interpolation method for better quality
-    frame = cv2.resize(frame, (320, 320), interpolation=cv2.INTER_LINEAR)
-
-    # Detect notes
-    results = model(frame, show=show)
-
-    print(f"Time taken in ms: {(time() - start) * 1000}ms")
+    results = detect(frame)
 
     for result in results:
         boxes = result.boxes
