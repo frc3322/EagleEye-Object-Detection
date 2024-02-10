@@ -1,11 +1,9 @@
 import cv2
 from time import time
 from ultralytics import YOLO
-from PIL import Image
-import numpy as np
 
 
-# @profile
+@profile
 def detect(frame):
     start = time()
 
@@ -35,7 +33,7 @@ out = cv2.VideoWriter("color_v1.mp4", fourcc, fps, (320, 320))  # Adjust the res
 # Load model
 model = YOLO("color_model.pt")
 
-show = True
+show = False
 
 # Loop through video
 while True:
