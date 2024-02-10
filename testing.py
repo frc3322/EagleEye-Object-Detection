@@ -3,7 +3,6 @@ from time import time
 from ultralytics import YOLO
 
 
-@profile
 def detect(frame):
     start = time()
 
