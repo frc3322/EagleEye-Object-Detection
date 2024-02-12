@@ -7,5 +7,5 @@ print("Model loaded.")
 
 # Export the model
 print("Exporting model...")
-model.export(format='onnx', imgsz=640, dynamic=True, opset=19)
+model.export(format='onnx', imgsz=640, opset=19)
 print("Model exported.")
