@@ -3,6 +3,7 @@ from time import time
 from ultralytics import YOLO
 
 
+@profile
 def detect(frame):
     start = time() 
 
@@ -13,6 +14,7 @@ def detect(frame):
     results = model(frame, show=show)
 
     print(f"Time taken in ms: {(time() - start) * 1000}ms")
+    print(f"Estimated FPS: {1 / (time() - start)}")
 
     return results
 
@@ -32,7 +34,7 @@ out = cv2.VideoWriter("color_v1.mp4", fourcc, fps, (640, 640))  # Adjust the res
 # Load model
 model = YOLO("color_model.pt")
 
-show = True
+show = False
 
 # Loop through video
 while True:
