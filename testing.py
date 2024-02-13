@@ -11,7 +11,7 @@ def detect(frame):
     frame = cv2.resize(frame, (640, 640))
 
     # Detect notes
-    results = model(frame, show=show)
+    results = model(frame, show=show, device="cpu")
 
     print(f"Time taken in ms: {(time() - start) * 1000}ms")
     print(f"Estimated FPS: {1 / (time() - start)}")
@@ -34,7 +34,7 @@ out = cv2.VideoWriter("color_v1.mp4", fourcc, fps, (640, 640))  # Adjust the res
 # Load model
 model = YOLO("color_model.pt")
 
-show = False
+show = True
 
 # Loop through video
 while True:
