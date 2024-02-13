@@ -1,7 +1,7 @@
 from rknnlite.api import RKNNLite
 
 
-class RKNN_model_container:
+class RKNN_model_container():
     def __init__(self, model_path, target=None, device_id=None) -> None:
         rknn = RKNNLite()
 
