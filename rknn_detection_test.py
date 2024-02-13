@@ -101,11 +101,14 @@ if __name__ == '__main__':
     print('--> Running model')
     start_time = time()
     outputs = rknn_lite.inference(inputs=[img])
+
     # print inference time in ms
     print('inference time: {} ms'.format((time() - start_time) * 1000))
 
     # Show the classification results
     show_top5(outputs)
     print('done')
+
+    print(f"outputs: {outputs}")
 
     rknn_lite.release()
