@@ -45,7 +45,7 @@ def show_top5(result):
     output = np.exp(output) / np.sum(np.exp(output))
     # Get the indices of the top 5 largest values
     output_sorted_indices = np.argsort(output)[::-1][:5]
-    print('output_sorted_indices: ' + np.argsort(output))
+    print('output_sorted_indices: ' + str(np.argsort(output)))
     top5_str = 'resnet18\n-----TOP 5-----\n'
     for i, index in enumerate(output_sorted_indices):
         value = output[index]
