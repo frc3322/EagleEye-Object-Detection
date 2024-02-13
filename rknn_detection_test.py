@@ -10,7 +10,7 @@ DEVICE_COMPATIBLE_NODE = '/proc/device-tree/compatible'
 labels = {0: "notes"}
 
 RK3566_RK3568_RKNN_MODEL = 'resnet18_for_rk3566_rk3568.rknn'
-RK3588_RKNN_MODEL = 'resnet18_for_rk3588.rknn'
+RK3588_RKNN_MODEL = 'color_model.rknn'
 RK3562_RKNN_MODEL = 'resnet18_for_rk3562.rknn'
 
 image_path = './test-note.jpg'
