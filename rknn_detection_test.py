@@ -21,7 +21,11 @@ class RKNN_model_container():
             pass
         else:
             inputs = [inputs]
+        print(f"inputs: {inputs}")
 
         result = self.rknn.inference(inputs=inputs)
 
         return result
+
+
+print("main run")
