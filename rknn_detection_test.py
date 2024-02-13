@@ -2,8 +2,9 @@ import cv2
 import numpy as np
 import platform
 from rknnlite.api import RKNNLite
+from time import time
 
-# decice tree for RK356x/RK3588
+# device tree for RK356x/RK3588
 DEVICE_COMPATIBLE_NODE = '/proc/device-tree/compatible'
 
 labels = {0: "notes"}
@@ -48,7 +49,7 @@ def show_top5(result):
     for i, index in enumerate(output_sorted_indices):
         value = output[index]
         if value > 0:
-            topi = '[{:>3d}] score:{:.6f} class:"{}"\n'.format(index, value, labels[index])
+            topi = '[{:>3d}] score:{:.6f} class:"{}"\n'.format(index, value, "note")
         else:
             topi = '-1: 0.0\n'
         top5_str += topi
@@ -98,7 +99,9 @@ if __name__ == '__main__':
 
     # Inference
     print('--> Running model')
+    start_time = time()
     outputs = rknn_lite.inference(inputs=[img])
+    print('inference time: ', time() - start_time)
 
     # Show the classification results
     show_top5(outputs)
