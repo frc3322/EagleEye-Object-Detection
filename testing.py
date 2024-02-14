@@ -30,13 +30,10 @@ height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 fourcc = cv2.VideoWriter_fourcc(*'MP4V')  # You can also use 'MJPG' or 'MP4V'
 out = cv2.VideoWriter("color_v1.mp4", fourcc, fps, (640, 640))  # Adjust the resolution if needed
 
-# Load base model to setup environment
-model = YOLO("yolov5n.pt")
-
 # Load model
 model = YOLO("color_model.pt")
 
-show = True
+show = False
 
 # Loop through video
 while True:
