@@ -3,6 +3,10 @@ from time import time
 from ultralytics import YOLO
 
 
+average_framerate_list = []
+average_time_list = []
+
+
 def detect(frame):
     start = time() 
 
@@ -14,6 +18,9 @@ def detect(frame):
 
     print(f"Time taken in ms: {(time() - start) * 1000}ms")
     print(f"Estimated FPS: {1 / (time() - start)}")
+
+    average_framerate_list.append(1 / (time() - start))
+    average_time_list.append((time() - start) * 1000)
 
     return results
 
@@ -85,3 +92,6 @@ out.release()
 
 # Close all windows
 cv2.destroyAllWindows()
+
+print(f"Average FPS: {sum(average_framerate_list) / len(average_framerate_list)}")
+print(f"Average time taken in ms: {sum(average_time_list) / len(average_time_list)}")
