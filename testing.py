@@ -43,48 +43,52 @@ model = YOLO("color_model.pt")
 show = False
 
 # Loop through video
-while True:
-    # Read frame
-    ret, frame = cap.read()
-    if not ret:
-        break
+try:
+    while True:
+        # Read frame
+        ret, frame = cap.read()
+        if not ret:
+            break
 
-    results = detect(frame)
+        results = detect(frame)
 
-    for result in results:
-        boxes = result.boxes
-        for box in boxes:
-            conf = round(box.conf[0].item(), 2)
-            class_num = box.cls[0].item()
+        for result in results:
+            boxes = result.boxes
+            for box in boxes:
+                conf = round(box.conf[0].item(), 2)
+                class_num = box.cls[0].item()
 
-            x1, y1, x2, y2 = (
-                int(box.xyxy[0][0].item()),
-                int(box.xyxy[0][1].item()),
-                int(box.xyxy[0][2].item()),
-                int(box.xyxy[0][3].item()),
-            )
+                x1, y1, x2, y2 = (
+                    int(box.xyxy[0][0].item()),
+                    int(box.xyxy[0][1].item()),
+                    int(box.xyxy[0][2].item()),
+                    int(box.xyxy[0][3].item()),
+                )
 
-            cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
-            cv2.putText(
-                frame,
-                str(conf),
-                (x1, y1),
-                cv2.FONT_HERSHEY_SIMPLEX,
-                1,
-                (0, 255, 0),
-                2,
-            )
+                cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
+                cv2.putText(
+                    frame,
+                    str(conf),
+                    (x1, y1),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    1,
+                    (0, 255, 0),
+                    2,
+                )
 
-    # Write frame with bounding boxes and confidences to video
-    out.write(frame)
+        # Write frame with bounding boxes and confidences to video
+        out.write(frame)
 
-    if show:
-        # show frame
-        cv2.imshow("Frame", frame)
+        if show:
+            # show frame
+            cv2.imshow("Frame", frame)
 
-    # Break on 'q'
-    if cv2.waitKey(1) & 0xFF == ord("q"):
-        break
+        # Break on 'q'
+        if cv2.waitKey(1) & 0xFF == ord("q"):
+            break
+except KeyboardInterrupt:
+    print(f"Average FPS: {sum(average_framerate_list) / len(average_framerate_list)}")
+    print(f"Average time taken in ms: {sum(average_time_list) / len(average_time_list)}")
 
 # Release VideoCapture and VideoWriter objects
 cap.release()
@@ -92,6 +96,3 @@ out.release()
 
 # Close all windows
 cv2.destroyAllWindows()
-
-print(f"Average FPS: {sum(average_framerate_list) / len(average_framerate_list)}")
-print(f"Average time taken in ms: {sum(average_time_list) / len(average_time_list)}")
