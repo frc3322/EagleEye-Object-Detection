@@ -38,7 +38,7 @@ fourcc = cv2.VideoWriter_fourcc(*'MP4V')  # You can also use 'MJPG' or 'MP4V'
 out = cv2.VideoWriter("color_v1.mp4", fourcc, fps, (640, 640))  # Adjust the resolution if needed
 
 # Load model
-model = YOLO("color_model.onnx")
+model = YOLO("../model_creation/color_model.onnx")
 
 show = True
 
