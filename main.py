@@ -17,7 +17,7 @@ def convert_pixels_to_degrees(x, y):
     :param y: the y coordinate (height) from the center of the image
     :return: (x, y) in degrees
     """
-    x_angle = width_angle_per_pixel * (ObjectDetectionConstants.input_size / 2 + x)
+    x_angle = width_angle_per_pixel * (ObjectDetectionConstants.input_size / 2 - x)
     y_angle = height_angle_per_pixel * (ObjectDetectionConstants.input_size / 2 - y)
 
     return x_angle, y_angle
