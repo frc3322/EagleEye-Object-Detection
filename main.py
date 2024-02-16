@@ -31,7 +31,7 @@ def calculate_local_note_position(x_angle, y_angle):
     :return: the position of the note in the local coordinate system
     """
     # soh cah toa
-    x_position = np.tan(180 - x_angle) * CameraConstants.camera_height
+    x_position = np.tan(90 + x_angle) * CameraConstants.camera_height
 
     return rotate2d((x_position, 0), np.radians(y_angle))
 
