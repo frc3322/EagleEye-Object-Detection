@@ -37,7 +37,7 @@ def calculate_local_note_position(x_angle, y_angle):
     x_position = np.tan(90 + y_angle) * CameraConstants.camera_height
     print(f"process angle: {90 + y_angle}")
 
-    return rotate2d((x_position, 0), np.radians(x_angle))
+    return rotate2d((x_position, 0), 0)
 
 
 def convert_to_global_position(local_position, robot_position, robot_angle):
