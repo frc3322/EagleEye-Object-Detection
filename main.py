@@ -49,7 +49,7 @@ def convert_to_global_position(local_position, robot_position, robot_angle):
 def main():
     try:
         # Initialize the camera
-        cap = cv2.VideoCapture("testing/IMG_1273.MOV")  # 0 for the default camera, you can change it if you have multiple cameras
+        cap = cv2.VideoCapture(0)  # 0 for the default camera, you can change it if you have multiple cameras
 
         if not cap.isOpened():
             raise ImportError("Could not open video device")
