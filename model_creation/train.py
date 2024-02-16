@@ -2,6 +2,10 @@ from ultralytics import YOLO
 
 
 def main():
+    input(
+        "This script will train the model, make sure you have the dataset ready and unziped in this folder, "
+        "press enter to continue: ")
+
     print("Loading model...")
 
     # Load the model.
@@ -14,7 +18,7 @@ def main():
     model.train(
         data=input("Input dataset path, recommend using roboflow: "),  # change dataset path, this is from roboflow
         imgsz=640,
-        epochs=input("Enter the number of epoches you want to train for, 180 is a larger number for this: "), # edit to change how long you will train
+        epochs=int(input("Enter the number of epoches you want to train for, 180 is a larger number for this: ")), # edit to change how long you will train
         batch=-1,
         name=input("Enter the name of the model: "),  # change to new model name
         cache=True,
