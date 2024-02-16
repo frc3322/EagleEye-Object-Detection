@@ -1,3 +1,6 @@
+from update import check_for_updates
+check_for_updates()
+
 import cv2
 from constants import DisplayConstants, CameraConstants, ObjectDetectionConstants
 from detector import detect
