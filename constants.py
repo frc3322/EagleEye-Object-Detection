@@ -12,7 +12,7 @@ class DisplayConstants:
 
 
 class CameraConstants:
-    camera_width_angle = 62.2  # the max view angle in degrees
-    camera_height_angle = 48.8  # the max view angle in degrees
+    camera_width_angle = 110  # the max view angle in degrees
+    camera_height_angle = 85  # the max view angle in degrees
 
     camera_height = 10  # the height of the camera from the ground in cm
