@@ -3,6 +3,7 @@ from constants import DisplayConstants, CameraConstants, ObjectDetectionConstant
 from detector import detect
 import numpy as np
 from point_rotation import rotate2d
+from time import time
 
 # pre-calculate values
 width_angle_per_pixel = CameraConstants.camera_width_angle / ObjectDetectionConstants.input_size
@@ -55,6 +56,7 @@ def main():
             raise ImportError("Could not open video device")
 
         while True:
+            start_time = time()
             # Capture frame-by-frame
             _, frame = cap.read()
 
@@ -88,6 +90,8 @@ def main():
                     # convert the local position to the global position
                     global_position = convert_to_global_position(local_position, np.array([0, 0]), 0)
 
+                    print(f"Total frame time: {(time() - start_time) * 1000}ms\n")
+                    print(f"Est fps: {1 / (time() - start_time)}\n")
                     print(f"global_position: {global_position}\n")
 
             if DisplayConstants.show_output:
