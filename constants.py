@@ -5,6 +5,7 @@ class NetworkTableConstants:
 class ObjectDetectionConstants:
     input_size = 640
     model_path = "model_creation/color_model.onnx"
+    confidence_threshold = 0.65
 
 
 class DisplayConstants:

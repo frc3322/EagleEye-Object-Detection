@@ -20,7 +20,7 @@ def convert_pixels_to_degrees(x, y):
     x_angle = width_angle_per_pixel * (ObjectDetectionConstants.input_size / 2 - x)
     y_angle = height_angle_per_pixel * (ObjectDetectionConstants.input_size / 2 - y)
 
-    return x_angle, y_angle
+    return -x_angle, y_angle
 
 
 def calculate_local_note_position(x_angle, y_angle):
@@ -82,7 +82,7 @@ def main():
                     # convert the center to degrees
                     x_angle, y_angle = convert_pixels_to_degrees(center_x, center_y)
 
-                    print(f"x_angle: {x_angle}, y_angle: {y_angle}")
+                    print(f"x_angle: {round(x_angle, 2)}, y_angle: {round(y_angle, 2)}")
 
                     # calculate the local position of the note
                     local_position = calculate_local_note_position(x_angle, y_angle)
