@@ -4,7 +4,7 @@ class NetworkTableConstants:
 
 class ObjectDetectionConstants:
     input_size = 640
-    model_path = "model_creation/color_model.onnx"
+    model_path = "model_creation/greyscale_model.onnx"
 
 
 class DisplayConstants:
