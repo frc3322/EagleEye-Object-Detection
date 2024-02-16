@@ -3,7 +3,6 @@ from constants import DisplayConstants, CameraConstants, ObjectDetectionConstant
 from detector import detect
 import numpy as np
 from point_rotation import rotate2d
-from graphing import plot_3d_point
 
 # pre-calculate values
 width_angle_per_pixel = CameraConstants.camera_width_angle / ObjectDetectionConstants.input_size
