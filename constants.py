@@ -16,4 +16,4 @@ class CameraConstants:
     camera_width_angle = 110  # the max view angle in degrees
     camera_height_angle = 85  # the max view angle in degrees
 
-    camera_height = 50  # the height of the camera from the ground in cm
+    camera_height = 61  # the height of the camera from the ground in cm
