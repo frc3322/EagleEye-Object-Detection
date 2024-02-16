@@ -6,7 +6,7 @@ def check_for_updates():
         # git fetch
         use_sudo = False
         fetch_result = subprocess.run(["git", "fetch"], capture_output=True, text=True)
-        if "detected dubious ownership" in fetch_result.stderr:
+        if "Permission denied" in fetch_result.stderr or "detected dubious ownership" in fetch_result.stderr:
             subprocess.run(
                 ["sudo", "git", "fetch"],
                 capture_output=True,
