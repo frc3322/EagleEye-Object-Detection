@@ -216,6 +216,8 @@ def main():
             if len(combined_list) == 0:
                 combined_list = "None"
 
+            print(f"combined_list: {combined_list}")
+
             sd.putValue("notes", combined_list)
 
             sleep(0.1)
