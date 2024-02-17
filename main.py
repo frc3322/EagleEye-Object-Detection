@@ -214,13 +214,14 @@ def main():
                 for note in detection_data[camera]:
                     global_list.append(note)
 
+            print(f"global_list: {global_list}")
+
             # go through each note in global_list and combine notes that are close to each other
             combined_list = []
             for note in global_list:
                 if len(combined_list) == 0:
                     combined_list.append(note)
                 else:
-                    print(f"combined_list: {combined_list}")
                     for combined_note in combined_list:
                         if np.linalg.norm([combined_note["x"] - note["x"], combined_note["y"] - note["y"]]) < ObjectDetectionConstants.note_combined_threshold:
                             combined_note.append(note)
