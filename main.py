@@ -105,7 +105,7 @@ def camera_thread(camera_data):
 
         camera_images[camera_data['name']] = frame
 
-        cv2.imshow(camera_data['name'], frame)
+        # cv2.imshow(camera_data['name'], frame)
 
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
