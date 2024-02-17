@@ -231,6 +231,8 @@ def main():
             if len(combined_list) == 0:
                 combined_list = "None"
 
+            print(f"Length of combined_list: {len(combined_list)}")
+
             sd.putValue("notes", combined_list)
 
             sleep(0.1)
