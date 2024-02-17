@@ -85,6 +85,7 @@ def convert_to_global_position(local_position, robot_position, robot_angle, came
     return (np.array(rotate2d(local_position, robot_angle)) + robot_position) - np.array([camera_offset_pos[0], camera_offset_pos[1]])
 
 
+@profile
 def calculation_thread(camera_data):
     print(f"Starting thread for {camera_data['name']}")
 
