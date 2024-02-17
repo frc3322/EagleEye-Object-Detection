@@ -222,16 +222,6 @@ def main():
 
         exit(0)
 
-    except:
-        print("An error occurred")
-
-        global running
-        running = False
-
-        cv2.destroyAllWindows()
-
-        exit(0)
-
 
 if __name__ == "__main__":
     main()
