@@ -105,6 +105,8 @@ def camera_thread(camera_data):
 
         camera_images[camera_data['name']] = frame
 
+        cv2.imshow(camera_data['name'], frame)
+
         sleep(0.01)
 
 
