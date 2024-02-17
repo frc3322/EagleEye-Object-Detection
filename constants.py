@@ -2,7 +2,7 @@ import numpy as np
 
 
 class NetworkTableConstants:
-    server_address = "ScytheEngineeringDesktop.local"
+    server_address = "OrangePi2.local"
 
 
 class ObjectDetectionConstants:
@@ -25,7 +25,7 @@ class CameraConstants:
             'camera_width_angle': 110,  # the max view angle in degrees
             'camera_height_angle': 85,  # the max view angle in degrees
 
-            'camera_offset_pos': np.array([0, 0, 32.385]),  # the offset of the camera from the center of the robot
+            'camera_offset_pos': np.array([0, 0, 73.34]),  # the offset of the camera from the center of the robot
             # in cm
 
             'camera_v_angle': 0,  # the angle of the camera from directly forward, positive is up
@@ -37,7 +37,7 @@ class CameraConstants:
             'camera_width_angle': 110,  # the max view angle in degrees
             'camera_height_angle': 85,  # the max view angle in degrees
 
-            'camera_offset_pos': np.array([0, 0, 32.385]),  # the offset of the camera from the center of the robot
+            'camera_offset_pos': np.array([0, 0, 73.34]),  # the offset of the camera from the center of the robot
             # in cm
 
             'camera_v_angle': 0,  # the angle of the camera from directly forward, positive is up
