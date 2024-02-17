@@ -110,7 +110,7 @@ def camera_thread(camera_data):
 
         thread_cv2.waitKey(1)
 
-        sleep(0.1)
+        sleep(0.05)
 
 
 def calculation_thread(camera_data):
