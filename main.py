@@ -87,7 +87,9 @@ def convert_to_global_position(local_position, robot_position, robot_angle, came
     return (np.array(rotate2d(local_position, robot_angle)) + robot_position) - np.array([camera_offset_pos[0], camera_offset_pos[1]])
 
 
-def camera_thread(camera_data):
+def calculation_thread(camera_data):
+    print(f"Starting thread for {camera_data['name']}")
+
     cap = cv2.VideoCapture(camera_data['camera_id'])
 
     if not cap.isOpened():
@@ -97,26 +99,6 @@ def camera_thread(camera_data):
         print_available_cameras()
         print("-" * 50)
         raise ImportError("Could not open video device")
-
-    global camera_images
-
-    while True:
-        _, frame = cap.read()
-
-        camera_images[camera_data['name']] = frame
-
-        # cv2.imshow(camera_data['name'], frame)
-
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
-
-        sleep(0.01)
-
-
-def calculation_thread(camera_data):
-    print(f"Starting thread for {camera_data['name']}")
-
-    # cap = cv2.VideoCapture(camera_data['camera_id'])
 
     # pre-calculate values
     width_angle_per_pixel = camera_data['camera_width_angle'] / ObjectDetectionConstants.input_size
@@ -131,8 +113,9 @@ def calculation_thread(camera_data):
         while running:
             start_time = time()
             # Capture frame-by-frame
+            _, frame = cap.read()
 
-            frame = camera_images[camera_data['name']]
+            cv2.imshow('frame1', frame)
 
             if DisplayConstants.show_output:
                 detection, frame = detect(frame, verbose=False, return_image=True)
