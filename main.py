@@ -187,32 +187,31 @@ def main():
         sleep(10)
 
         while True:
-            with lock:
-                global_list = []
-                for camera in detection_data.keys():
-                    for note in detection_data[camera]:
-                        global_list.append(note)
+            global_list = []
+            for camera in detection_data.keys():
+                for note in detection_data[camera]:
+                    global_list.append(note)
 
-                # go through each note in global_list and combine notes that are close to each other
-                combined_list = []
-                for note in global_list:
-                    print(f"note: {note}")
-                    if len(combined_list) == 0:
-                        combined_list.append(note)
+            # go through each note in global_list and combine notes that are close to each other
+            combined_list = []
+            for note in global_list:
+                print(f"note: {note}")
+                if len(combined_list) == 0:
+                    combined_list.append(note)
+                else:
+                    for combined_note in combined_list:
+                        if np.linalg.norm([combined_note[0]["x"] - note["x"], combined_note[0]["y"] - note["y"]]) < ObjectDetectionConstants.note_combined_threshold:
+                            combined_note.append(note)
+                            break
                     else:
-                        for combined_note in combined_list:
-                            if np.linalg.norm([combined_note[0]["x"] - note["x"], combined_note[0]["y"] - note["y"]]) < ObjectDetectionConstants.note_combined_threshold:
-                                combined_note.append(note)
-                                break
-                        else:
-                            combined_list.append(note)
+                        combined_list.append(note)
 
-                # convert the dicts of notes into strings
-                combined_list = [str(note) for note in combined_list]
+            # convert the dicts of notes into strings
+            combined_list = [str(note) for note in combined_list]
 
-                print(f"combined_list: {combined_list}")
+            print(f"combined_list: {combined_list}")
 
-                sd.putValue("notes", combined_list)
+            sd.putValue("notes", combined_list)
 
             sleep(0.1)
 
