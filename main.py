@@ -131,6 +131,7 @@ def calculation_thread(camera_data):
         while running:
             start_time = time()
             # Capture frame-by-frame
+            print(f"Getting frame for {camera_data}")
             frame = camera_images[camera_data['name']]
 
             if DisplayConstants.show_output:
