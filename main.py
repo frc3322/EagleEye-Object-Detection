@@ -218,7 +218,7 @@ def main():
             print(f"len(global_list): {len(global_list)}")
 
             if len(global_list) == 0:
-                sd.putValue("notes", [])
+                sd.putValue("notes", ["None"])
                 print("No notes found")
                 sleep(0.1)
                 continue
