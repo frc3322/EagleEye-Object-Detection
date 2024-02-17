@@ -142,7 +142,7 @@ def calculation_thread(camera_data):
 
             frame = image_data[camera_data['name']]
 
-            cv2.imshow('frame1', frame)
+            cv2.imshow('frame2', frame)
 
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
