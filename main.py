@@ -122,11 +122,11 @@ def calculation_thread(camera_data):
 
                     robot_position = ''.join(filter(str.isdigit, robot_position)).split(" ")
 
+                    print(f"Robot position: {robot_position}")
+
                     pose_x = float(robot_position[0])
                     pose_y = float(robot_position[1])
                     pose_angle = float(robot_position[2])
-
-                    print(f"Robot position: {pose_x}, {pose_y}, {pose_angle}")
 
                     # convert the local position to the global position
                     global_position = convert_to_global_position(local_position, np.array([pose_x, pose_y]), pose_angle,
