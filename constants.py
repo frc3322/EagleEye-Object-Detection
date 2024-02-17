@@ -2,7 +2,7 @@ import numpy as np
 
 
 class NetworkTableConstants:
-    server_address = "roborio-3322-frc.local"
+    server_address = "ScytheEngineeringDesktop.local"
 
 
 class ObjectDetectionConstants:
