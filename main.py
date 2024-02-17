@@ -118,7 +118,7 @@ def calculation_thread(camera_data):
                                                                    camera_data['camera_h_angle'],
                                                                    camera_data['camera_v_angle'])
 
-                    robot_position = sd.getString("wpilib estimated pose w/ ll", "Pose X: 0 Pose Y: 0 Rotation: 0")
+                    robot_position = sd.getString(key="wpilib estimated pose w/ ll", defaultValue="Pose X: 0 Pose Y: 0 Rotation: 0")
 
                     robot_position = ''.join(filter(str.isdigit, robot_position)).split(" ")
 
