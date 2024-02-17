@@ -214,7 +214,7 @@ def main():
 
                 sd.putValue("notes", combined_list)
 
-                sleep(0.1)
+            sleep(0.1)
 
     except KeyboardInterrupt:
         print("Keyboard interrupt")
