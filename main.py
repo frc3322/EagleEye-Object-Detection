@@ -111,7 +111,7 @@ def calculation_thread(camera_data):
         while running:
             start_time = time()
             # Capture frame-by-frame
-            _, frame = cap.read()
+            _, frame = cap.grab()
 
             if DisplayConstants.show_output:
                 detection, frame = detect(frame, verbose=False, return_image=True)
