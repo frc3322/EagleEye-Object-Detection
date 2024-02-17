@@ -28,8 +28,6 @@ ready_count = 0
 detection_data = {}
 lock = Lock()
 
-camera_images = {}
-
 
 def print_available_cameras():
     for i in range(10):  # Check up to camera index 9 (adjust if needed)
@@ -104,7 +102,7 @@ def calculation_thread(camera_data):
     width_angle_per_pixel = camera_data['camera_width_angle'] / ObjectDetectionConstants.input_size
     height_angle_per_pixel = camera_data['camera_height_angle'] / ObjectDetectionConstants.input_size
 
-    global running, ready_count, camera_images
+    global running, ready_count
 
     with lock:
         ready_count += 1
@@ -210,11 +208,6 @@ def calculation_thread(camera_data):
 def main():
     try:
         for camera in CameraConstants.camera_list:
-            t = Thread(target=camera_thread, args=(camera,))
-            t.start()
-
-            sleep(1)
-
             t = Thread(target=calculation_thread, args=(camera,))
             t.start()
 
