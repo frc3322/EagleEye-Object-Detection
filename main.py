@@ -3,8 +3,8 @@ import subprocess
 import sys
 
 if check_for_updates():
-    print("Restarting the program...")
-    subprocess.run([sys.executable, "main.py"])  #
+    print("Changes have been made to main.py. Restarting the program...")
+    subprocess.run([sys.executable, "main.py"])
     sys.exit()
 
 import cv2
