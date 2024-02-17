@@ -32,7 +32,7 @@ def check_for_updates():
             # Run 'git fetch' to fetch the latest changes from the remote repository
             print("Fetching latest changes...")
             subprocess.run(
-                ["sudo", "git", "fetch"] if use_sudo else ["git", "fetch"]
+                ["sudo", "git", "fetch"] if use_sudo else ["git", "fetch"]  #
             )
 
             # Run 'git pull' to pull the latest changes

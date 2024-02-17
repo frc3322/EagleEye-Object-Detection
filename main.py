@@ -4,7 +4,7 @@ import sys
 
 if check_for_updates():
     print("Restarting the program...")
-    subprocess.run([sys.executable, "main.py"])
+    subprocess.run([sys.executable, "main.py"])  #
     sys.exit()
 
 import cv2
