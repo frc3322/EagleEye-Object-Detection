@@ -153,6 +153,7 @@ def calculation_thread(camera_data):
 
                 with lock:
                     detection_data[camera_data['name']] = note_data
+                    print(f"detection_data: {detection_data}")
 
             if DisplayConstants.show_output:
                 # Display the resulting frame
@@ -174,12 +175,12 @@ def main():
             t.start()
 
         while True:
+            sleep(10)
+
             global_list = []
             for camera in detection_data.keys():
                 for note in detection_data[camera]:
                     global_list.append(note)
-
-            sleep(10)
 
             # go through each note in global_list and combine notes that are close to each other
             combined_list = []
