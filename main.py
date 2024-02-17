@@ -64,7 +64,7 @@ def convert_to_global_position(local_position, robot_position, robot_angle, came
     :param camera_offset_pos: the offset of the camera from the center of the robot
     :return: the global position of the note
     """
-    return (np.array(rotate2d(local_position, robot_angle)) + robot_position) - camera_offset_pos
+    return (np.array(rotate2d(local_position, robot_angle)) + robot_position) - np.array([camera_offset_pos[0], camera_offset_pos[1]])
 
 
 def calculation_thread(camera_data):
