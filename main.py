@@ -186,6 +186,8 @@ def main():
             # go through each note in global_list and combine notes that are close to each other
             combined_list = []
             for note in global_list:
+                print(f"note: {note}")
+                raise KeyboardInterrupt
                 if len(combined_list) == 0:
                     combined_list.append([note])
                 else:
