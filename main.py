@@ -116,7 +116,7 @@ def camera_thread(camera_data):
 def calculation_thread(camera_data):
     print(f"Starting thread for {camera_data['name']}")
 
-    cap = cv2.VideoCapture(camera_data['camera_id'])
+    # cap = cv2.VideoCapture(camera_data['camera_id'])
 
     # pre-calculate values
     width_angle_per_pixel = camera_data['camera_width_angle'] / ObjectDetectionConstants.input_size
