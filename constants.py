@@ -31,8 +31,7 @@ class CameraConstants:
             'camera_v_angle': 0,  # the angle of the camera from directly forward, positive is up
             'camera_h_angle': 0  # the angle of the camera from directly forward, positive is right
         },
-    ]
-    """{
+        {
             'name': 'back',
             'camera_id': 1,  # the id of the camera, 0 for the default camera, you can change it if you have multiple
             'camera_width_angle': 110,  # the max view angle in degrees
@@ -43,4 +42,5 @@ class CameraConstants:
 
             'camera_v_angle': 0,  # the angle of the camera from directly forward, positive is up
             'camera_h_angle': 0  # the angle of the camera from directly forward, positive is right
-        }"""
+        }
+    ]
