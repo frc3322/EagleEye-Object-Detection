@@ -2,7 +2,7 @@ import cv2
 
 
 # code that reads from camera 0 and displays the video feed
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture(1)
 
 while True:
     ret, frame = cap.read()
