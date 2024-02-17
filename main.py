@@ -107,6 +107,8 @@ def camera_thread(camera_data):
 
         cv2.imshow(camera_data['name'], frame)
 
+        print(f"camera_images: {camera_images}")
+
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 
@@ -114,8 +116,6 @@ def camera_thread(camera_data):
 
 
 def calculation_thread(camera_data):
-    global camera_images
-
     print(f"Starting thread for {camera_data['name']}")
 
     # cap = cv2.VideoCapture(camera_data['camera_id'])
@@ -124,7 +124,7 @@ def calculation_thread(camera_data):
     width_angle_per_pixel = camera_data['camera_width_angle'] / ObjectDetectionConstants.input_size
     height_angle_per_pixel = camera_data['camera_height_angle'] / ObjectDetectionConstants.input_size
 
-    global running, ready_count
+    global running, ready_count, camera_images
 
     with lock:
         ready_count += 1
