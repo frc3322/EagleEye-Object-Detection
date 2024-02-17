@@ -28,6 +28,8 @@ ready_count = 0
 detection_data = {}
 lock = Lock()
 
+image_data = {}
+
 
 def print_available_cameras():
     for i in range(10):  # Check up to camera index 9 (adjust if needed)
@@ -85,6 +87,29 @@ def convert_to_global_position(local_position, robot_position, robot_angle, came
     return (np.array(rotate2d(local_position, robot_angle)) + robot_position) - np.array([camera_offset_pos[0], camera_offset_pos[1]])
 
 
+def camera_thread(camera_data):
+    cap = cv2.VideoCapture(camera_data['camera_id'])
+    global image_data
+
+    if not cap.isOpened():
+        print(f"\nCould not open video device {camera_data['camera_id']}\n")
+        print("Available cameras:")
+        print("-" * 50)
+        print_available_cameras()
+        print("-" * 50)
+        raise ImportError("Could not open video device")
+
+    while True:
+        _, frame = cap.read()
+
+        image_data[camera_data['name']] = frame
+
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+
+        sleep(0.1)
+
+
 def calculation_thread(camera_data):
     print(f"Starting thread for {camera_data['name']}")
 
@@ -111,7 +136,9 @@ def calculation_thread(camera_data):
         while running:
             start_time = time()
             # Capture frame-by-frame
-            _, frame = cap.read()
+            # _, frame = cap.read()
+
+            frame = image_data[camera_data['name']]
 
             cv2.imshow('frame1', frame)
 
@@ -183,10 +210,8 @@ def calculation_thread(camera_data):
                     print(f"detection_data: {detection_data}")
 
             if DisplayConstants.show_output:
-                print(1)
                 # Display the resulting frame
                 cv2.imshow('frame', frame)
-                print(2)
 
                 if cv2.waitKey(1) & 0xFF == ord('q'):
                     break
@@ -208,6 +233,11 @@ def calculation_thread(camera_data):
 def main():
     try:
         for camera in CameraConstants.camera_list:
+            t = Thread(target=camera_thread, args=(camera,))
+            t.start()
+
+            sleep(1)
+
             t = Thread(target=calculation_thread, args=(camera,))
             t.start()
 
