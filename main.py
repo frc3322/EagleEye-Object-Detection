@@ -205,6 +205,7 @@ def calculation_thread(camera_data):
                 print(1)
                 # Display the resulting frame
                 cv2.imshow('frame', frame)
+                print(2)
 
                 if cv2.waitKey(1) & 0xFF == ord('q'):
                     break
