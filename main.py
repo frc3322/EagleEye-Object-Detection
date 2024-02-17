@@ -194,6 +194,8 @@ def main():
                     else:
                         combined_list.append([note])
 
+            print(f"combined_list: {combined_list}")
+
             sd.putValue("notes", combined_list)
 
             sleep(0.01)
