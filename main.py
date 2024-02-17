@@ -114,9 +114,9 @@ def calculation_thread(camera_data):
             _, frame = cap.read()
 
             if DisplayConstants.show_output:
-                detection, frame = detect(frame, verbose=True, return_image=True)
+                detection, frame = detect(frame, verbose=False, return_image=True)
             else:
-                detection = detect(frame, verbose=True, return_image=False)
+                detection = detect(frame, verbose=False, return_image=False)
 
             global detection_data
 
