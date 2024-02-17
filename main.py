@@ -228,7 +228,7 @@ def main():
             t = Thread(target=camera_thread, args=(camera,))
             t.start()
 
-            sleep(0.1)
+            sleep(1)
 
             t = Thread(target=calculation_thread, args=(camera,))
             t.start()
