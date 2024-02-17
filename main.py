@@ -251,6 +251,9 @@ def main():
 
         cv2.destroyAllWindows()
 
+        global running
+        running = False
+
         exit(0)
 
 
