@@ -22,6 +22,8 @@ NetworkTables.initialize(server=NetworkTableConstants.server_address)
 
 sd = NetworkTables.getTable('SmartDashboard')
 
+running = True
+
 detection_data = {}
 lock = Lock()
 
@@ -84,8 +86,10 @@ def calculation_thread(camera_data):
     if not cap.isOpened():
         raise ImportError("Could not open video device")
 
+    global running
+
     try:
-        while True:
+        while running:
             start_time = time()
             # Capture frame-by-frame
             _, frame = cap.read()
@@ -194,14 +198,17 @@ def main():
                 for note in global_list:
                     print(f"note: {note}")
                     if len(combined_list) == 0:
-                        combined_list.append([note])
+                        combined_list.append(note)
                     else:
                         for combined_note in combined_list:
                             if np.linalg.norm([combined_note[0]["x"] - note["x"], combined_note[0]["y"] - note["y"]]) < ObjectDetectionConstants.note_combined_threshold:
                                 combined_note.append(note)
                                 break
                         else:
-                            combined_list.append([note])
+                            combined_list.append(note)
+
+                # convert the dicts of notes into strings
+                combined_list = [str(note) for note in combined_list]
 
                 print(f"combined_list: {combined_list}")
 
@@ -213,6 +220,18 @@ def main():
         print("Keyboard interrupt")
 
         cv2.destroyAllWindows()
+
+        exit(0)
+
+    except:
+        print("An error occurred")
+
+        global running
+        running = False
+
+        cv2.destroyAllWindows()
+
+        exit(0)
 
 
 if __name__ == "__main__":
