@@ -39,6 +39,8 @@ def check_for_updates():
             print("Pulling latest changes...")
             pull_result = subprocess.run(["sudo", "git", "pull"] if use_sudo else ["git", "pull"], capture_output=True, text=True)
 
+            print(f"Pull result: {pull_result.stdout}")
+
             if "main.py" in pull_result.stdout:
                 print("Changes have been made to main.py. Restarting the program...")
                 return True
