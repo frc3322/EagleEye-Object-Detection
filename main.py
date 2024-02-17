@@ -214,12 +214,8 @@ def main():
                 for note in detection_data[camera]:
                     global_list.append(note)
 
-            print(f"global_list: {global_list}")
-            print(f"len(global_list): {len(global_list)}")
-
             if len(global_list) == 0:
                 sd.putValue("notes", ["None"])
-                print("No notes found")
                 sleep(0.1)
                 continue
 
