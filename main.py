@@ -106,9 +106,9 @@ def camera_thread(camera_data):
 
         image_data[camera_data['name']] = frame
 
-        # thread_cv2.imshow('frame1', frame)
+        thread_cv2.imshow('frame1', frame)
 
-        # thread_cv2.waitKey(1)
+        thread_cv2.waitKey(1)
 
         sleep(0.1)
 
@@ -143,9 +143,9 @@ def calculation_thread(camera_data):
 
             frame = image_data[camera_data['name']]
 
-            cv2.imshow('frame2', frame)
+            # cv2.imshow('frame2', frame)
 
-            cv2.waitKey(1)
+            # cv2.waitKey(1)
 
             if DisplayConstants.show_output:
                 detection, frame = detect(frame, verbose=False, return_image=True)
@@ -216,9 +216,9 @@ def calculation_thread(camera_data):
 
             if DisplayConstants.show_output:
                 # Display the resulting frame
-                cv2.imshow('frame', frame)
+                # cv2.imshow('frame', frame)
 
-                cv2.waitKey(1)
+                # cv2.waitKey(1)
 
                 print(f"Total frame time: {(time() - start_time) * 1000}ms\n")
                 print(f"Est fps: {1 / (time() - start_time)}\n")
