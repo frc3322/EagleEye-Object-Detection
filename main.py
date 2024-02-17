@@ -104,9 +104,6 @@ def camera_thread(camera_data):
 
         image_data[camera_data['name']] = frame
 
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
-
         sleep(0.1)
 
 
