@@ -106,9 +106,9 @@ def camera_thread(camera_data):
 
         image_data[camera_data['name']] = frame
 
-        thread_cv2.imshow('frame1', frame)
+        # thread_cv2.imshow('frame1', frame)
 
-        thread_cv2.waitKey(1)
+        # thread_cv2.waitKey(1)
 
         sleep(0.1)
 
