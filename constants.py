@@ -33,7 +33,7 @@ class CameraConstants:
         },
         {
             'name': 'back',
-            'camera_id': 2,  # the id of the camera, 0 for the default camera, you can change it if you have multiple
+            'camera_id': 1,  # the id of the camera, 0 for the default camera, you can change it if you have multiple
             'camera_width_angle': 110,  # the max view angle in degrees
             'camera_height_angle': 85,  # the max view angle in degrees
 

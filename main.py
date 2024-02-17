@@ -29,6 +29,16 @@ detection_data = {}
 lock = Lock()
 
 
+def print_available_cameras():
+    for i in range(10):  # Check up to camera index 9 (adjust if needed)
+        cap = cv2.VideoCapture(i)
+        if not cap.isOpened():
+            print(f"Camera index {i} is not available.")
+        else:
+            print(f"Camera index {i} is available.")
+            cap.release()
+
+
 def convert_pixels_to_degrees(x, y, width_angle_per_pixel, height_angle_per_pixel):
     """
     Converts the given pixel coordinates to degrees
@@ -85,6 +95,9 @@ def calculation_thread(camera_data):
     height_angle_per_pixel = camera_data['camera_height_angle'] / ObjectDetectionConstants.input_size
 
     if not cap.isOpened():
+        print(f"Could not open video device {camera_data['camera_id']}")
+        print("Available cameras:")
+        print_available_cameras()
         raise ImportError("Could not open video device")
 
     global running, ready_count
