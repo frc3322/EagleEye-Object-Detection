@@ -195,7 +195,6 @@ def main():
             # go through each note in global_list and combine notes that are close to each other
             combined_list = []
             for note in global_list:
-                print(f"note: {note}")
                 if len(combined_list) == 0:
                     combined_list.append(note)
                 else:
@@ -209,7 +208,8 @@ def main():
             # convert the dicts of notes into strings
             combined_list = [str(note) for note in combined_list]
 
-            print(f"combined_list: {combined_list}")
+            if len(combined_list) == 0:
+                combined_list = "None"
 
             sd.putValue("notes", combined_list)
 
