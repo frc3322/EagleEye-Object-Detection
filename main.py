@@ -123,6 +123,9 @@ def calculation_thread(camera_data):
                     # remove all characters that are not numbers or a space
                     robot_position = ''.join(filter(lambda x: x.isdigit() or x == " ", robot_position)).split(" ")
 
+                    # remove all instances of a string with a space
+                    robot_position = list(filter(lambda x: x != "", robot_position))
+
                     print(f"Robot position: {robot_position}")
 
                     pose_x = float(robot_position[0])
