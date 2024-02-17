@@ -98,10 +98,10 @@ def camera_thread(camera_data):
         print("-" * 50)
         raise ImportError("Could not open video device")
 
+    global camera_images
+
     while True:
         _, frame = cap.read()
-
-        global camera_images
 
         camera_images[camera_data['name']] = frame
 
