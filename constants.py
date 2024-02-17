@@ -14,7 +14,7 @@ class ObjectDetectionConstants:
 
 
 class DisplayConstants:
-    show_output = False
+    show_output = True
 
 
 class CameraConstants:
@@ -22,18 +22,6 @@ class CameraConstants:
         {
             'name': 'front',
             'camera_id': 0,  # the id of the camera, 0 for the default camera, you can change it if you have multiple
-            'camera_width_angle': 110,  # the max view angle in degrees
-            'camera_height_angle': 85,  # the max view angle in degrees
-
-            'camera_offset_pos': np.array([0, 0, 73.34]),  # the offset of the camera from the center of the robot
-            # in cm
-
-            'camera_v_angle': 0,  # the angle of the camera from directly forward, positive is up
-            'camera_h_angle': 0  # the angle of the camera from directly forward, positive is right
-        },
-        {
-            'name': 'back',
-            'camera_id': 2,  # the id of the camera, 0 for the default camera, you can change it if you have multiple
             'camera_width_angle': 110,  # the max view angle in degrees
             'camera_height_angle': 85,  # the max view angle in degrees
 
