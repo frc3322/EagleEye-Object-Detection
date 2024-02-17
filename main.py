@@ -214,7 +214,10 @@ def main():
                 for note in detection_data[camera]:
                     global_list.append(note)
 
-            print(f"global_list: {global_list}")
+            if len(global_list) == 0:
+                sd.putValue("notes", "None")
+                sleep(0.1)
+                continue
 
             # go through each note in global_list and combine notes that are close to each other
             combined_list = []
