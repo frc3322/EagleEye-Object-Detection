@@ -127,7 +127,7 @@ def calculation_thread(camera_data):
     width_angle_per_pixel = camera_data['camera_width_angle'] / ObjectDetectionConstants.input_size
     height_angle_per_pixel = camera_data['camera_height_angle'] / ObjectDetectionConstants.input_size
 
-    global running, ready_count
+    global running, ready_count, image_data
 
     with lock:
         ready_count += 1
@@ -141,6 +141,9 @@ def calculation_thread(camera_data):
             frame = image_data[camera_data['name']]
 
             cv2.imshow('frame1', frame)
+
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                break
 
             if DisplayConstants.show_output:
                 detection, frame = detect(frame, verbose=False, return_image=True)
