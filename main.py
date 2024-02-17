@@ -115,13 +115,13 @@ def calculation_thread(camera_data):
 
     # cap = cv2.VideoCapture(camera_data['camera_id'])
 
-    if not cap.isOpened():
+    """if not cap.isOpened():
         print(f"\nCould not open video device {camera_data['camera_id']}\n")
         print("Available cameras:")
         print("-" * 50)
         print_available_cameras()
         print("-" * 50)
-        raise ImportError("Could not open video device")
+        raise ImportError("Could not open video device")"""
 
     # pre-calculate values
     width_angle_per_pixel = camera_data['camera_width_angle'] / ObjectDetectionConstants.input_size
