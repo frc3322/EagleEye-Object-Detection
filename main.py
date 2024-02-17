@@ -215,7 +215,7 @@ def main():
                     global_list.append(note)
 
             if len(global_list) == 0:
-                sd.putValue("notes", "None")
+                sd.putValue("notes", [])
                 sleep(0.1)
                 continue
 
