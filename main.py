@@ -88,6 +88,8 @@ def convert_to_global_position(local_position, robot_position, robot_angle, came
 
 
 def camera_thread(camera_data):
+    import cv2 as thread_cv2
+
     cap = cv2.VideoCapture(camera_data['camera_id'])
     global image_data
 
@@ -104,10 +106,9 @@ def camera_thread(camera_data):
 
         image_data[camera_data['name']] = frame
 
-        cv2.imshow('frame1', frame)
+        thread_cv2.imshow('frame1', frame)
 
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
+        thread_cv2.waitKey(1)
 
         sleep(0.1)
 
@@ -144,8 +145,7 @@ def calculation_thread(camera_data):
 
             cv2.imshow('frame2', frame)
 
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                break
+            cv2.waitKey(1)
 
             if DisplayConstants.show_output:
                 detection, frame = detect(frame, verbose=False, return_image=True)
@@ -218,8 +218,7 @@ def calculation_thread(camera_data):
                 # Display the resulting frame
                 cv2.imshow('frame', frame)
 
-                if cv2.waitKey(1) & 0xFF == ord('q'):
-                    break
+                cv2.waitKey(1)
 
                 print(f"Total frame time: {(time() - start_time) * 1000}ms\n")
                 print(f"Est fps: {1 / (time() - start_time)}\n")
