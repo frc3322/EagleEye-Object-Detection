@@ -184,6 +184,9 @@ def calculation_thread(camera_data):
                 # Display the resulting frame
                 cv2.imshow('frame', frame)
 
+                if cv2.waitKey(1) & 0xFF == ord('q'):
+                    break
+
                 print(f"Total frame time: {(time() - start_time) * 1000}ms\n")
                 print(f"Est fps: {1 / (time() - start_time)}\n")
 
