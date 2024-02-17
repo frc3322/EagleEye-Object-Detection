@@ -118,7 +118,7 @@ def calculation_thread(camera_data):
                                                                    camera_data['camera_h_angle'],
                                                                    camera_data['camera_v_angle'])
 
-                    robot_position = sd.getString("wpilib estimated pose w/ ll")
+                    robot_position = sd.getString("wpilib estimated pose w/ ll", "Pose X: 0 Pose Y: 0 Rotation: 0")
 
                     robot_position = ''.join(filter(str.isdigit, robot_position)).split(" ")
 
@@ -164,6 +164,7 @@ def calculation_thread(camera_data):
 def main():
     try:
         for camera in CameraConstants.camera_list:
+            print(camera)
             t = Thread(target=calculation_thread, args=(camera,))
             t.start()
 
@@ -172,6 +173,8 @@ def main():
             for camera in detection_data.keys():
                 for note in detection_data[camera]:
                     global_list.append(note)
+
+            sleep(10)
 
             # go through each note in global_list and combine notes that are close to each other
             combined_list = []
