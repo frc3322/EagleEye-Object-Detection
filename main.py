@@ -23,6 +23,7 @@ NetworkTables.initialize(server=NetworkTableConstants.server_address)
 sd = NetworkTables.getTable('SmartDashboard')
 
 running = True
+ready_count = 0
 
 detection_data = {}
 lock = Lock()
@@ -86,7 +87,10 @@ def calculation_thread(camera_data):
     if not cap.isOpened():
         raise ImportError("Could not open video device")
 
-    global running
+    global running, ready_count
+
+    with lock:
+        ready_count += 1
 
     try:
         while running:
@@ -184,7 +188,8 @@ def main():
             t = Thread(target=calculation_thread, args=(camera,))
             t.start()
 
-        sleep(10)
+        while ready_count < len(CameraConstants.camera_list):
+            sleep(0.1)
 
         while True:
             global_list = []
