@@ -222,7 +222,7 @@ def main():
                 else:
                     print(f"combined_list: {combined_list}")
                     for combined_note in combined_list:
-                        if np.linalg.norm([combined_note[0]["x"] - note["x"], combined_note[0]["y"] - note["y"]]) < ObjectDetectionConstants.note_combined_threshold:
+                        if np.linalg.norm([combined_note["x"] - note["x"], combined_note["y"] - note["y"]]) < ObjectDetectionConstants.note_combined_threshold:
                             combined_note.append(note)
                             break
                     else:
