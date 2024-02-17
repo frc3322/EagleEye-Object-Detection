@@ -126,6 +126,8 @@ def calculation_thread(camera_data):
                     pose_y = float(robot_position[1])
                     pose_angle = float(robot_position[2])
 
+                    print(f"Robot position: {pose_x}, {pose_y}, {pose_angle}")
+
                     # convert the local position to the global position
                     global_position = convert_to_global_position(local_position, np.array([pose_x, pose_y]), pose_angle,
                                                                  camera_data['camera_offset_pos'])
@@ -164,7 +166,6 @@ def calculation_thread(camera_data):
 def main():
     try:
         for camera in CameraConstants.camera_list:
-            print(camera)
             t = Thread(target=calculation_thread, args=(camera,))
             t.start()
 
