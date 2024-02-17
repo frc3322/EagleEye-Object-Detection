@@ -168,8 +168,6 @@ def calculation_thread(camera_data):
                     print(f"global_position: {global_position}\n")
                     print(f"x_angle: {round(x_angle, 2)}, y_angle: {round(y_angle, 2)}")
                     print(f"Robot position: {pose_x}, {pose_y}, {pose_angle}")
-                    print(f"Total frame time: {(time() - start_time) * 1000}ms\n")
-                    print(f"Est fps: {1 / (time() - start_time)}\n")
 
                     note_dict = {
                         "x": global_position[0],
@@ -181,6 +179,9 @@ def calculation_thread(camera_data):
                 with lock:
                     detection_data[camera_data['name']] = note_data
                     print(f"detection_data: {detection_data}")
+
+                    print(f"Total frame time: {(time() - start_time) * 1000}ms\n")
+                    print(f"Est fps: {1 / (time() - start_time)}\n")
 
                     print("-" * 60)
 
