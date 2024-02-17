@@ -28,6 +28,8 @@ ready_count = 0
 detection_data = {}
 lock = Lock()
 
+camera_images = {}
+
 
 def print_available_cameras():
     for i in range(10):  # Check up to camera index 9 (adjust if needed)
@@ -85,14 +87,8 @@ def convert_to_global_position(local_position, robot_position, robot_angle, came
     return (np.array(rotate2d(local_position, robot_angle)) + robot_position) - np.array([camera_offset_pos[0], camera_offset_pos[1]])
 
 
-def calculation_thread(camera_data):
-    print(f"Starting thread for {camera_data['name']}")
-
+def camera_thread(camera_data):
     cap = cv2.VideoCapture(camera_data['camera_id'])
-
-    # pre-calculate values
-    width_angle_per_pixel = camera_data['camera_width_angle'] / ObjectDetectionConstants.input_size
-    height_angle_per_pixel = camera_data['camera_height_angle'] / ObjectDetectionConstants.input_size
 
     if not cap.isOpened():
         print(f"\nCould not open video device {camera_data['camera_id']}\n")
@@ -101,6 +97,25 @@ def calculation_thread(camera_data):
         print_available_cameras()
         print("-" * 50)
         raise ImportError("Could not open video device")
+
+    while True:
+        _, frame = cap.read()
+
+        global camera_images
+
+        camera_images[camera_data['name']] = frame
+
+        sleep(0.01)
+
+
+def calculation_thread(camera_data):
+    print(f"Starting thread for {camera_data['name']}")
+
+    cap = cv2.VideoCapture(camera_data['camera_id'])
+
+    # pre-calculate values
+    width_angle_per_pixel = camera_data['camera_width_angle'] / ObjectDetectionConstants.input_size
+    height_angle_per_pixel = camera_data['camera_height_angle'] / ObjectDetectionConstants.input_size
 
     global running, ready_count
 
@@ -111,7 +126,7 @@ def calculation_thread(camera_data):
         while running:
             start_time = time()
             # Capture frame-by-frame
-            _, frame = cap.read()
+            frame = camera_images[camera_data['name']]
 
             if DisplayConstants.show_output:
                 detection, frame = detect(frame, verbose=False, return_image=True)
@@ -204,6 +219,9 @@ def calculation_thread(camera_data):
 def main():
     try:
         for camera in CameraConstants.camera_list:
+            t = Thread(target=camera_thread, args=(camera,))
+            t.start()
+
             t = Thread(target=calculation_thread, args=(camera,))
             t.start()
 
