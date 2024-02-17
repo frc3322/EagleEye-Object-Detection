@@ -95,9 +95,11 @@ def calculation_thread(camera_data):
     height_angle_per_pixel = camera_data['camera_height_angle'] / ObjectDetectionConstants.input_size
 
     if not cap.isOpened():
-        print(f"Could not open video device {camera_data['camera_id']}")
+        print(f"\nCould not open video device {camera_data['camera_id']}\n")
         print("Available cameras:")
+        print("-" * 50)
         print_available_cameras()
+        print("-" * 50)
         raise ImportError("Could not open video device")
 
     global running, ready_count
