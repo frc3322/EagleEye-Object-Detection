@@ -120,7 +120,8 @@ def calculation_thread(camera_data):
 
                     robot_position = sd.getString(key="wpilib estimated pose w/ ll", defaultValue="Pose X: 0 Pose Y: 0 Rotation: 0")
 
-                    robot_position = ''.join(filter(str.isdigit, robot_position)).split(" ")
+                    # remove all characters that are not numbers or a space
+                    robot_position = ''.join(filter(lambda x: x.isdigit() or x == " ", robot_position))
 
                     print(f"Robot position: {robot_position}")
 
