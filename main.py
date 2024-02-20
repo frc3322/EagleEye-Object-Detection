@@ -115,16 +115,6 @@ def camera_thread(camera_data):
 def calculation_thread(camera_data):
     print(f"Starting thread for {camera_data['name']}")
 
-    # cap = cv2.VideoCapture(camera_data['camera_id'])
-
-    """if not cap.isOpened():
-        print(f"\nCould not open video device {camera_data['camera_id']}\n")
-        print("Available cameras:")
-        print("-" * 50)
-        print_available_cameras()
-        print("-" * 50)
-        raise ImportError("Could not open video device")"""
-
     # pre-calculate values
     width_angle_per_pixel = camera_data['camera_width_angle'] / ObjectDetectionConstants.input_size
     height_angle_per_pixel = camera_data['camera_height_angle'] / ObjectDetectionConstants.input_size
