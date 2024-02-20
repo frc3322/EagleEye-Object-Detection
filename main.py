@@ -187,6 +187,9 @@ def calculation_thread(camera_data):
                     global_position = convert_to_global_position(local_position, np.array([pose_x, pose_y]), pose_angle,
                                                                  camera_data['camera_offset_pos'])
 
+                    # distance between robot position and note position
+                    distance = np.linalg.norm(np.array([pose_x, pose_y]) - global_position)
+
                     print("-" * 25 + f"thread for {camera_data['name']}" + "-" * 25)
                     print(f"global_position: {global_position}\n")
                     print(f"x_angle: {round(x_angle, 2)}, y_angle: {round(y_angle, 2)}")
@@ -195,7 +198,8 @@ def calculation_thread(camera_data):
                     note_dict = {
                         "x": global_position[0],
                         "y": global_position[1],
-                        "yaw": x_angle
+                        "yaw": x_angle,
+                        "distance": distance,
                     }
                     note_data.append(note_dict)
 
