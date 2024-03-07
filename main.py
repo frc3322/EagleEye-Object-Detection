@@ -267,6 +267,9 @@ def main():
                     else:
                         combined_list.append(note)
 
+            # sort the combined list by distance
+            combined_list.sort(key=lambda x: x["distance"])
+
             # convert the dicts of notes into strings
             combined_list = [str(note) for note in combined_list]
 
