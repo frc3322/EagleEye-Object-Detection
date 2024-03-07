@@ -22,8 +22,8 @@ class CameraConstants:
         {
             'name': 'front',
             'camera_id': 0,  # the id of the camera, 0 for the default camera, you can change it if you have multiple
-            'camera_width_angle': 110,  # the max view angle in degrees
-            'camera_height_angle': 85,  # the max view angle in degrees
+            'camera_width_angle': 70,  # the max view angle in degrees
+            'camera_height_angle': 38,  # the max view angle in degrees
 
             'camera_offset_pos': np.array([0, 0, 73.34]),  # the offset of the camera from the center of the robot
             # in cm
