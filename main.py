@@ -1,4 +1,4 @@
-from update import check_for_updates
+from scytheautoupdate import check_for_updates
 import subprocess
 import sys
 
@@ -8,7 +8,12 @@ if check_for_updates():
     sys.exit()
 
 import cv2
-from constants import DisplayConstants, CameraConstants, ObjectDetectionConstants, NetworkTableConstants
+from constants import (
+    DisplayConstants,
+    CameraConstants,
+    ObjectDetectionConstants,
+    NetworkTableConstants,
+)
 from detector import detect
 import numpy as np
 from point_rotation import rotate2d
@@ -20,7 +25,7 @@ from networktables import NetworkTables
 # As a client to connect to a robot
 NetworkTables.initialize(server=NetworkTableConstants.server_address)
 
-sd = NetworkTables.getTable('SmartDashboard')
+sd = NetworkTables.getTable("SmartDashboard")
 
 running = True
 ready_count = 0
@@ -56,7 +61,9 @@ def convert_pixels_to_degrees(x, y, width_angle_per_pixel, height_angle_per_pixe
     return -x_angle, y_angle
 
 
-def calculate_local_note_position(x_angle, y_angle, camera_offset_pos, camera_h_angle, camera_v_angle):
+def calculate_local_note_position(
+    x_angle, y_angle, camera_offset_pos, camera_h_angle, camera_v_angle
+):
     """
     Calculates the position of the note in the local coordinate system
     :param x_angle: the x angle in degrees
@@ -75,7 +82,9 @@ def calculate_local_note_position(x_angle, y_angle, camera_offset_pos, camera_h_
     return rotate2d((x_position, 0), np.radians(x_angle))
 
 
-def convert_to_global_position(local_position, robot_position, robot_angle, camera_offset_pos):
+def convert_to_global_position(
+    local_position, robot_position, robot_angle, camera_offset_pos
+):
     """
     Converts the local position to the global position
     :param local_position: the local position of the note
@@ -84,12 +93,13 @@ def convert_to_global_position(local_position, robot_position, robot_angle, came
     :param camera_offset_pos: the offset of the camera from the center of the robot
     :return: the global position of the note
     """
-    return (np.array(rotate2d(local_position, robot_angle)) + robot_position) - np.array([camera_offset_pos[0], camera_offset_pos[1]])
+    return (
+        np.array(rotate2d(local_position, robot_angle)) + robot_position
+    ) - np.array([camera_offset_pos[0], camera_offset_pos[1]])
 
 
 def camera_thread(camera_data):
-
-    cap = cv2.VideoCapture(camera_data['camera_id'])
+    cap = cv2.VideoCapture(camera_data["camera_id"])
     global image_data
 
     if not cap.isOpened():
@@ -103,7 +113,7 @@ def camera_thread(camera_data):
     while True:
         _, frame = cap.read()
 
-        image_data[camera_data['name']] = frame
+        image_data[camera_data["name"]] = frame
 
         # cv2.imshow('frame1', frame)
 
@@ -116,8 +126,12 @@ def calculation_thread(camera_data):
     print(f"Starting thread for {camera_data['name']}")
 
     # pre-calculate values
-    width_angle_per_pixel = camera_data['camera_width_angle'] / ObjectDetectionConstants.input_size
-    height_angle_per_pixel = camera_data['camera_height_angle'] / ObjectDetectionConstants.input_size
+    width_angle_per_pixel = (
+        camera_data["camera_width_angle"] / ObjectDetectionConstants.input_size
+    )
+    height_angle_per_pixel = (
+        camera_data["camera_height_angle"] / ObjectDetectionConstants.input_size
+    )
 
     global running, ready_count, image_data
 
@@ -130,9 +144,9 @@ def calculation_thread(camera_data):
             # Capture frame-by-frame
             # _, frame = cap.read()
 
-            frame = image_data[camera_data['name']]
+            frame = image_data[camera_data["name"]]
 
-            cv2.imshow('frame2', frame)
+            cv2.imshow("frame2", frame)
 
             cv2.waitKey(1)
 
@@ -161,18 +175,31 @@ def calculation_thread(camera_data):
                     center_y = (y1 + y2) / 2
 
                     # convert the center to degrees
-                    x_angle, y_angle = convert_pixels_to_degrees(center_x, center_y, width_angle_per_pixel,
-                                                                 height_angle_per_pixel)
+                    x_angle, y_angle = convert_pixels_to_degrees(
+                        center_x,
+                        center_y,
+                        width_angle_per_pixel,
+                        height_angle_per_pixel,
+                    )
 
                     # calculate the local position of the note
-                    local_position = calculate_local_note_position(x_angle, y_angle, camera_data['camera_offset_pos'],
-                                                                   camera_data['camera_h_angle'],
-                                                                   camera_data['camera_v_angle'])
+                    local_position = calculate_local_note_position(
+                        x_angle,
+                        y_angle,
+                        camera_data["camera_offset_pos"],
+                        camera_data["camera_h_angle"],
+                        camera_data["camera_v_angle"],
+                    )
 
-                    robot_position = sd.getString(key="wpilib estimated pose w/ ll", defaultValue="Pose X: 0 Pose Y: 0 Rotation: 0")
+                    robot_position = sd.getString(
+                        key="wpilib estimated pose w/ ll",
+                        defaultValue="Pose X: 0 Pose Y: 0 Rotation: 0",
+                    )
 
                     # remove all characters that are not numbers or a space
-                    robot_position = ''.join(filter(lambda x: x.isdigit() or x == " ", robot_position)).split(" ")
+                    robot_position = "".join(
+                        filter(lambda x: x.isdigit() or x == " ", robot_position)
+                    ).split(" ")
 
                     # remove all instances of a string with a space
                     robot_position = list(filter(lambda x: x != "", robot_position))
@@ -184,11 +211,17 @@ def calculation_thread(camera_data):
                     pose_angle = float(robot_position[2])
 
                     # convert the local position to the global position
-                    global_position = convert_to_global_position(local_position, np.array([pose_x, pose_y]), pose_angle,
-                                                                 camera_data['camera_offset_pos'])
+                    global_position = convert_to_global_position(
+                        local_position,
+                        np.array([pose_x, pose_y]),
+                        pose_angle,
+                        camera_data["camera_offset_pos"],
+                    )
 
                     # distance between robot position and note position
-                    distance = np.linalg.norm(np.array([pose_x, pose_y]) - global_position)
+                    distance = np.linalg.norm(
+                        np.array([pose_x, pose_y]) - global_position
+                    )
 
                     print("-" * 25 + f"thread for {camera_data['name']}" + "-" * 25)
                     print(f"global_position: {global_position}\n")
@@ -204,12 +237,12 @@ def calculation_thread(camera_data):
                     note_data.append(note_dict)
 
                 with lock:
-                    detection_data[camera_data['name']] = note_data
+                    detection_data[camera_data["name"]] = note_data
                     print(f"detection_data: {detection_data}")
 
             if DisplayConstants.show_output:
                 # Display the resulting frame
-                cv2.imshow('frame', frame)
+                cv2.imshow("frame", frame)
 
                 cv2.waitKey(1)
 
@@ -261,7 +294,15 @@ def main():
                     combined_list.append(note)
                 else:
                     for combined_note in combined_list:
-                        if np.linalg.norm([combined_note["x"] - note["x"], combined_note["y"] - note["y"]]) < ObjectDetectionConstants.note_combined_threshold:
+                        if (
+                            np.linalg.norm(
+                                [
+                                    combined_note["x"] - note["x"],
+                                    combined_note["y"] - note["y"],
+                                ]
+                            )
+                            < ObjectDetectionConstants.note_combined_threshold
+                        ):
                             combined_note.append(note)
                             break
                     else:

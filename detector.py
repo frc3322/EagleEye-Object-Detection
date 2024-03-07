@@ -24,7 +24,12 @@ def detect(image, verbose=False, return_image=False):
     image = cv2.resize(image, image_size)
 
     # Detect notes
-    detections = model.predict(image, show=False, device="cpu", conf=ObjectDetectionConstants.confidence_threshold)
+    detections = model.predict(
+        image,
+        show=False,
+        device="cpu",
+        conf=ObjectDetectionConstants.confidence_threshold,
+    )
 
     if return_image:
         for detection in detections:
