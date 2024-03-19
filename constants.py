@@ -15,6 +15,7 @@ class ObjectDetectionConstants:
 
 class DisplayConstants:
     show_output = True
+    render_output = False
 
 
 class CameraConstants:
