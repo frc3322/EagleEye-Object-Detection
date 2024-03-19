@@ -22,6 +22,16 @@ from threading import Thread, Lock
 
 from networktables import NetworkTables
 
+if DisplayConstants.render_output:
+    from sapphirerenderer import SapphireRenderer
+
+    renderer = SapphireRenderer(draw_axis=True)
+
+    line_of_sight = renderer.add_object("Line")
+    line_of_sight.set_color((0, 0, 255))
+
+    note_object = renderer.add_object("Torus")
+
 # As a client to connect to a robot
 NetworkTables.initialize(server=NetworkTableConstants.server_address)
 
@@ -266,7 +276,7 @@ def main():
             t = Thread(target=camera_thread, args=(camera,))
             t.start()
 
-            sleep(1)
+            sleep(5)
 
             t = Thread(target=calculation_thread, args=(camera,))
             t.start()
@@ -311,12 +321,34 @@ def main():
             # sort the combined list by distance
             combined_list.sort(key=lambda x: x["distance"])
 
+            if DisplayConstants.render_output:
+                note_object.move_absolute(
+                    np.array(
+                        [combined_list[0]["x"] / 100, combined_list[0]["y"] / 100, 0]
+                    )
+                )
+
+                line_of_sight.change_vertices(
+                    np.array(
+                        [
+                            [0, 0, 0],
+                            [
+                                combined_list[0]["x"] / 100,
+                                combined_list[0]["y"] / 100,
+                                0,
+                            ],
+                        ],
+                        dtype=float,
+                    )
+                )
+
             # convert the dicts of notes into strings
             combined_list = [str(note) for note in combined_list]
 
             if len(combined_list) == 0:
                 combined_list = "None"
 
+            print(f"Combined list: {combined_list}")
             sd.putValue("notes", combined_list)
 
             sleep(0.1)

@@ -4,3 +4,4 @@ pynetworktables
 ultralytics
 roboflow
 scytheautoupdate
+sapphire-renderer
