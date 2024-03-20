@@ -23,14 +23,15 @@ from threading import Thread, Lock
 from networktables import NetworkTables
 
 if DisplayConstants.render_output:
-    from sapphirerenderer import SapphireRenderer
+    from sapphirerenderer import SapphireRenderer, ParticleManager
 
     renderer = SapphireRenderer(draw_axis=True)
 
-    line_of_sight = renderer.add_object("Line")
-    line_of_sight.set_color((0, 0, 255))
+    note_object = renderer.add_object(
+        "Torus", args=(np.array([0.0, 0.0, 0.0]), (255, 135, 0), 1.5, 0.5, 5)
+    )
 
-    note_object = renderer.add_object("Torus")
+    particle_manager = ParticleManager(note_object, renderer)
 
 # As a client to connect to a robot
 NetworkTables.initialize(server=NetworkTableConstants.server_address)
@@ -214,7 +215,8 @@ def calculation_thread(camera_data):
                     # remove all instances of a string with a space
                     robot_position = list(filter(lambda x: x != "", robot_position))
 
-                    print(f"Robot position: {robot_position}")
+                    if DisplayConstants.debug:
+                        print(f"Robot position: {robot_position}")
 
                     pose_x = float(robot_position[0])
                     pose_y = float(robot_position[1])
@@ -233,10 +235,13 @@ def calculation_thread(camera_data):
                         np.array([pose_x, pose_y]) - global_position
                     )
 
-                    print("-" * 25 + f"thread for {camera_data['name']}" + "-" * 25)
-                    print(f"global_position: {global_position}\n")
-                    print(f"x_angle: {round(x_angle, 2)}, y_angle: {round(y_angle, 2)}")
-                    print(f"Robot position: {pose_x}, {pose_y}, {pose_angle}")
+                    if DisplayConstants.debug:
+                        print("-" * 25 + f"thread for {camera_data['name']}" + "-" * 25)
+                        print(f"global_position: {global_position}\n")
+                        print(
+                            f"x_angle: {round(x_angle, 2)}, y_angle: {round(y_angle, 2)}"
+                        )
+                        print(f"Robot position: {pose_x}, {pose_y}, {pose_angle}")
 
                     note_dict = {
                         "x": global_position[0],
@@ -248,7 +253,8 @@ def calculation_thread(camera_data):
 
                 with lock:
                     detection_data[camera_data["name"]] = note_data
-                    print(f"detection_data: {detection_data}")
+                    if DisplayConstants.debug:
+                        print(f"detection_data: {detection_data}")
 
             if DisplayConstants.show_output:
                 # Display the resulting frame
@@ -256,10 +262,11 @@ def calculation_thread(camera_data):
 
                 cv2.waitKey(1)
 
-                print(f"Total frame time: {(time() - start_time) * 1000}ms\n")
-                print(f"Est fps: {1 / (time() - start_time)}\n")
+                if DisplayConstants.debug:
+                    print(f"Total frame time: {(time() - start_time) * 1000}ms\n")
+                    print(f"Est fps: {1 / (time() - start_time)}\n")
 
-                print("-" * 60)
+                    print("-" * 60)
 
     except KeyboardInterrupt:
         print("Keyboard interrupt")
@@ -322,25 +329,21 @@ def main():
             combined_list.sort(key=lambda x: x["distance"])
 
             if DisplayConstants.render_output:
-                note_object.move_absolute(
-                    np.array(
-                        [combined_list[0]["x"] / 100, combined_list[0]["y"] / 100, 0]
-                    )
-                )
+                # change the amount of particles to the amount of notes by adding or removing particles
+                particle_diff = len(combined_list) - len(particle_manager.particles)
 
-                line_of_sight.change_vertices(
-                    np.array(
-                        [
-                            [0, 0, 0],
-                            [
-                                combined_list[0]["x"] / 100,
-                                combined_list[0]["y"] / 100,
-                                0,
-                            ],
-                        ],
-                        dtype=float,
+                if particle_diff > 0:
+                    for _ in range(particle_diff):
+                        particle_manager.add_particle()
+                elif particle_diff < 0:
+                    for _ in range(-particle_diff):
+                        particle_manager.remove_particle(particle_manager.particles[0])
+
+                # move the particles to the correct position
+                for i, note in enumerate(combined_list):
+                    particle_manager.particles[i].move_absolute(
+                        [note["x"] / 10, note["y"] / 10, 0]
                     )
-                )
 
             # convert the dicts of notes into strings
             combined_list = [str(note) for note in combined_list]
@@ -348,7 +351,8 @@ def main():
             if len(combined_list) == 0:
                 combined_list = "None"
 
-            print(f"Combined list: {combined_list}")
+            if DisplayConstants.debug:
+                print(f"Combined list: {combined_list}")
             sd.putValue("notes", combined_list)
 
             sleep(0.1)
