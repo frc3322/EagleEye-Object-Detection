@@ -33,6 +33,11 @@ if DisplayConstants.render_output:
 
     particle_manager = ParticleManager(note_object, renderer)
 
+if DisplayConstants.run_web_server:
+    from web_server import VideoStreamer
+
+    video_streamer = VideoStreamer()
+
 # As a client to connect to a robot
 NetworkTables.initialize(server=NetworkTableConstants.server_address)
 
@@ -259,6 +264,7 @@ def calculation_thread(camera_data):
             if DisplayConstants.show_output:
                 # Display the resulting frame
                 cv2.imshow("frame", frame)
+                video_streamer.update_image(frame)
 
                 cv2.waitKey(1)
 
