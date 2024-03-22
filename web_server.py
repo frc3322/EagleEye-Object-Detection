@@ -7,10 +7,11 @@ app = Flask(__name__)
 
 class VideoStreamer:
     def __init__(self):
-        self.current_image = None
+        self.current_image = cv2.imread("no-signal.jpg")
         self.run_server()
 
     def update_image(self, new_image):
+        new_image = cv2.cvtColor(new_image, cv2.COLOR_RGB2RGBA)
         self.current_image = new_image
 
     def generate_frames(self):
@@ -18,10 +19,7 @@ class VideoStreamer:
             if self.current_image is not None:
                 _, buffer = cv2.imencode(".jpg", self.current_image)
                 frame = buffer.tobytes()
-                yield (
-                    b"--frame\r\n",
-                    b"Content-Type: image/jpeg\r\n\r\n" + frame + b"\r\n",
-                )
+                yield b"--frame\r\n" b"Content-Type: image/jpeg\r\n\r\n" + frame + b"\r\n"
 
     def run_server(self):
         @app.route("/")

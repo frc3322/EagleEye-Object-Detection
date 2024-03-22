@@ -17,7 +17,7 @@ class ObjectDetectionConstants:
 
 class DisplayConstants:
     show_output = True
-    render_output = True
+    render_output = False
     debug = False
     run_web_server = True
 
