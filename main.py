@@ -167,7 +167,8 @@ def calculation_thread(camera_data):
 
             frame = image_data[camera_data["name"]]
 
-            cv2.imshow("frame2", frame)
+            if DisplayConstants.show_output:
+                cv2.imshow("frame2", frame)
 
             cv2.waitKey(1)
 
