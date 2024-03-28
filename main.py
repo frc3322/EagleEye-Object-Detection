@@ -22,6 +22,11 @@ from threading import Thread, Lock
 
 from networktables import NetworkTables
 
+# ANSI color codes
+RED = "\033[91m"
+GREEN = "\033[92m"
+RESET = "\033[0m"
+
 if DisplayConstants.render_output:
     from sapphirerenderer import SapphireRenderer, ParticleManager
 
@@ -56,9 +61,9 @@ def print_available_cameras():
     for i in range(10):  # Check up to camera index 9 (adjust if needed)
         cap = cv2.VideoCapture(i)
         if not cap.isOpened():
-            print(f"Camera index {i} is not available.")
+            print(RED + f"Camera index {i} is not available." + RESET)
         else:
-            print(f"Camera index {i} is available.")
+            print(GREEN + f"Camera index {i} is available." + RESET)
             cap.release()
 
 
