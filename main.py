@@ -292,7 +292,6 @@ def calculation_thread(camera_data):
 
 
 def main():
-    start = time()
     global running
     try:
         for camera in CameraConstants.camera_list:
@@ -310,10 +309,6 @@ def main():
         sleep(2)
 
         while running:
-
-            # if time is above 30 seconds set running to false
-            if time() - start > 30:
-                running = False
 
             global_list = []
             for camera in detection_data.keys():
