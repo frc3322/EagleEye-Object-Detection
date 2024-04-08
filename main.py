@@ -20,6 +20,7 @@ from point_rotation import rotate2d
 from time import time, sleep
 from threading import Thread, Lock
 from log import log
+from log_server import run
 
 from networktables import NetworkTables
 
@@ -379,12 +380,14 @@ def main():
         cv2.destroyAllWindows()
 
         running = False
-        log(running)
 
         exit(0)
 
 
 if __name__ == "__main__":
+    log_server_thread = Thread(target=run, args=())
+    log_server_thread.start()
+
     while True:
         try:
             main()

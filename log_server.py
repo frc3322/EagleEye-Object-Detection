@@ -1,27 +1,20 @@
-from http.server import BaseHTTPRequestHandler, HTTPServer
+from flask import Flask, send_file
+
+app = Flask(__name__)
 
 
-class RequestHandler(BaseHTTPRequestHandler):
-    def do_GET(self):
-        if self.path == "/log":
-            try:
-                with open("log.txt", "rb") as file:
-                    self.send_response(200)
-                    self.send_header("Content-type", "text/plain")
-                    self.end_headers()
-                    self.wfile.write(file.read())
-            except FileNotFoundError:
-                self.send_error(404, "File Not Found: {}".format(self.path))
-        else:
-            self.send_error(404, "Not Found: {}".format(self.path))
+@app.route('/log')
+def serve_text_file():
+    print("Serving log file")
+    try:
+        return send_file('log.txt', mimetype='text/plain')
+    except FileNotFoundError:
+        return "File not found", 404
 
 
-def run(server_class=HTTPServer, handler_class=RequestHandler, port=8000):
-    server_address = ("", port)
-    httpd = server_class(server_address, handler_class)
-    print("Starting server on localhost:{}...".format(port))
-    httpd.serve_forever()
+def run():
+    app.run(debug=False)
 
 
-if __name__ == "__main__":
-    run()
+if __name__ == '__main__':
+    app.run(debug=True)
