@@ -7,7 +7,7 @@ class NetworkTableConstants:
 
 class ObjectDetectionConstants:
     input_size = 640
-    model_path = "model_creation/color_model.onnx"
+    model_path = "model_creation/best.onnx"
     confidence_threshold = 0.65
 
     note_combined_threshold = (

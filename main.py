@@ -2,10 +2,11 @@ from scytheautoupdate import check_for_updates
 import subprocess
 import sys
 
-if check_for_updates():
-    print("Changes have been made to main.py. Restarting the program...")
-    subprocess.run([sys.executable, "main.py"])
-    sys.exit()
+if False:
+    if check_for_updates():
+        print("Changes have been made to main.py. Restarting the program...")
+        subprocess.run([sys.executable, "main.py"])
+        sys.exit()
 
 import cv2
 from constants import (
@@ -19,8 +20,6 @@ import numpy as np
 from point_rotation import rotate2d
 from time import time, sleep
 from threading import Thread, Lock
-from log import log
-from log_server import run
 
 from networktables import NetworkTables
 
@@ -28,8 +27,6 @@ from networktables import NetworkTables
 RED = "\033[91m"
 GREEN = "\033[92m"
 RESET = "\033[0m"
-
-running = True
 
 if DisplayConstants.render_output:
     from sapphirerenderer import SapphireRenderer, ParticleManager
@@ -52,6 +49,7 @@ NetworkTables.initialize(server=NetworkTableConstants.server_address)
 
 sd = NetworkTables.getTable("SmartDashboard")
 
+running = True
 ready_count = 0
 
 detection_data = {}
@@ -64,9 +62,9 @@ def print_available_cameras():
     for i in range(10):  # Check up to camera index 9 (adjust if needed)
         cap = cv2.VideoCapture(i)
         if not cap.isOpened():
-            log(RED + f"Camera index {i} is not available." + RESET)
+            print(RED + f"Camera index {i} is not available." + RESET)
         else:
-            log(GREEN + f"Camera index {i} is available." + RESET)
+            print(GREEN + f"Camera index {i} is available." + RESET)
             cap.release()
 
 
@@ -127,14 +125,14 @@ def camera_thread(camera_data):
     global image_data
 
     if not cap.isOpened():
-        log(f"\nCould not open video device {camera_data['camera_id']}\n")
-        log("Available cameras:")
-        log("-" * 50)
+        print(f"\nCould not open video device {camera_data['camera_id']}\n")
+        print("Available cameras:")
+        print("-" * 50)
         print_available_cameras()
-        log("-" * 50)
+        print("-" * 50)
         raise ImportError("Could not open video device")
 
-    while running:
+    while True:
         _, frame = cap.read()
 
         image_data[camera_data["name"]] = frame
@@ -147,7 +145,7 @@ def camera_thread(camera_data):
 
 
 def calculation_thread(camera_data):
-    log(f"Starting thread for {camera_data['name']}")
+    print(f"Starting thread for {camera_data['name']}")
 
     # pre-calculate values
     width_angle_per_pixel = (
@@ -230,7 +228,7 @@ def calculation_thread(camera_data):
                     robot_position = list(filter(lambda x: x != "", robot_position))
 
                     if DisplayConstants.debug:
-                        log(f"Robot position: {robot_position}")
+                        print(f"Robot position: {robot_position}")
 
                     pose_x = float(robot_position[0])
                     pose_y = float(robot_position[1])
@@ -250,12 +248,12 @@ def calculation_thread(camera_data):
                     )
 
                     if DisplayConstants.debug:
-                        log("-" * 25 + f"thread for {camera_data['name']}" + "-" * 25)
-                        log(f"global_position: {global_position}\n")
-                        log(
+                        print("-" * 25 + f"thread for {camera_data['name']}" + "-" * 25)
+                        print(f"global_position: {global_position}\n")
+                        print(
                             f"x_angle: {round(x_angle, 2)}, y_angle: {round(y_angle, 2)}"
                         )
-                        log(f"Robot position: {pose_x}, {pose_y}, {pose_angle}")
+                        print(f"Robot position: {pose_x}, {pose_y}, {pose_angle}")
 
                     note_dict = {
                         "x": global_position[0],
@@ -268,7 +266,7 @@ def calculation_thread(camera_data):
                 with lock:
                     detection_data[camera_data["name"]] = note_data
                     if DisplayConstants.debug:
-                        log(f"detection_data: {detection_data}")
+                        print(f"detection_data: {detection_data}")
 
             if DisplayConstants.show_output:
                 # Display the resulting frame
@@ -278,22 +276,17 @@ def calculation_thread(camera_data):
                 cv2.waitKey(1)
 
                 if DisplayConstants.debug:
-                    log(f"Total frame time: {(time() - start_time) * 1000}ms\n")
-                    log(f"Est fps: {1 / (time() - start_time)}\n")
+                    print(f"Total frame time: {(time() - start_time) * 1000}ms\n")
+                    print(f"Est fps: {1 / (time() - start_time)}\n")
 
-                    log("-" * 60)
+                    print("-" * 60)
 
     except KeyboardInterrupt:
-        log("Keyboard interrupt")
-
-        # Release the capture
-        cap.release()
-
+        print("Keyboard interrupt")
         raise KeyboardInterrupt
 
 
 def main():
-    global running
     try:
         for camera in CameraConstants.camera_list:
             t = Thread(target=camera_thread, args=(camera,))
@@ -309,8 +302,7 @@ def main():
 
         sleep(2)
 
-        while running:
-
+        while True:
             global_list = []
             for camera in detection_data.keys():
                 for note in detection_data[camera]:
@@ -369,29 +361,21 @@ def main():
                 combined_list = "None"
 
             if DisplayConstants.debug:
-                log(f"Combined list: {combined_list}")
+                print(f"Combined list: {combined_list}")
             sd.putValue("notes", combined_list)
 
             sleep(0.1)
 
     except KeyboardInterrupt:
-        log("Keyboard interrupt")
+        print("Keyboard interrupt")
 
         cv2.destroyAllWindows()
 
+        global running
         running = False
 
         exit(0)
 
 
 if __name__ == "__main__":
-    log_server_thread = Thread(target=run, args=())
-    log_server_thread.start()
-
-    while True:
-        try:
-            main()
-        except Exception as e:
-            log(f"An error occurred: {e}")
-            log("Restarting the program...")
-            continue
+    main()
