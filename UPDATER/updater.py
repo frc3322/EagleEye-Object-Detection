@@ -1,6 +1,7 @@
 import socket
 import pickle
 import os
+from time import sleep
 
 # Configuration
 TCP_PORT = 12345       # Must match the server's TCP port
@@ -55,6 +56,7 @@ def tcp_client(server_ip, folder_path):
     try:
         print(f"[TCP] Connecting to server at {server_ip}:{TCP_PORT} ...")
         tcp_sock.connect((server_ip, TCP_PORT))
+        sleep(5)
         send_folder(folder_path, tcp_sock)
         print("[TCP] Folder sent successfully.")
     except Exception as e:
@@ -63,7 +65,7 @@ def tcp_client(server_ip, folder_path):
         tcp_sock.close()
 
 if __name__ == '__main__':
-    folder_path = r"E:\Ceph-Mirror\Python-Files\Projects\FIRST-Note-Detection"  # Replace with actual folder path
+    folder_path = "src"  # Replace with actual folder path
     server_ip = discover_server()
     if server_ip:
         tcp_client(server_ip, folder_path)
