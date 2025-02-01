@@ -1,85 +1,103 @@
 import os
 import socket
 import struct
-import json
+import tempfile
+import shutil  # For make_archive
+import configparser
 
-MULTICAST_GROUP = "239.255.255.250"
-DISCOVERY_PORT = 5002
-TRANSFER_PORT = 5001
-CACHE_FILE = os.path.expanduser("~\\.folder_cache")
+# Configuration
+TCP_PORT = 332299  # Must match the server's TCP port
+CONFIG_FILE = "client_config.ini"  # To cache the folder path
 
-def discover_server():
-    """Uses multicast to find the server."""
-    with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
-        sock.settimeout(3)
-        try:
-            print("[Client] Searching for server...")
-            sock.sendto(b"DISCOVER", (MULTICAST_GROUP, DISCOVERY_PORT))
-            data, addr = sock.recvfrom(1024)
-            if data == b"SERVER_HERE":
-                print(f"[Client] Server found at {addr[0]}")
-                return addr[0]
-        except socket.timeout:
-            print("[Client] No response from server.")
-    return None
+def get_folder_path():
+    """
+    Check for a cached folder path in CONFIG_FILE.
+    If found, ask the user if they want to use it.
+    Otherwise, ask the user to provide a folder path.
+    """
+    config = configparser.ConfigParser()
+    folder_path = None
 
-def load_cached_path():
-    """Loads the cached folder path if available."""
-    if os.path.exists(CACHE_FILE):
-        with open(CACHE_FILE, "r") as f:
-            return json.load(f).get("folder_path")
-    return None
+    if os.path.exists(CONFIG_FILE):
+        config.read(CONFIG_FILE)
+        if "Settings" in config and "folder_path" in config["Settings"]:
+            cached_path = config["Settings"]["folder_path"]
+            use_cached = input(f"Use cached folder path '{cached_path}'? (Y/n): ").strip().lower()
+            if use_cached in ("", "y", "yes"):
+                folder_path = cached_path
 
-def save_cached_path(folder_path):
-    """Saves the folder path to cache."""
-    with open(CACHE_FILE, "w") as f:
-        json.dump({"folder_path": folder_path}, f)
+    while not folder_path or not os.path.isdir(folder_path):
+        folder_path = input("Enter the full path to the folder you want to send: ").strip()
+        if not os.path.isdir(folder_path):
+            print("The provided path is not a valid folder. Please try again.")
 
-def send_folder(server_ip, folder_path):
-    """Sends a folder to the server."""
-    file_list = []
-    for root, _, files in os.walk(folder_path):
-        for file in files:
-            full_path = os.path.join(root, file)
-            rel_path = os.path.relpath(full_path, folder_path)
-            file_list.append((rel_path, full_path))
+    # Cache the folder path in the config file.
+    if "Settings" not in config:
+        config["Settings"] = {}
+    config["Settings"]["folder_path"] = folder_path
+    with open(CONFIG_FILE, "w") as configfile:
+        config.write(configfile)
+    return folder_path
 
-    num_files = len(file_list)
-    print(f"[Client] Sending {num_files} files to {server_ip}...")
+def create_zip_of_folder(folder_path):
+    """
+    Compress the given folder into a ZIP file.
+    Returns the full path to the created ZIP file.
+    """
+    # Create a temporary file (we only need the base name; shutil.make_archive adds .zip)
+    temp_dir = tempfile.mkdtemp(prefix="ziptemp_")
+    base_name = os.path.join(temp_dir, "archive")
+    # Create the zip archive. This will zip the folder contents.
+    # The archive will contain the folder's base name as the top-level folder.
+    archive_path = shutil.make_archive(base_name, 'zip', root_dir=folder_path)
+    return archive_path, temp_dir
 
+def send_zip_to_server(zip_path, server_ip):
+    """
+    Open the ZIP file, send its size and contents to the server.
+    """
+    filesize = os.path.getsize(zip_path)
+    print(f"[TCP] Preparing to send {filesize} bytes to server {server_ip}:{TCP_PORT}")
+
+    with open(zip_path, "rb") as f:
+        file_data = f.read()
+
+    # Create a TCP socket and connect
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:
-        with socket.create_connection((server_ip, TRANSFER_PORT)) as sock:
-            sock.sendall(struct.pack("!I", num_files))
-
-            for rel_path, full_path in file_list:
-                rel_path_bytes = rel_path.replace("\\", "/").encode('utf-8')  # Ensure cross-platform path compatibility
-                sock.sendall(struct.pack("!I", len(rel_path_bytes)))
-                sock.sendall(rel_path_bytes)
-
-                file_size = os.path.getsize(full_path)
-                sock.sendall(struct.pack("!Q", file_size))
-
-                with open(full_path, 'rb') as f:
-                    while chunk := f.read(4096):
-                        sock.sendall(chunk)
-
-                print(f"[Client] Sent {rel_path}")
-        print("[Client] Folder transfer complete.")
+        sock.connect((server_ip, TCP_PORT))
+        # First send 8 bytes representing the file size in network byte order
+        sock.sendall(struct.pack('!Q', filesize))
+        # Then send the file data
+        sock.sendall(file_data)
+        print("[TCP] File sent successfully.")
     except Exception as e:
-        print(f"[Client] Error: {e}")
+        print(f"[TCP] Error sending file: {e}")
+    finally:
+        sock.close()
 
-if __name__ == "__main__":
-    cached_path = load_cached_path()
-    folder_path = input(f"Enter folder path (Press Enter to use cached: {cached_path}): ").strip() or cached_path
+if __name__ == '__main__':
+    # Get the folder path from the user or config
+    folder_path = get_folder_path()
+    print(f"[CLIENT] Using folder: {folder_path}")
 
-    if not folder_path or not os.path.isdir(folder_path):
-        print("[Client] Invalid folder path.")
-        exit(1)
+    # Create a zip archive of the folder
+    zip_path, temp_dir = create_zip_of_folder(folder_path)
+    print(f"[CLIENT] Created ZIP archive: {zip_path}")
 
-    save_cached_path(folder_path)
-    server_ip = discover_server()
+    # Ask for the server IP address
+    server_ip = input("Enter the server IP address: ").strip()
 
-    if server_ip:
-        send_folder(server_ip, folder_path)
-    else:
-        print("[Client] No server found.")
+    # Send the zip archive to the server
+    send_zip_to_server(zip_path, server_ip)
+
+    # Clean up the temporary zip and directory
+    try:
+        if os.path.exists(zip_path):
+            os.remove(zip_path)
+        if os.path.exists(temp_dir):
+            shutil.rmtree(temp_dir)
+    except Exception as cleanup_error:
+        print(f"[CLIENT] Cleanup error: {cleanup_error}")
+
+    print("[CLIENT] Done.")
