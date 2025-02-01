@@ -4,6 +4,7 @@ import threading
 import pickle
 import os
 import shutil
+import subprocess
 
 # Configuration
 TCP_PORT = 12345       # Port for TCP connections (data exchange)
@@ -15,6 +16,14 @@ RECEIVE_DIR = os.path.expanduser("../src")  # Directory to save received files
 def sys_print(msg):
     print(msg)
     sys.stdout.flush()
+
+def restart_vision():
+    try:
+        subprocess.run(["systemctl", "restart", "ScytheVision"], check=True)
+        sys_print("ScytheVision restarted successfully.")
+    except subprocess.CalledProcessError as e:
+        sys_print(f"Failed to restart ScytheVision: {e}")
+
 
 def udp_discovery_listener():
     """
@@ -96,6 +105,7 @@ def tcp_server():
         except Exception as e:
             sys_print(f"[TCP] Error processing data: {e}")
         finally:
+
             conn.close()
             sys_print(f"[TCP] Connection closed with {addr}")
 
