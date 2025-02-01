@@ -7,7 +7,7 @@ import zipfile
 import tempfile
 
 # Configuration
-TCP_PORT = 332299  # Port for incoming TCP connections
+TCP_PORT = 3399  # Port for incoming TCP connections
 TARGET_FOLDER = "FIRST-Object-Detection"  # Folder to replace
 
 def recvall(sock, count):

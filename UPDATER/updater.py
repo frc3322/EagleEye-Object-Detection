@@ -6,7 +6,7 @@ import shutil  # For make_archive
 import configparser
 
 # Configuration
-TCP_PORT = 332299  # Must match the server's TCP port
+TCP_PORT = 3399  # Must match the server's TCP port
 CONFIG_FILE = "client_config.ini"  # To cache the folder path
 
 def get_folder_path():
