@@ -23,7 +23,7 @@ def udp_discovery_listener():
 
     while True:
         try:
-            data, addr = udp_sock.recvfrom(1024)
+            data, addr = udp_sock.recvfrom(9988)
             message = data.decode('utf-8')
             if message == DISCOVERY_MSG:
                 print(f"[UDP] Discovery request received from {addr}")
@@ -59,7 +59,13 @@ def tcp_server():
     TCP server to accept client connections and receive data.
     """
     tcp_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    tcp_sock.bind(('', TCP_PORT))
+    tcp_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)  # Allow reusing the address
+    try:
+        tcp_sock.bind(('', TCP_PORT))
+    except OSError as e:
+        print(f"[TCP] Port {TCP_PORT} already in use. Retrying...")
+        return  # Exit or handle the error differently
+
     tcp_sock.listen(1)
     print(f"[TCP] Server listening on port {TCP_PORT}")
 

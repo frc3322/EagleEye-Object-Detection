@@ -22,7 +22,7 @@ def discover_server(timeout=3):
     try:
         print("[UDP] Sending discovery broadcast...")
         udp_sock.sendto(DISCOVERY_MSG.encode('utf-8'), (BROADCAST_ADDR, UDP_PORT))
-        data, addr = udp_sock.recvfrom(1024)
+        data, addr = udp_sock.recvfrom(9988)
         if data.decode('utf-8') == RESPONSE_MSG:
             print(f"[UDP] Server discovered at {addr[0]}")
             return addr[0]
