@@ -1,7 +1,3 @@
-import cv2
-from time import time
-
-from numba.cuda import stream
 from ultralytics import YOLO
 from constants import ObjectDetectionConstants
 from format_conversion.convert_model import convert_model

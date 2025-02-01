@@ -1,5 +1,5 @@
 import numpy as np
-from logging import log
+from custom_logging import log
 
 
 def rotate2d(point, angle):

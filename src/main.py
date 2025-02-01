@@ -1,15 +1,15 @@
+import os
+
+# Set working directory to the current directory of the script
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
+
 import numpy as np
 import subprocess
 import sys
-import os
 
 from detector import Detector
-from logging.log import log
-from logging.log_server import run
+from custom_logging.log import log
 from math_conversions import calculate_local_position, convert_to_global_position, pixels_to_degrees
-
-run()
-# runs the log server
 
 import cv2
 from constants import (
@@ -29,8 +29,11 @@ RESET = "\033[0m"
 
 # run web server that streams video
 if DisplayConstants.run_web_server:
-    from web_server import VideoStreamer
+    from web_server import VideoStreamer, LogStreamer, run
+
     video_streamer = VideoStreamer()
+    log_streamer = LogStreamer()
+    run()
 
 # As a client to connect to a robot
 NetworkTables.initialize(server=NetworkTableConstants.server_address)
@@ -40,13 +43,17 @@ smart_dashboard.putNumber("active_model", 0)
 smart_dashboard.putBoolean("restart_object_detection", False)
 
 
+def sys_print(msg):
+    print(msg)
+    sys.stdout.flush()
+
 def print_available_cameras():
     for i in range(10):  # Check up to camera index 9 (adjust if needed)
         cap = cv2.VideoCapture(i)
         if not cap.isOpened():
-            print(RED + f"Camera index {i} is not available." + RESET)
+            sys_print(RED + f"Camera index {i} is not available." + RESET)
         else:
-            print(GREEN + f"Camera index {i} is available." + RESET)
+            sys_print(GREEN + f"Camera index {i} is available." + RESET)
             cap.release()
 
 
@@ -124,7 +131,7 @@ class ScytheVision:
 
 
     def detection_thread(self, camera_data, detector):
-        print(f"Starting thread for {camera_data['name']} camera")
+        sys_print(f"Starting thread for {camera_data['name']} camera")
         results_stream = detector.detect()
 
         detections = []

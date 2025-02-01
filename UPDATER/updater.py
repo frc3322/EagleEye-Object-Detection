@@ -46,7 +46,7 @@ def send_folder(folder_path, tcp_sock):
                 tcp_sock.sendall(len(file_info).to_bytes(4, 'big'))  # Send length first
                 tcp_sock.sendall(file_info)  # Then send data
                 print(f"[TCP] Sent file: {file_path}")
-                sleep(0.1)  # Allow the server to process
+                sleep(0.05)  # Allow the server to process
 
     tcp_sock.sendall(b"EOF")  # End of transmission
     print("[TCP] Folder transfer complete.")
@@ -59,7 +59,7 @@ def tcp_client(server_ip, folder_path):
     try:
         print(f"[TCP] Connecting to server at {server_ip}:{TCP_PORT} ...")
         tcp_sock.connect((server_ip, TCP_PORT))
-        sleep(5)
+        sleep(1)
         send_folder(folder_path, tcp_sock)
         print("[TCP] Folder sent successfully.")
     except Exception as e:

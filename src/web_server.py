@@ -1,9 +1,9 @@
+import threading
+import time
 from flask import Flask, Response
 import cv2
-import threading
 
 app = Flask(__name__)
-
 
 class VideoStreamer:
     def __init__(self):
@@ -29,8 +29,31 @@ class VideoStreamer:
                 mimetype="multipart/x-mixed-replace; boundary=frame",
             )
 
-        # Run Flask app in a separate thread
-        server_thread = threading.Thread(
-            target=app.run, kwargs={"host": "0.0.0.0", "port": 5000, "debug": False}
-        )
-        server_thread.start()
+class LogStreamer:
+    def generate_log(self):
+        """Generator that yields new lines from the log file as they are written."""
+        while True:
+            with open('log.txt', 'r') as log_file:
+                log_file.seek(0, 2)  # Move to the end of the file
+                while True:
+                    line = log_file.readline()
+                    if line:
+                        yield line
+                    else:
+                        time.sleep(1)  # Sleep for a second before checking for new content
+
+    @app.route('/log')
+    def stream_log(self):
+        """Streams the log file content to the client."""
+        return Response(self.generate_log(), content_type='text/plain;charset=utf-8')
+
+def run():
+    # Create a thread to run the Flask app
+    thread = threading.Thread(target=app.run, kwargs={"host": "0.0.0.0", "port": 5000, 'debug': False})
+    thread.start()
+
+if __name__ == '__main__':
+    # Initialize video streamer and log streamer
+    video_streamer = VideoStreamer()
+    log_streamer = LogStreamer()
+    run()
