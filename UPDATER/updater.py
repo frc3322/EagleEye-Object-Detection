@@ -1,34 +1,30 @@
-#!/usr/bin/env python3
 import os
 import socket
 import struct
 import json
 
-BROADCAST_PORT = 5002
+MULTICAST_GROUP = "239.255.255.250"
+DISCOVERY_PORT = 5002
 TRANSFER_PORT = 5001
-CACHE_FILE = os.path.expanduser("~/.folder_cache")
+CACHE_FILE = os.path.expanduser("~\\.folder_cache")
 
 def discover_server():
-    """Broadcasts a UDP message to find the server."""
-    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-    sock.settimeout(3)
-
-    try:
-        print("[Client] Searching for server...")
-        sock.sendto(b"DISCOVER", ("<broadcast>", BROADCAST_PORT))
-        data, addr = sock.recvfrom(1024)
-        if data == b"SERVER_HERE":
-            print(f"[Client] Server found at {addr[0]}")
-            return addr[0]
-    except socket.timeout:
-        print("[Client] Server not found. Make sure it's running.")
-    finally:
-        sock.close()
+    """Uses multicast to find the server."""
+    with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
+        sock.settimeout(10)
+        try:
+            print("[Client] Searching for server...")
+            sock.sendto(b"DISCOVER", (MULTICAST_GROUP, DISCOVERY_PORT))
+            data, addr = sock.recvfrom(1024)
+            if data == b"SERVER_HERE":
+                print(f"[Client] Server found at {addr[0]}")
+                return addr[0]
+        except socket.timeout:
+            print("[Client] No response from server.")
     return None
 
 def load_cached_path():
-    """Loads the last used folder path from cache."""
+    """Loads the cached folder path if available."""
     if os.path.exists(CACHE_FILE):
         with open(CACHE_FILE, "r") as f:
             return json.load(f).get("folder_path")
@@ -52,12 +48,11 @@ def send_folder(server_ip, folder_path):
     print(f"[Client] Sending {num_files} files to {server_ip}...")
 
     try:
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-            sock.connect((server_ip, TRANSFER_PORT))
+        with socket.create_connection((server_ip, TRANSFER_PORT)) as sock:
             sock.sendall(struct.pack("!I", num_files))
 
             for rel_path, full_path in file_list:
-                rel_path_bytes = rel_path.encode('utf-8')
+                rel_path_bytes = rel_path.replace("\\", "/").encode('utf-8')  # Ensure cross-platform path compatibility
                 sock.sendall(struct.pack("!I", len(rel_path_bytes)))
                 sock.sendall(rel_path_bytes)
 
@@ -69,7 +64,6 @@ def send_folder(server_ip, folder_path):
                         sock.sendall(chunk)
 
                 print(f"[Client] Sent {rel_path}")
-
         print("[Client] Folder transfer complete.")
     except Exception as e:
         print(f"[Client] Error: {e}")
