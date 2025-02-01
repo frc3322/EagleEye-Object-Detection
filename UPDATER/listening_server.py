@@ -83,29 +83,33 @@ def tcp_server():
             remove_and_create_folder(RECEIVE_DIR)
 
             while True:
-                length_data = conn.recv(4)  # Read 4-byte length
+                # Read 4-byte length first
+                length_data = conn.recv(4)
                 if not length_data:
                     break  # Connection closed
+
+                # If we receive "EOF", terminate the transfer
+                if length_data == b"EOF":
+                    sys_print("[TCP] Folder transfer complete.")
+                    restart_vision()
+                    break
+
                 length = int.from_bytes(length_data, 'big')
 
+                # Read the actual file data
                 data = b""
                 while len(data) < length:
                     packet = conn.recv(length - len(data))
                     if not packet:
-                        break
+                        raise ValueError("Incomplete data received")  # Prevent empty pickle.loads()
                     data += packet
 
-                if data == b"EOF":  # End of transmission
-                    sys_print("[TCP] Folder transfer complete.")
-                    break
-
-                file_info = pickle.loads(data)  # Load data
+                file_info = pickle.loads(data)  # Deserialize file info
                 save_file(file_info)
 
         except Exception as e:
             sys_print(f"[TCP] Error processing data: {e}")
         finally:
-
             conn.close()
             sys_print(f"[TCP] Connection closed with {addr}")
 
