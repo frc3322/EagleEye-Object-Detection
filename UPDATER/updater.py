@@ -3,7 +3,6 @@ import os
 import socket
 import struct
 import threading
-import tkinter as tk
 import tkinter.filedialog as filedialog
 import customtkinter as ctk
 
