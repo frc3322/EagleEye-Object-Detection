@@ -86,9 +86,9 @@ def restart_service(service_name):
         print(f"[Server] Failed to restart service: {e}")
 
 def main():
-    listen_ip = "0.0.0.0"
-    listen_port = 5001
-    target_folder = "/opt/scythevision"  # Folder to update
+    listen_ip = "10.0.0.158"
+    listen_port = 3329
+    target_folder = "/FIRST-Note-Detection"  # Folder to update
     service_name = "ScytheVision.service"
 
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_sock:

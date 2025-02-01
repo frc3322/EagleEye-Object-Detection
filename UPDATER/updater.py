@@ -97,7 +97,7 @@ class ClientApp(ctk.CTk):
         self.ip_entry.pack(pady=(20, 10))
 
         # Server Port entry
-        self.port_entry = ctk.CTkEntry(self, placeholder_text="Server Port (e.g., 5001)")
+        self.port_entry = ctk.CTkEntry(self, placeholder_text="Server Port (e.g., 3329)")
         self.port_entry.pack(pady=(0, 20))
 
         # Transfer button
