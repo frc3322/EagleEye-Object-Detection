@@ -9,7 +9,7 @@ TCP_PORT = 12345       # Port for TCP connections (data exchange)
 UDP_PORT = 54321       # Port for UDP discovery messages
 DISCOVERY_MSG = "DISCOVER_SERVER"
 RESPONSE_MSG = "SERVER_HERE"
-RECEIVE_DIR = os.path.expanduser("/src")  # Directory to save received files
+RECEIVE_DIR = os.path.expanduser("../src")  # Directory to save received files
 
 def udp_discovery_listener():
     """
