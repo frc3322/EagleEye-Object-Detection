@@ -1,57 +1,119 @@
+#!/usr/bin/env python3
+import os
 import socket
-import pickle
+import struct
+import configparser
 import time
+import threading
 
 # Configuration
-TCP_PORT = 12345       # Must match the server's TCP port
-UDP_PORT = 54321       # Must match the server's UDP discovery port
-DISCOVERY_MSG = "DISCOVER_SERVER"
-RESPONSE_MSG = "SERVER_HERE"
-BROADCAST_ADDR = '<broadcast>'  # Special address for UDP broadcast
+UDP_PORT = 12346  # Port for UDP broadcasting
+TCP_PORT = 12345  # Port for server's TCP connection
+CONFIG_FILE = "client_config.ini"  # To cache the folder path
 
-def discover_server(timeout=3):
+def get_folder_path():
     """
-    Send a UDP broadcast to discover the server.
-    Returns the server's IP address if found, otherwise None.
+    Check for a cached folder path in CONFIG_FILE.
+    If found, ask the user if they want to use it.
+    Otherwise, ask the user to provide a folder path.
     """
-    udp_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
-    udp_sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-    udp_sock.settimeout(timeout)
+    config = configparser.ConfigParser()
+    folder_path = None
 
+    if os.path.exists(CONFIG_FILE):
+        config.read(CONFIG_FILE)
+        if "Settings" in config and "folder_path" in config["Settings"]:
+            cached_path = config["Settings"]["folder_path"]
+            use_cached = input(f"Use cached folder path '{cached_path}'? (Y/n): ").strip().lower()
+            if use_cached in ("", "y", "yes"):
+                folder_path = cached_path
+
+    while not folder_path or not os.path.isdir(folder_path):
+        folder_path = input("Enter the full path to the folder you want to send: ").strip()
+        if not os.path.isdir(folder_path):
+            print("The provided path is not a valid folder. Please try again.")
+
+    # Cache the folder path in the config file.
+    if "Settings" not in config:
+        config["Settings"] = {}
+    config["Settings"]["folder_path"] = folder_path
+    with open(CONFIG_FILE, "w") as configfile:
+        config.write(configfile)
+    return folder_path
+
+def find_server_ip():
+    """
+    Broadcast a message to find the server's IP address.
+    """
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
+    sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+    sock.sendto(b"FIND_SERVER", ('<broadcast>', UDP_PORT))  # Broadcast message
+    print(f"[CLIENT] Sending broadcast to find server on port {UDP_PORT}...")
+
+    # Wait for the server response
+    sock.settimeout(5)  # Timeout after 5 seconds
     try:
-        print("[UDP] Sending discovery broadcast...")
-        udp_sock.sendto(DISCOVERY_MSG.encode('utf-8'), (BROADCAST_ADDR, UDP_PORT))
-        data, addr = udp_sock.recvfrom(1024)
-        if data.decode('utf-8') == RESPONSE_MSG:
-            print(f"[UDP] Server discovered at {addr[0]}")
-            return addr[0]
+        response, _ = sock.recvfrom(1024)  # Receive response from server
+        server_ip = response.decode().split(":")[0]  # Get the IP address part
+        print(f"[CLIENT] Server found: {server_ip}")
+        return server_ip
     except socket.timeout:
-        print("[UDP] Discovery timed out. No server found.")
-    except Exception as e:
-        print(f"[UDP] Error during discovery: {e}")
+        print("[CLIENT] Server not found in time.")
+        return None
 
-    return None
+def send_folder_to_server(folder_path, server_ip):
+    """
+    Open the folder, send its contents (files) to the server.
+    """
+    folder_name = os.path.basename(folder_path)
+    print(f"[CLIENT] Sending folder: {folder_name}")
 
-def tcp_client(server_ip):
-    """
-    Connect to the server via TCP and send a message.
-    """
-    tcp_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    # Create a TCP socket and connect to the server
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:
-        print(f"[TCP] Connecting to server at {server_ip}:{TCP_PORT} ...")
-        tcp_sock.connect((server_ip, TCP_PORT))
-        message = {"message": "Hello from Windows client!"}
-        data = pickle.dumps(message)
-        tcp_sock.send(data)
-        print("[TCP] Message sent.")
+        sock.connect((server_ip, TCP_PORT))
+        print(f"[CLIENT] Connected to server {server_ip}:{TCP_PORT}")
+
+        # Send folder name first
+        folder_name_len = len(folder_name)
+        sock.sendall(struct.pack('!I', folder_name_len))
+        sock.sendall(folder_name.encode('utf-8'))
+
+        # Iterate over the files in the folder and send them one by one
+        for root, dirs, files in os.walk(folder_path):
+            for file_name in files:
+                file_path = os.path.join(root, file_name)
+                file_size = os.path.getsize(file_path)
+
+                # Send file size and name
+                sock.sendall(struct.pack('!Q', file_size))
+                sock.sendall(struct.pack('!I', len(file_name)))
+                sock.sendall(file_name.encode('utf-8'))
+
+                # Send the file content
+                with open(file_path, 'rb') as f:
+                    file_data = f.read()
+                    sock.sendall(file_data)
+
+                print(f"[CLIENT] Sent file: {file_name}")
+
+        print("[CLIENT] Folder sent successfully.")
+
     except Exception as e:
-        print(f"[TCP] Error: {e}")
+        print(f"[CLIENT] Error sending folder: {e}")
     finally:
-        tcp_sock.close()
+        sock.close()
+        print(f"[CLIENT] Connection closed.")
 
 if __name__ == '__main__':
-    server_ip = discover_server()
+    # Get the folder path from the user or config
+    folder_path = get_folder_path()
+    print(f"[CLIENT] Using folder: {folder_path}")
+
+    # Automatically find the server IP using broadcast
+    server_ip = find_server_ip()
     if server_ip:
-        tcp_client(server_ip)
-    else:
-        print("Server could not be discovered.")
+        # Send the folder to the server
+        send_folder_to_server(folder_path, server_ip)
+
+    print("[CLIENT] Done.")
