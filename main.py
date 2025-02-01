@@ -1,5 +1,4 @@
 import numpy as np
-from scytheautoupdate import check_for_updates
 import subprocess
 import sys
 import os
@@ -8,11 +7,6 @@ from detector import Detector
 from logging.log import log
 from logging.log_server import run
 from math_conversions import calculate_local_position, convert_to_global_position, pixels_to_degrees
-
-if not os.path.exists("no_update.txt") and check_for_updates():
-    log("Changes have been made to main.py. Restarting the program...")
-    subprocess.run([sys.executable, "main.py"])
-    sys.exit()
 
 run()
 # runs the log server
