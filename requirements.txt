@@ -7,3 +7,4 @@ torch~=2.7.0.dev20250127+cu126
 future~=1.0.0
 customtkinter~=5.2.2
 numba~=0.61.0
+tqdm~=4.67.1

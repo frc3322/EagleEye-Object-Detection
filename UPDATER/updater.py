@@ -2,53 +2,76 @@
 import os
 import socket
 import struct
-import shutil
+import threading
+import tkinter as tk
 import tkinter.filedialog as filedialog
 import customtkinter as ctk
-import threading
 
 # ---------------------------
-# Core functions (from client.py)
+# Core functions for sending a folder (without zipping)
 # ---------------------------
-def zip_folder(folder_path):
+def send_folder(server_ip, server_port, folder_path, status_callback=None):
     """
-    Compress the specified folder into a zip archive.
-    The zip archive is created in the current working directory.
-    Returns the filename of the zip archive.
-    """
-    base_name = os.path.basename(os.path.normpath(folder_path))
-    zip_file = shutil.make_archive(base_name, 'zip', folder_path)
-    return zip_file
+    Sends the contents of folder_path to the server.
 
-def send_file(server_ip, server_port, file_path, status_callback=None):
+    Protocol:
+      1. Send a 4-byte unsigned integer: number of files.
+      2. For each file (found via os.walk):
+         a. Send a 4-byte unsigned integer: length of the file’s relative path in bytes.
+         b. Send the relative file path (UTF-8 encoded).
+         c. Send an 8-byte unsigned long long: file size in bytes.
+         d. Send the file’s data.
     """
-    Sends a file to the specified server IP and port.
-    status_callback (if provided) is a function that will be called with status messages.
-    """
-    file_size = os.path.getsize(file_path)
+    # Build list of files to send.
+    file_list = []
+    for root, dirs, files in os.walk(folder_path):
+        for file in files:
+            full_path = os.path.join(root, file)
+            # Compute path relative to folder_path.
+            rel_path = os.path.relpath(full_path, folder_path)
+            file_list.append((rel_path, full_path))
+    num_files = len(file_list)
+    if status_callback:
+        status_callback(f"Found {num_files} files to send.")
+
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
             if status_callback:
                 status_callback(f"Connecting to {server_ip}:{server_port} ...")
             sock.connect((server_ip, server_port))
             if status_callback:
-                status_callback("Connected. Sending file size...")
-            # Send file size (8 bytes, network byte order)
-            sock.sendall(struct.pack("!Q", file_size))
+                status_callback("Connected to server.")
+            # Send number of files (4 bytes).
+            sock.sendall(struct.pack("!I", num_files))
 
-            # Send the file data in chunks.
-            sent = 0
-            with open(file_path, 'rb') as f:
-                while True:
-                    chunk = f.read(4096)
-                    if not chunk:
-                        break
-                    sock.sendall(chunk)
-                    sent += len(chunk)
-                    if status_callback:
-                        status_callback(f"Sent {sent} of {file_size} bytes...")
+            # Loop through files.
+            for rel_path, full_path in file_list:
+                # Send relative path length and relative path.
+                rel_path_bytes = rel_path.encode('utf-8')
+                path_len = len(rel_path_bytes)
+                sock.sendall(struct.pack("!I", path_len))
+                sock.sendall(rel_path_bytes)
+
+                # Get file size and send it (8 bytes).
+                file_size = os.path.getsize(full_path)
+                sock.sendall(struct.pack("!Q", file_size))
+
+                # Send the file data.
+                sent = 0
+                with open(full_path, 'rb') as f:
+                    while sent < file_size:
+                        chunk = f.read(4096)
+                        if not chunk:
+                            break
+                        sock.sendall(chunk)
+                        sent += len(chunk)
+                        if status_callback:
+                            status_callback(f"Sending {rel_path}... ({sent}/{file_size} bytes)")
+                if status_callback:
+                    status_callback(f"Finished sending {rel_path}.")
+
             if status_callback:
-                status_callback("File transfer complete.")
+                status_callback("Folder transfer complete.")
     except Exception as e:
         if status_callback:
             status_callback(f"Error during transfer: {e}")
@@ -60,7 +83,7 @@ class ClientApp(ctk.CTk):
     def __init__(self):
         super().__init__()
         self.title("Folder Update Client")
-        self.geometry("500x300")
+        self.geometry("500x350")
 
         # Folder selection
         self.folder_path = ""
@@ -83,7 +106,7 @@ class ClientApp(ctk.CTk):
         self.transfer_button.pack(pady=(0, 20))
 
         # Status display (multi-line text box)
-        self.status_text = ctk.CTkTextbox(self, width=480, height=100)
+        self.status_text = ctk.CTkTextbox(self, width=480, height=120)
         self.status_text.pack(pady=(0, 10))
         self.status_text.insert("end", "Status messages will appear here...\n")
         self.status_text.configure(state="disabled")
@@ -103,7 +126,6 @@ class ClientApp(ctk.CTk):
         self.status_text.configure(state="disabled")
 
     def transfer_folder(self):
-        # Retrieve server IP and port.
         server_ip = self.ip_entry.get().strip()
         port_str = self.port_entry.get().strip()
         if not self.folder_path:
@@ -118,30 +140,12 @@ class ClientApp(ctk.CTk):
             self.log_status("Error: Port must be an integer.")
             return
 
-        # Run the file transfer in a separate thread to avoid blocking the GUI.
+        # Run the transfer in a separate thread.
         threading.Thread(target=self.process_transfer, args=(server_ip, server_port), daemon=True).start()
 
     def process_transfer(self, server_ip, server_port):
-        self.log_status("Compressing folder...")
-        try:
-            zip_file = zip_folder(self.folder_path)
-            self.log_status(f"Created archive: {zip_file}")
-        except Exception as e:
-            self.log_status(f"Error compressing folder: {e}")
-            return
-
-        self.log_status("Starting file transfer...")
-        # Define a callback to log status messages from send_file.
-        def callback(msg):
-            self.log_status(msg)
-        send_file(server_ip, server_port, zip_file, status_callback=callback)
-
-        # Clean up the temporary zip file.
-        try:
-            os.remove(zip_file)
-            self.log_status("Temporary archive removed.")
-        except Exception as e:
-            self.log_status(f"Error removing temporary archive: {e}")
+        self.log_status("Starting folder transfer...")
+        send_folder(server_ip, server_port, self.folder_path, status_callback=self.log_status)
 
 if __name__ == "__main__":
     app = ClientApp()
