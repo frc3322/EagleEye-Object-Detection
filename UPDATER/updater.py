@@ -1,12 +1,12 @@
+#!/usr/bin/env python3
 import os
 import socket
 import struct
-import tempfile
-import shutil  # For make_archive
 import configparser
+import time
 
 # Configuration
-TCP_PORT = 3399  # Must match the server's TCP port
+TCP_PORT = 12345  # Must match the server's TCP port
 CONFIG_FILE = "client_config.ini"  # To cache the folder path
 
 def get_folder_path():
@@ -39,65 +39,59 @@ def get_folder_path():
         config.write(configfile)
     return folder_path
 
-def create_zip_of_folder(folder_path):
+def send_folder_to_server(folder_path, server_ip):
     """
-    Compress the given folder into a ZIP file.
-    Returns the full path to the created ZIP file.
+    Open the folder, send its contents (files) to the server.
     """
-    # Create a temporary file (we only need the base name; shutil.make_archive adds .zip)
-    temp_dir = tempfile.mkdtemp(prefix="ziptemp_")
-    base_name = os.path.join(temp_dir, "archive")
-    # Create the zip archive. This will zip the folder contents.
-    # The archive will contain the folder's base name as the top-level folder.
-    archive_path = shutil.make_archive(base_name, 'zip', root_dir=folder_path)
-    return archive_path, temp_dir
+    folder_name = os.path.basename(folder_path)
+    print(f"[CLIENT] Sending folder: {folder_name}")
 
-def send_zip_to_server(zip_path, server_ip):
-    """
-    Open the ZIP file, send its size and contents to the server.
-    """
-    filesize = os.path.getsize(zip_path)
-    print(f"[TCP] Preparing to send {filesize} bytes to server {server_ip}:{TCP_PORT}")
-
-    with open(zip_path, "rb") as f:
-        file_data = f.read()
-
-    # Create a TCP socket and connect
+    # Create a TCP socket and connect to the server
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:
         sock.connect((server_ip, TCP_PORT))
-        # First send 8 bytes representing the file size in network byte order
-        sock.sendall(struct.pack('!Q', filesize))
-        # Then send the file data
-        sock.sendall(file_data)
-        print("[TCP] File sent successfully.")
+        print(f"[CLIENT] Connected to server {server_ip}:{TCP_PORT}")
+
+        # Send folder name first
+        folder_name_len = len(folder_name)
+        sock.sendall(struct.pack('!I', folder_name_len))
+        sock.sendall(folder_name.encode('utf-8'))
+
+        # Iterate over the files in the folder and send them one by one
+        for root, dirs, files in os.walk(folder_path):
+            for file_name in files:
+                file_path = os.path.join(root, file_name)
+                file_size = os.path.getsize(file_path)
+
+                # Send file size and name
+                sock.sendall(struct.pack('!Q', file_size))
+                sock.sendall(struct.pack('!I', len(file_name)))
+                sock.sendall(file_name.encode('utf-8'))
+
+                # Send the file content
+                with open(file_path, 'rb') as f:
+                    file_data = f.read()
+                    sock.sendall(file_data)
+
+                print(f"[CLIENT] Sent file: {file_name}")
+
+        print("[CLIENT] Folder sent successfully.")
+
     except Exception as e:
-        print(f"[TCP] Error sending file: {e}")
+        print(f"[CLIENT] Error sending folder: {e}")
     finally:
         sock.close()
+        print(f"[CLIENT] Connection closed.")
 
 if __name__ == '__main__':
     # Get the folder path from the user or config
     folder_path = get_folder_path()
     print(f"[CLIENT] Using folder: {folder_path}")
 
-    # Create a zip archive of the folder
-    zip_path, temp_dir = create_zip_of_folder(folder_path)
-    print(f"[CLIENT] Created ZIP archive: {zip_path}")
-
     # Ask for the server IP address
     server_ip = input("Enter the server IP address: ").strip()
 
-    # Send the zip archive to the server
-    send_zip_to_server(zip_path, server_ip)
-
-    # Clean up the temporary zip and directory
-    try:
-        if os.path.exists(zip_path):
-            os.remove(zip_path)
-        if os.path.exists(temp_dir):
-            shutil.rmtree(temp_dir)
-    except Exception as cleanup_error:
-        print(f"[CLIENT] Cleanup error: {cleanup_error}")
+    # Send the folder to the server
+    send_folder_to_server(folder_path, server_ip)
 
     print("[CLIENT] Done.")

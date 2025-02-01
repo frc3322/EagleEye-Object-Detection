@@ -1,13 +1,13 @@
+#!/usr/bin/env python3
 import socket
 import threading
 import struct
 import os
 import shutil
-import zipfile
 import tempfile
 
 # Configuration
-TCP_PORT = 3399  # Port for incoming TCP connections
+TCP_PORT = 12345  # Port for incoming TCP connections
 TARGET_FOLDER = "FIRST-Object-Detection"  # Folder to replace
 
 def recvall(sock, count):
@@ -23,78 +23,42 @@ def recvall(sock, count):
 def handle_client(conn, addr):
     print(f"[TCP] Connection accepted from {addr}")
     try:
-        # First, read an 8-byte header that represents the file size
-        header = recvall(conn, 8)
-        if len(header) < 8:
-            print(f"[TCP] Incomplete header received from {addr}")
-            return
+        # First, receive the folder name (assuming it’s a UTF-8 encoded string)
+        folder_name_len = struct.unpack('!I', recvall(conn, 4))[0]
+        folder_name = recvall(conn, folder_name_len).decode('utf-8')
 
-        file_size = struct.unpack('!Q', header)[0]
-        print(f"[TCP] Expecting {file_size} bytes from {addr}")
+        # Receive folder contents
+        while True:
+            # Receive a file size header
+            header = recvall(conn, 8)
+            if len(header) < 8:
+                break  # No more files to receive
 
-        # Read the file data
-        received = 0
-        chunks = []
-        while received < file_size:
-            chunk = conn.recv(min(4096, file_size - received))
-            if not chunk:
-                break
-            chunks.append(chunk)
-            received += len(chunk)
-        zip_data = b''.join(chunks)
-        if len(zip_data) != file_size:
-            print(f"[TCP] Error: Expected {file_size} bytes but received {len(zip_data)} bytes.")
-            return
+            file_size = struct.unpack('!Q', header)[0]
+            file_name_len = struct.unpack('!I', recvall(conn, 4))[0]
+            file_name = recvall(conn, file_name_len).decode('utf-8')
 
-        # Save the received data as a temporary zip file
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".zip") as tmp_zip_file:
-            tmp_zip_file.write(zip_data)
-            tmp_zip_name = tmp_zip_file.name
-        print(f"[TCP] Received ZIP file saved as {tmp_zip_name}")
+            print(f"[TCP] Receiving file {file_name} ({file_size} bytes)")
 
-        # Create a temporary directory for extraction
-        temp_extract_dir = tempfile.mkdtemp(prefix="extract_")
+            # Receive the file content
+            file_data = recvall(conn, file_size)
 
-        try:
-            with zipfile.ZipFile(tmp_zip_name, "r") as zip_ref:
-                zip_ref.extractall(temp_extract_dir)
-            print(f"[TCP] ZIP file extracted to {temp_extract_dir}")
-        except Exception as e:
-            print(f"[TCP] Error extracting ZIP file: {e}")
-            return
+            # Make sure the directory exists, then write the file
+            target_dir = os.path.join(TARGET_FOLDER, folder_name)
+            os.makedirs(target_dir, exist_ok=True)
 
-        # Remove the current TARGET_FOLDER if it exists
-        if os.path.exists(TARGET_FOLDER):
-            shutil.rmtree(TARGET_FOLDER)
-            print(f"[TCP] Removed existing folder: {TARGET_FOLDER}")
+            file_path = os.path.join(target_dir, file_name)
+            with open(file_path, 'wb') as f:
+                f.write(file_data)
+            print(f"[TCP] File saved: {file_path}")
 
-        # Now, determine how to re-create the TARGET_FOLDER.
-        # If the ZIP file contained a single top-level folder, move it.
-        # Otherwise, create TARGET_FOLDER and move all items in.
-        extracted_items = os.listdir(temp_extract_dir)
-        if len(extracted_items) == 1 and os.path.isdir(os.path.join(temp_extract_dir, extracted_items[0])):
-            src_path = os.path.join(temp_extract_dir, extracted_items[0])
-            shutil.move(src_path, TARGET_FOLDER)
-            print(f"[TCP] Moved folder {src_path} to {TARGET_FOLDER}")
-        else:
-            os.makedirs(TARGET_FOLDER, exist_ok=True)
-            for item in extracted_items:
-                shutil.move(os.path.join(temp_extract_dir, item), TARGET_FOLDER)
-            print(f"[TCP] Moved extracted items into {TARGET_FOLDER}")
+        print(f"[TCP] Finished receiving folder {folder_name} from {addr}")
 
     except Exception as e:
         print(f"[TCP] Error handling client {addr}: {e}")
     finally:
         conn.close()
         print(f"[TCP] Connection closed with {addr}")
-        # Clean up temporary files/directories
-        try:
-            if os.path.exists(tmp_zip_name):
-                os.remove(tmp_zip_name)
-            if os.path.exists(temp_extract_dir):
-                shutil.rmtree(temp_extract_dir)
-        except Exception as cleanup_error:
-            print(f"[TCP] Cleanup error: {cleanup_error}")
 
 def tcp_server():
     server_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
