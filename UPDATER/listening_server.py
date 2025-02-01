@@ -55,17 +55,9 @@ def save_file(file_info):
     print(f"[TCP] Received and saved file: {file_path}")
 
 def tcp_server():
-    """
-    TCP server to accept client connections and receive data.
-    """
     tcp_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    tcp_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)  # Allow reusing the address
-    try:
-        tcp_sock.bind(('', TCP_PORT))
-    except OSError as e:
-        print(f"[TCP] Port {TCP_PORT} already in use. Retrying...")
-        return  # Exit or handle the error differently
-
+    tcp_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    tcp_sock.bind(('', TCP_PORT))
     tcp_sock.listen(1)
     print(f"[TCP] Server listening on port {TCP_PORT}")
 
@@ -74,17 +66,28 @@ def tcp_server():
         print(f"[TCP] Connection accepted from {addr}")
 
         try:
-            # Remove the existing folder and create a fresh one
             remove_and_create_folder(RECEIVE_DIR)
 
             while True:
-                data = conn.recv(4096)
-                if data == b"EOF":  # End of folder transmission
+                length_data = conn.recv(4)  # Read 4-byte length
+                if not length_data:
+                    break  # Connection closed
+                length = int.from_bytes(length_data, 'big')
+
+                data = b""
+                while len(data) < length:
+                    packet = conn.recv(length - len(data))
+                    if not packet:
+                        break
+                    data += packet
+
+                if data == b"EOF":  # End of transmission
                     print("[TCP] Folder transfer complete.")
                     break
-                if data:
-                    file_info = pickle.loads(data)
-                    save_file(file_info)
+
+                file_info = pickle.loads(data)  # Load data
+                save_file(file_info)
+
         except Exception as e:
             print(f"[TCP] Error processing data: {e}")
         finally:

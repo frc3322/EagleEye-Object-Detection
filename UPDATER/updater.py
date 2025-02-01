@@ -34,18 +34,18 @@ def discover_server(timeout=3):
     return None
 
 def send_folder(folder_path, tcp_sock):
-    """
-    Send the folder contents to the server.
-    """
     for root, dirs, files in os.walk(folder_path):
         for file in files:
             file_path = os.path.join(root, file)
             with open(file_path, 'rb') as f:
                 file_data = f.read()
-                file_info = {"file_name": os.path.relpath(file_path, folder_path), "file_data": file_data}
-                tcp_sock.send(pickle.dumps(file_info))  # Send each file one by one
+                file_info = pickle.dumps({"file_name": os.path.relpath(file_path, folder_path), "file_data": file_data})
+                tcp_sock.sendall(len(file_info).to_bytes(4, 'big'))  # Send length first
+                tcp_sock.sendall(file_info)  # Then send data
                 print(f"[TCP] Sent file: {file_path}")
-    tcp_sock.send(b"EOF")  # End of folder transmission
+                sleep(0.1)  # Allow the server to process
+
+    tcp_sock.sendall(b"EOF")  # End of transmission
     print("[TCP] Folder transfer complete.")
 
 def tcp_client(server_ip, folder_path):
@@ -65,7 +65,7 @@ def tcp_client(server_ip, folder_path):
         tcp_sock.close()
 
 if __name__ == '__main__':
-    folder_path = "src"  # Replace with actual folder path
+    folder_path = r"/Users/darkeden/PycharmProjects/FIRST-Object-Detection/src"  # Replace with actual folder path
     server_ip = discover_server()
     if server_ip:
         tcp_client(server_ip, folder_path)
