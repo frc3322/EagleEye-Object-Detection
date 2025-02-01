@@ -1,5 +1,6 @@
 import os
 import datetime
+import sys
 
 log_file = "log.txt"
 
@@ -39,3 +40,4 @@ def log(message):
     with open(log_file, "a") as file:
         file.write(f"[{now.strftime('%Y-%m-%d %H:%M:%S')}]:{message}\n")
     print(message)
+    sys.stdout.flush()
