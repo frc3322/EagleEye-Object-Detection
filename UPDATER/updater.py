@@ -11,7 +11,7 @@ CACHE_FILE = os.path.expanduser("~\\.folder_cache")
 def discover_server():
     """Uses multicast to find the server."""
     with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
-        sock.settimeout(10)
+        sock.settimeout(3)
         try:
             print("[Client] Searching for server...")
             sock.sendto(b"DISCOVER", (MULTICAST_GROUP, DISCOVERY_PORT))
