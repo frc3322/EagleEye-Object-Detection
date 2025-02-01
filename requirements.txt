@@ -2,6 +2,6 @@ opencv-python
 numpy
 pynetworktables
 ultralytics
-roboflow
 scytheautoupdate
-sapphire-renderer
+Flask
+torch

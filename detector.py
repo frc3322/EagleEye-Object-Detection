@@ -1,67 +1,61 @@
 import cv2
 from time import time
+
+from numba.cuda import stream
 from ultralytics import YOLO
-from constants import ObjectDetectionConstants, DisplayConstants
-
-image_size = (ObjectDetectionConstants.input_size, ObjectDetectionConstants.input_size)
-
-# Load model
-model = YOLO(ObjectDetectionConstants.model_path, task="detect")
+from constants import ObjectDetectionConstants
+from format_conversion.convert_model import convert_model
+from format_conversion.detect_devices import detect_hardware
 
 
-def detect(image, verbose=False, return_image=False):
-    """
-    Detects notes in the given image
-    :param image: the image to detect notes in
-    :param verbose: print out the time taken and estimated FPS
-    :param return_image: whether to return the image with the detected notes overlaid
-    :return: returns the detections if return_image is False, otherwise returns the detections and the image with the
-    detected notes overlaid (detections, image)
-    """
-    start = time()
+class Detector:
+    def __init__(self, model_paths, model_index=0):
+        """
+        Initializes the detector with the given model paths
+        :param model_paths: the paths to the models to use
+        :param model_index: the index of the model to use
+        """
+        model_paths = [convert_model(model) for model in model_paths]
+        self.models = [YOLO(model, task="detect") for model in model_paths]
+        self.gpu_present, self.tpu_present = detect_hardware()
+        self.model_index = model_index
 
-    # Resize frame directly using the interpolation method for better quality
-    image = cv2.resize(image, image_size)
+    def set_model_index(self, model_index):
+        """
+        Sets the index of the model to use
+        :param model_index: the index of the model to use
+        """
+        self.model_index = model_index
 
-    # Detect notes
-    detections = model.predict(
-        image,
-        show=False,
-        device="cpu",
-        conf=ObjectDetectionConstants.confidence_threshold,
-    )
+    def get_class_names(self):
+        """
+        Gets the class names of the model
+        :return: the class names of the model
+        """
+        return self.models[self.model_index].names
 
-    if return_image:
-        for detection in detections:
-            boxes = detection.boxes
-            for box in boxes:
-                conf = round(box.conf[0].item(), 2)
+    def detect(self, camera_index):
+        """
+        Detects notes in the given image
+        :param camera_index: the index of the camera to use
+        :return: returns the detections generator
+        """
+        if not self.tpu_present:
+            detections = self.models[self.model_index].predict(
+                camera_index,
+                show=False,
+                device="gpu" if self.gpu_present else "cpu",
+                conf=ObjectDetectionConstants.confidence_threshold,
+                imgsz=ObjectDetectionConstants.input_size,
+                stream=True
+            )
+        else:
+            detections = self.models[self.model_index].predict(
+                camera_index,
+                show=False,
+                conf=ObjectDetectionConstants.confidence_threshold,
+                imgsz=ObjectDetectionConstants.input_size,
+                stream=True
+            )
 
-                x1, y1, x2, y2 = (
-                    int(box.xyxy[0][0].item()),
-                    int(box.xyxy[0][1].item()),
-                    int(box.xyxy[0][2].item()),
-                    int(box.xyxy[0][3].item()),
-                )
-
-                cv2.rectangle(image, (x1, y1), (x2, y2), (0, 255, 0), 2)
-                cv2.putText(
-                    image,
-                    str(conf),
-                    (x1, y1),
-                    cv2.FONT_HERSHEY_SIMPLEX,
-                    1,
-                    (0, 255, 0),
-                    2,
-                )
-        if verbose:
-            print(f"Detection Time taken in ms: {(time() - start) * 1000}ms")
-            print(f"Detection Estimated FPS: {1 / (time() - start)}")
-
-        return detections, image
-
-    if verbose:
-        print(f"Detection Time taken in ms: {(time() - start) * 1000}ms")
-        print(f"Detection Estimated FPS: {1 / (time() - start)}")
-
-    return detections
+        return detections
