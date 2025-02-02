@@ -1,7 +1,14 @@
+import sys
+
 from ultralytics import YOLO
 from constants import ObjectDetectionConstants
 from format_conversion.convert_model import convert_model
 from format_conversion.detect_devices import detect_hardware
+
+
+def sys_print(msg):
+    print(msg)
+    sys.stdout.flush()
 
 
 class Detector:
@@ -37,6 +44,7 @@ class Detector:
         :return: returns the detections generator
         """
         if not self.tpu_present:
+            sys_print("Using GPU")
             detections = self.models[self.model_index].predict(
                 camera_index,
                 show=False,
@@ -46,12 +54,14 @@ class Detector:
                 stream=True
             )
         else:
+            sys_print("Using TPU")
             detections = self.models[self.model_index].predict(
                 camera_index,
                 show=False,
                 conf=ObjectDetectionConstants.confidence_threshold,
                 imgsz=ObjectDetectionConstants.input_size,
-                stream=True
+                stream=True,
+                device="tpu:0"
             )
 
         return detections

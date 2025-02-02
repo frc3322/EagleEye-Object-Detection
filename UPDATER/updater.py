@@ -3,6 +3,7 @@ import pickle
 import os
 from time import sleep
 import sys
+import argparse
 
 # Configuration
 TCP_PORT = 12345       # Must match the server's TCP port
@@ -24,6 +25,8 @@ def discover_server(timeout=3):
         print("[UDP] Sending discovery broadcast...")
         sys.stdout.flush()
         udp_sock.sendto(DISCOVERY_MSG.encode('utf-8'), (BROADCAST_ADDR, UDP_PORT))
+        print(f"[UDP] Sent discovery message to {BROADCAST_ADDR}:{UDP_PORT}")
+        sys.stdout.flush()
         data, addr = udp_sock.recvfrom(9988)
         if data.decode('utf-8') == RESPONSE_MSG:
             print(f"[UDP] Server discovered at {addr[0]}")
@@ -42,7 +45,10 @@ def send_folder(folder_path, tcp_sock):
             file_path = os.path.join(root, file)
             with open(file_path, 'rb') as f:
                 file_data = f.read()
-                file_info = pickle.dumps({"file_name": os.path.relpath(file_path, folder_path), "file_data": file_data})
+                file_info = pickle.dumps({
+                    "file_name": os.path.relpath(file_path, folder_path).replace("\\", "/"),
+                    "file_data": file_data
+                })
                 tcp_sock.sendall(len(file_info).to_bytes(4, 'big'))  # Send length first
                 tcp_sock.sendall(file_info)  # Then send data
                 print(f"[TCP] Sent file: {file_path}")
@@ -68,8 +74,33 @@ def tcp_client(server_ip, folder_path):
         tcp_sock.close()
 
 if __name__ == '__main__':
-    folder_path = r"/Users/darkeden/PycharmProjects/FIRST-Object-Detection/src"  # Replace with actual folder path
-    server_ip = discover_server()
+    parser = argparse.ArgumentParser(
+        description="Client for sending a folder to a server via TCP. "
+                    "Either supply a hostname/IP for a direct connection, or let the client use UDP broadcast discovery."
+    )
+    parser.add_argument(
+        "-H", "--hostname",
+        type=str,
+        help="Hostname or IP address of the server for a direct connection."
+    )
+    parser.add_argument(
+        "-f", "--folder",
+        type=str,
+        required=True,
+        help="Path to the folder that should be sent."
+    )
+
+    args = parser.parse_args()
+
+    folder_path = args.folder
+    server_ip = args.hostname
+
+    if server_ip:
+        print(f"[INFO] Using direct connection to server at: {server_ip}")
+    else:
+        print("[INFO] No hostname provided. Attempting UDP discovery...")
+        server_ip = discover_server()
+
     if server_ip:
         tcp_client(server_ip, folder_path)
     else:

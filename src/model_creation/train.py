@@ -32,10 +32,15 @@ def main():
         ),  # edit to change how long you will train
         batch=-1,
         name=input("Enter the name of the model: "),  # change to new model name
-        cache=True,
+        cache="disk",
         device=input(
             "Enter what device to train with, 0 is first gpu, cpu is for cpu, and an array of numbers for multi gpu: "
         ),  # 0 is the first GPU, remove this line to use CPU, use array to use multiple GPUs, GPU is much faster
+        patience=int(
+            input(
+                "Enter the patience value, 20 is a good starting point: "
+            )
+        ),  # change to change confidence threshold
     )
 
     print("Training complete.")

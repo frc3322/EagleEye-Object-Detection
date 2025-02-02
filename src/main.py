@@ -57,18 +57,12 @@ def print_available_cameras():
             cap.release()
 
 
-def restart():
-    log("Restarting the program...")
-    subprocess.run([sys.executable, "main.py"])
-    sys.exit()
-
-
 class ScytheVision:
     def __init__(self):
         model_paths = [
             f"models/{model}"
             for model in os.listdir("models")
-            if model.endswith(".pt") and not model.startswith("_")
+            if not model.endswith(".md") and not model.startswith("_")
         ]
         log(f"Loading models: {model_paths}")
         self.detector = Detector(model_paths)
@@ -87,8 +81,7 @@ class ScytheVision:
 
         log("All threads running")
 
-        smart_dashboard.addEntryListener(self.change_model, key="active_model", immediateNotify=True, flags=NetworkTables.NotifyFlags.UPDATE)
-        smart_dashboard.addEntryListener(restart, key="restart_object_detection", immediateNotify=True, flags=NetworkTables.NotifyFlags.UPDATE, localNotify=False)
+        smart_dashboard.addEntryListener(self.change_model, key="active_model", immediateNotify=True, localNotify=False)
 
         while True:
             collected_detections = {}
@@ -129,15 +122,18 @@ class ScytheVision:
                     [detection["global_position"].tolist() for detection in detections]
                 )
 
+            sleep(0.1)
+
 
     def detection_thread(self, camera_data, detector):
         sys_print(f"Starting thread for {camera_data['name']} camera")
-        results_stream = detector.detect()
+        results_stream = detector.detect(camera_data["camera_id"])
 
         detections = []
 
         for results in results_stream:
-            for box in results[0].boxes:
+            print(f"Speeds: {results.speed}")
+            for box in results.boxes:
                 box_class = self.detector.get_class_names()[int(box.cls[0])]
                 box_confidence = box.conf.tolist()[0]
                 box_x = box.xywh.tolist()[0][0] * ObjectDetectionConstants.input_size
@@ -162,11 +158,14 @@ class ScytheVision:
                     "distance": distance,
                 })
 
+            video_streamer.update_image(results.plot())
+
             with self.data_lock:
                 self.data[camera_data["name"]] = detections
 
-    def change_model(self, model_index):
-        self.detector.set_model_index(model_index)
+    def change_model(self, _, __, value, is_new):
+        if is_new:
+            self.detector.set_model_index(int(value))
 
 
 if __name__ == "__main__":

@@ -19,7 +19,7 @@ def convert_model(model_path: str, regenerate: bool = False):
 
     if gpu_present:
         # check if model already is .engine
-        if ".engine" in model_name_no_ext:
+        if ".engine" in model_path:
             sys_print("Model already converted")
             return model_path
 
@@ -32,7 +32,7 @@ def convert_model(model_path: str, regenerate: bool = False):
         model_path = model.export(format="TensorRT", device="gpu")
         sys_print(f"Successfully converted to TensorRT: {model_path}")
     elif tpu_present:
-        if "_edgetpu.tflite" in model_name_no_ext:
+        if "_edgetpu.tflite" in model_path:
             sys_print("Model already converted")
             return model_path
 
@@ -45,7 +45,7 @@ def convert_model(model_path: str, regenerate: bool = False):
         model_path = model.export(format="edgetpu")
         sys_print(f"Model converted successfully to EdgeTPU: {model_path}")
     else:
-        if ".onnx" in model_name_no_ext:
+        if ".onnx" in model_path:
             sys_print("Model already converted")
             return model_path
 

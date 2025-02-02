@@ -30,7 +30,7 @@ def check_amd_gpu():
 def check_coral_tpu():
     try:
         result = subprocess.run(["lsusb"], capture_output=True, text=True)
-        return "Global Unichip Corp" in result.stdout
+        return ("Global Unichip Corp" in result.stdout) or ("Google Inc" in result.stdout)
     except Exception:
         return False
 
