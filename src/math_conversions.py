@@ -27,7 +27,7 @@ def pixels_to_degrees(pixel_position, total_pixels, fov):
     """
     pixel_percent = pixel_position / (total_pixels / 2)
 
-    if pixel_percent > 1:
+    if pixel_percent.any() > 1:
         log("ERROR: Pixel position is greater than total pixels")
 
     return ((pixel_percent - 0.5) * fov) + 30

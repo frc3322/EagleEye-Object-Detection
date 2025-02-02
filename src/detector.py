@@ -19,7 +19,11 @@ class Detector:
         :param model_index: the index of the model to use
         """
         model_paths = [convert_model(model) for model in model_paths]
-        self.models = [YOLO(model, task="detect") for model in model_paths]
+        self.models = []
+        for model_path in model_paths:
+            sys_print(f"Loading model from {model_path}")
+            self.models.append(YOLO(model_path, task="detect"))
+            sys_print(f"Model loaded from {model_path}")
         self.gpu_present, self.tpu_present = detect_hardware()
         self.model_index = model_index
 

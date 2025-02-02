@@ -2,10 +2,6 @@ from ultralytics import YOLO
 
 
 def main():
-    input(
-        "This script will train the model, make sure you have the dataset ready and unziped in this folder, "
-        "press enter to continue: "
-    )
 
     print("Loading model...")
 
