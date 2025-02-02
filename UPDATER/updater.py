@@ -4,6 +4,7 @@ import os
 from time import sleep
 import sys
 import argparse
+from tqdm import tqdm
 
 # Configuration
 TCP_PORT = 12345       # Must match the server's TCP port
@@ -25,12 +26,9 @@ def discover_server(timeout=3):
         print("[UDP] Sending discovery broadcast...")
         sys.stdout.flush()
         udp_sock.sendto(DISCOVERY_MSG.encode('utf-8'), (BROADCAST_ADDR, UDP_PORT))
-        print(f"[UDP] Sent discovery message to {BROADCAST_ADDR}:{UDP_PORT}")
-        sys.stdout.flush()
         data, addr = udp_sock.recvfrom(9988)
         if data.decode('utf-8') == RESPONSE_MSG:
             print(f"[UDP] Server discovered at {addr[0]}")
-            sys.stdout.flush()
             return addr[0]
     except socket.timeout:
         print("[UDP] Discovery timed out. No server found.")
@@ -40,9 +38,10 @@ def discover_server(timeout=3):
     return None
 
 def send_folder(folder_path, tcp_sock):
-    for root, dirs, files in os.walk(folder_path):
-        for file in files:
-            file_path = os.path.join(root, file)
+    files = [os.path.join(root, file) for root, _, files in os.walk(folder_path) for file in files]
+
+    with tqdm(total=len(files), desc="Sending files", unit="file") as pbar:
+        for file_path in files:
             with open(file_path, 'rb') as f:
                 file_data = f.read()
                 file_info = pickle.dumps({
@@ -51,8 +50,8 @@ def send_folder(folder_path, tcp_sock):
                 })
                 tcp_sock.sendall(len(file_info).to_bytes(4, 'big'))  # Send length first
                 tcp_sock.sendall(file_info)  # Then send data
-                print(f"[TCP] Sent file: {file_path}")
                 sleep(0.05)  # Allow the server to process
+                pbar.update(1)
 
     tcp_sock.sendall(b"EOF")  # End of transmission
     print("[TCP] Folder transfer complete.")

@@ -9,7 +9,7 @@ class NetworkTableConstants:
 
 
 class ObjectDetectionConstants:
-    input_size = 640
+    input_size = 320
     model_path = "model_creation/model.pt"
     confidence_threshold = 0.65
 

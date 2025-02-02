@@ -133,6 +133,8 @@ class ScytheVision:
 
         for results in results_stream:
             print(f"Speeds: {results.speed}")
+            video_streamer.update_image(results.plot())
+
             for box in results.boxes:
                 box_class = self.detector.get_class_names()[int(box.cls[0])]
                 box_confidence = box.conf.tolist()[0]
@@ -157,8 +159,6 @@ class ScytheVision:
                     "global_position": object_global_position,
                     "distance": distance,
                 })
-
-            video_streamer.update_image(results.plot())
 
             with self.data_lock:
                 self.data[camera_data["name"]] = detections
