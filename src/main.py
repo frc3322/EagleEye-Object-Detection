@@ -68,7 +68,7 @@ class ScytheVision:
         model_paths = [
             f"models/{model}"
             for model in os.listdir("models")
-            if model.endswith(".pt")
+            if model.endswith(".pt") and not model.startswith("_")
         ]
         log(f"Loading models: {model_paths}")
         self.detector = Detector(model_paths)
