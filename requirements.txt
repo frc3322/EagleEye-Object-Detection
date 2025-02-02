@@ -4,14 +4,3 @@ pynetworktables~=2021.0.0
 ultralytics~=8.3.68
 Flask~=3.1.0
 numba~=0.61.0
-
-tensorflow
-onnx2tf
-tf_keras
-sng4onnx
-onnx_graphsurgeon
-onnx
-onnxslim
-tflite_support
-flatbuffers
-onnxruntime
