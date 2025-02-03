@@ -141,12 +141,12 @@ class ScytheVision:
                 box_x = box.xywh.tolist()[0][0] * ObjectDetectionConstants.input_size
                 box_y = box.xywh.tolist()[0][1] * ObjectDetectionConstants.input_size
 
-                yaw_angle = pixels_to_degrees(np.array([box_x, box_y]), ObjectDetectionConstants.input_size, camera_data)
+                yaw_angle = pixels_to_degrees(np.array([box_x, box_y]), ObjectDetectionConstants.input_size, camera_data["fov"])
                 object_local_position = calculate_local_position(
                     np.array([box_x, box_y]), ObjectDetectionConstants.input_size, camera_data
                 )
                 object_global_position = convert_to_global_position(
-                    object_local_position, smart_dashboard.getNumberArray("robot_position", [0, 0]), smart_dashboard.getNumber("robot_angle", 0)
+                    object_local_position, smart_dashboard.getNumberArray("robot_position", np.array([0, 0])), smart_dashboard.getNumber("robot_angle", 0)
                 )
 
                 distance = np.linalg.norm(object_local_position)
