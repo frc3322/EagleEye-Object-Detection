@@ -1,0 +1,13 @@
+[Unit]
+Description=EagleEye Object Detection Updater Utility
+After=network.target
+
+[Service]
+Type=idle
+Restart=on-failure
+User=root
+WorkingDirectory=/root/EagleEye-Object-Detection
+ExecStart=/root/EagleEye-Object-Detection/venv/bin/python /root/EagleEye-Object-Detection/UPDATER/listening_server.py
+
+[Install]
+WantedBy=multi-user.target
