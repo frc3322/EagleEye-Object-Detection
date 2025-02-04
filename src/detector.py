@@ -4,11 +4,7 @@ from ultralytics import YOLO
 from constants import ObjectDetectionConstants
 from format_conversion.convert_model import convert_model
 from format_conversion.detect_devices import detect_hardware
-
-
-def sys_print(msg):
-    print(msg)
-    sys.stdout.flush()
+from custom_logging.log import log
 
 
 class Detector:
@@ -21,9 +17,9 @@ class Detector:
         model_paths = [convert_model(model) for model in model_paths]
         self.models = []
         for model_path in model_paths:
-            sys_print(f"Loading model from {model_path}")
+            log(f"Loading model from {model_path}")
             self.models.append(YOLO(model_path, task="detect"))
-            sys_print(f"Model loaded from {model_path}")
+            log(f"Model loaded from {model_path}")
         self.gpu_present, self.tpu_present = detect_hardware()
         self.model_index = model_index
 
@@ -48,24 +44,26 @@ class Detector:
         :return: returns the detections generator
         """
         if not self.tpu_present:
-            sys_print("Using GPU")
+            log("Using GPU")
             detections = self.models[self.model_index].predict(
                 camera_index,
                 show=False,
                 device="gpu" if self.gpu_present else "cpu",
                 conf=ObjectDetectionConstants.confidence_threshold,
                 imgsz=ObjectDetectionConstants.input_size,
-                stream=True
+                stream=True,
+                verbose = False
             )
         else:
-            sys_print("Using TPU")
+            log("Using TPU")
             detections = self.models[self.model_index].predict(
                 camera_index,
                 show=False,
                 conf=ObjectDetectionConstants.confidence_threshold,
                 imgsz=ObjectDetectionConstants.input_size,
                 stream=True,
-                device="tpu:0"
+                device="tpu:0",
+                verbose=False
             )
 
         return detections

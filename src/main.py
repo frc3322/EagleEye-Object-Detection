@@ -4,8 +4,6 @@ import os
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 import numpy as np
-import sys
-
 from detector import Detector
 from custom_logging.log import log
 from math_conversions import calculate_local_position, convert_to_global_position, pixels_to_degrees
@@ -16,6 +14,7 @@ from constants import (
     CameraConstants,
     ObjectDetectionConstants,
     NetworkTableConstants,
+    Constants,
 )
 from time import sleep, time
 from threading import Thread, Lock
@@ -42,17 +41,13 @@ smart_dashboard.putNumber("active_model", 0)
 smart_dashboard.putBoolean("restart_object_detection", False)
 
 
-def sys_print(msg):
-    print(msg)
-    sys.stdout.flush()
-
 def print_available_cameras():
     for i in range(10):  # Check up to camera index 9 (adjust if needed)
         cap = cv2.VideoCapture(i)
         if not cap.isOpened():
-            sys_print(RED + f"Camera index {i} is not available." + RESET)
+            log(RED + f"Camera index {i} is not available." + RESET)
         else:
-            sys_print(GREEN + f"Camera index {i} is available." + RESET)
+            log(GREEN + f"Camera index {i} is available." + RESET)
             cap.release()
 
 
@@ -125,13 +120,14 @@ class ScytheVision:
 
 
     def detection_thread(self, camera_data, detector):
-        sys_print(f"Starting thread for {camera_data['name']} camera")
+        log(f"Starting thread for {camera_data['name']} camera")
         results_stream = detector.detect(camera_data["camera_id"])
 
         detections = []
 
         for results in results_stream:
-            print(f"Speeds: {results.speed}")
+            start_time = time()
+            log(f"Speeds: {results.speed}", force_no_log=Constants.detection_logging)
             video_streamer.update_image(results.plot())
 
             for box in results.boxes:
@@ -161,6 +157,11 @@ class ScytheVision:
 
             with self.data_lock:
                 self.data[camera_data["name"]] = detections
+
+            total_inference_time = sum(results.speed)
+            estimated_fps = 1000 / total_inference_time
+            log(f"Total processing time (ms): {(time() - start_time) + total_inference_time}", force_no_log=Constants.detection_logging)
+            log(f"Estimated fps: {estimated_fps}", force_no_log=Constants.detection_logging)
 
     def change_model(self, _, __, value, is_new):
         if is_new:

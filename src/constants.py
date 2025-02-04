@@ -1,8 +1,14 @@
 import numpy as np
 
 
+class Constants:
+    log = True # Log to file
+    print_terminal = False # use-full for debugging
+    detection_logging = False # WILL LOG EVERY DETECTION (NOT RECOMMENDED FOR USE)
+
+
 class NetworkTableConstants:
-    server_address = "object-detection.local"
+    server_address = "object-detection.local" # the hostname of this machine
 
     robot_position_key = "robot_position"
     robot_rotation_key = "robot_rotation"
@@ -19,8 +25,6 @@ class ObjectDetectionConstants:
 
 
 class DisplayConstants:
-    show_output = False
-    debug = False
     run_web_server = True
 
 
