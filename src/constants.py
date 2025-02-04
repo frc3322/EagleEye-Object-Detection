@@ -2,22 +2,21 @@ import numpy as np
 
 
 class Constants:
-    log = True # Log to file
-    print_terminal = False # use-full for debugging
-    detection_logging = False # WILL LOG EVERY DETECTION (NOT RECOMMENDED FOR USE)
+    log = True # Log to file (limits logs to 1 gb)
+    print_terminal = False # use for debugging
+    detection_logging = False # WILL LOG EVERY DETECTION !!(NOT RECOMMENDED FOR USE)!! !!(OVERRIDES LOG CONSTANT)!!
 
 
 class NetworkTableConstants:
     server_address = "object-detection.local" # the hostname of this machine
 
-    robot_position_key = "robot_position"
-    robot_rotation_key = "robot_rotation"
+    robot_position_key = "robot_position" # network tables key for robot_position
+    robot_rotation_key = "robot_rotation" # network tables key for robot_rotation
 
 
 class ObjectDetectionConstants:
-    input_size = 320
-    model_path = "model_creation/model.pt"
-    confidence_threshold = 0.65
+    input_size = 320 # size of images given to model, needs to be the same as model was trained with
+    confidence_threshold = 0.65 # minimum confidence that model needs for detections
 
     note_combined_threshold = (
         10  # the threshold for combining notes in the same position
