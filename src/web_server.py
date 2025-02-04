@@ -42,10 +42,12 @@ class LogStreamer:
                     else:
                         time.sleep(1)  # Sleep for a second before checking for new content
 
+    @staticmethod
     @app.route('/log')
-    def stream_log(self):
+    def stream_log():
         """Streams the log file content to the client."""
-        return Response(self.generate_log(), content_type='text/plain;charset=utf-8')
+        log_streamer = LogStreamer()
+        return Response(log_streamer.generate_log(), content_type='text/plain;charset=utf-8')
 
 def run():
     # Create a thread to run the Flask app

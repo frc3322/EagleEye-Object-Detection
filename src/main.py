@@ -4,7 +4,6 @@ import os
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 import numpy as np
-import subprocess
 import sys
 
 from detector import Detector
@@ -18,7 +17,7 @@ from constants import (
     ObjectDetectionConstants,
     NetworkTableConstants,
 )
-from time import sleep
+from time import sleep, time
 from threading import Thread, Lock
 from networktables import NetworkTables
 
