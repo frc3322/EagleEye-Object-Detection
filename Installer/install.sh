@@ -1,3 +1,6 @@
+#!/bin/bash
+set -e  # Exit immediately if any command fails
+
 echo "Updating and upgrading the system..."
 apt update && apt upgrade -y
 
@@ -7,22 +10,35 @@ apt install -y libgl1
 echo "Installing Python3 and pip..."
 apt install python3-pip -y
 
+echo "Installing python venv"
+apt install python3.12-venv -y
+
+REPO_PATH="/root/EagleEye-Object-Detection"
+
+if [ -d "$REPO_PATH" ]; then
+    echo "Removing existing repository..."
+    rm -rf "$REPO_PATH"
+fi
+
+echo "Cloning Repo..."
+git clone "https://github.com/frc3322/EagleEye-Object-Detection.git"
+
 echo "Navigating to EagleEye-Object-Detection directory..."
-cd /root/EagleEye-Object-Detection/
+cd "$REPO_PATH" || { echo "Failed to change directory to $REPO_PATH"; exit 1; }
 
 echo "Creating and activating Python virtual environment..."
-python -m venv venv
-source venv/bin/activate
+python3 -m venv venv
+. "$REPO_PATH"/venv/bin/activate
 
 echo "Installing PyTorch..."
 pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
 
 echo "Installing project dependencies..."
-pip install -r requirements.txt
+pip3 install -r requirements.txt
 
 echo "Copying service files to systemd directory..."
-cp /root/EagleEye-Object-Detection/Installer/EagleEye.service /etc/systemd/system/
-cp /root/EagleEye-Object-Detection/Installer/EagleEyeUpdater.service /etc/systemd/system/
+cp "$REPO_PATH/Installer/EagleEye.service" /etc/systemd/system/
+cp "$REPO_PATH/Installer/EagleEyeUpdater.service" /etc/systemd/system/
 
 echo "Reloading systemd daemon..."
 systemctl daemon-reload
