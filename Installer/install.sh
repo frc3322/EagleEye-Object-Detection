@@ -11,7 +11,7 @@ echo "Installing Python3 and pip..."
 apt install python3-pip -y
 
 echo "Installing python venv"
-apt install python3.12-venv -y
+apt install python3-venv -y
 
 REPO_PATH="/root/EagleEye-Object-Detection"
 
