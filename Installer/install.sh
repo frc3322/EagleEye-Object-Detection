@@ -34,7 +34,8 @@ python3 -m venv venv
 . "$REPO_PATH"/venv/bin/activate
 
 echo "Installing PyTorch..."
-pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+pip3 install --upgrade --force-reinstall typing-extensions
+pip3 install torch torchvision torchaudio --no-cache-dir --index-url https://download.pytorch.org/whl/cpu
 
 echo "Installing project dependencies..."
 pip3 install -r requirements.txt
