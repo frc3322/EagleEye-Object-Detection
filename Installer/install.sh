@@ -24,11 +24,11 @@ echo "Cloning Repo..."
 git clone "https://github.com/frc3322/EagleEye-Object-Detection.git"
 
 echo "Navigating to EagleEye-Object-Detection directory..."
-cd "$REPO_PATH"
+cd "$REPO_PATH" || { echo "Failed to change directory to $REPO_PATH"; exit 1; }
 
 echo "Creating and activating Python virtual environment..."
 python3 -m venv venv
-source venv/bin/activate
+. "$REPO_PATH"/venv/bin/activate
 
 echo "Installing PyTorch..."
 pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
