@@ -22,8 +22,8 @@ esac
 
 # Function to get the latest libedgetpu1-std release link
 echo "Fetching latest libedgetpu1-std release link for $PLATFORM..."
-LATEST_URL=$(curl -s https://api.github.com/repos/feranick/libedgetpu/releases/latest \
-  | grep -oP '"browser_download_url": "\K(https://github.com/feranick/libedgetpu/releases/download/[^" ]+bookworm_'$PLATFORM'.deb)')
+LATEST_URL=$(curl -s https://api.github.com/repos/feranick/libedgetpu/releases/latest | 
+  grep -oP '"browser_download_url": "\K(https://github.com/feranick/libedgetpu/releases/download/[^"]+libedgetpu1-std_[^"]+'$PLATFORM'\.deb)' | head -n 1)
 
 if [[ -z "$LATEST_URL" ]]; then
     echo "Error: Could not find the latest libedgetpu1-std package for $PLATFORM. Check the repository manually."
@@ -31,18 +31,19 @@ if [[ -z "$LATEST_URL" ]]; then
 fi
 
 echo "Downloading $LATEST_URL..."
-wget "$LATEST_URL" -O libedgetpu1-std.bookworm_"$PLATFORM".deb
+wget -O libedgetpu1-std.bookworm_"$PLATFORM".deb "$LATEST_URL"
 
 # Install the package
 echo "Installing libedgetpu1-std..."
 dpkg -i libedgetpu1-std.bookworm_"$PLATFORM".deb
 
 # Activate virtual environment
-if [[ -f "/root/EagleEye-Object-Detection/venv/bin/activate" ]]; then
+VENV_PATH="/root/EagleEye-Object-Detection/venv/bin/activate"
+if [[ -f "$VENV_PATH" ]]; then
     echo "Activating virtual environment..."
-    . /root/EagleEye-Object-Detection/venv/bin/activate
+    source "$VENV_PATH"
 else
-    echo "Error: Virtual environment not found."
+    echo "Error: Virtual environment not found at $VENV_PATH."
     exit 1
 fi
 
