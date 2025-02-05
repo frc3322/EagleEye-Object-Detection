@@ -4,6 +4,9 @@ set -e  # Exit immediately if any command fails
 SNAPSHOT_NAME="pre_install_$(date +%Y%m%d_%H%M%S)"
 BACKUP_DIR="/root/system_backup"
 
+echo "Installing timeshift"
+apt install timeshift
+
 echo "Saving machine state before installation..."
 
 if command -v timeshift &> /dev/null; then
