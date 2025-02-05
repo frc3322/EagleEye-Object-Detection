@@ -1,7 +1,7 @@
 import os
 import datetime
 import sys
-from src.constants import Constants
+from src.constants.constants import Constants
 
 log_file = "log.txt"
 

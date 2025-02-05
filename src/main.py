@@ -9,7 +9,7 @@ from custom_logging.log import log
 from math_conversions import calculate_local_position, convert_to_global_position, pixels_to_degrees
 
 import cv2
-from constants import (
+from src.constants.constants import (
     DisplayConstants,
     CameraConstants,
     ObjectDetectionConstants,
