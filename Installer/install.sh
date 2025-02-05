@@ -7,6 +7,9 @@ apt install -y libgl1
 echo "Installing Python3 and pip..."
 apt install python3-pip -y
 
+echo "Cloaning Repo"
+git clone "https://github.com/frc3322/EagleEye-Object-Detection.git"
+
 echo "Navigating to EagleEye-Object-Detection directory..."
 cd /root/EagleEye-Object-Detection/
 
