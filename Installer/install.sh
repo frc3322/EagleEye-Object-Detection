@@ -13,6 +13,9 @@ apt install python3-pip -y
 echo "Installing python venv"
 apt install python3-venv -y
 
+echo "Installing git"
+apt install git -y
+
 REPO_PATH="/root/EagleEye-Object-Detection"
 
 if [ -d "$REPO_PATH" ]; then
