@@ -17,14 +17,14 @@ echo "Navigating to EagleEye-Object-Detection directory..."
 cd /root/EagleEye-Object-Detection/
 
 echo "Creating and activating Python virtual environment..."
-python -m venv venv
+python3 -m venv venv
 source venv/bin/activate
 
 echo "Installing PyTorch..."
 pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
 
 echo "Installing project dependencies..."
-pip install -r requirements.txt
+pip3 install -r requirements.txt
 
 echo "Copying service files to systemd directory..."
 cp /root/EagleEye-Object-Detection/Installer/EagleEye.service /etc/systemd/system/
