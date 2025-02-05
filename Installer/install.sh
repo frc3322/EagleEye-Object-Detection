@@ -10,6 +10,9 @@ apt install -y libgl1
 echo "Installing Python3 and pip..."
 apt install python3-pip -y
 
+echo "Installing python venv"
+apt install python3.12-venv
+
 REPO_PATH="/root/EagleEye-Object-Detection"
 
 if [ -d "$REPO_PATH" ]; then
