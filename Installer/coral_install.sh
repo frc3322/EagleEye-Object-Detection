@@ -15,7 +15,7 @@ wget "$LATEST_URL" -O libedgetpu1-std.bookworm_arm64.deb
 echo "Installing libedgetpu1-std..."
 dpkg -i libedgetpu1-std.bookworm_arm64.deb
 
-source /root/EagleEye-Object-Detection/venv/bin/activate
+. /root/EagleEye-Object-Detection/venv/bin/activate
 
 # Uninstall existing TensorFlow packages
 echo "Uninstalling TensorFlow..."
