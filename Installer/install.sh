@@ -1,31 +1,6 @@
 #!/bin/bash
 set -e  # Exit immediately if any command fails
 
-SNAPSHOT_NAME="pre_install_$(date +%Y%m%d_%H%M%S)"
-BACKUP_DIR="/root/system_backup"
-
-echo "Installing timeshift"
-apt install timeshift -y
-
-echo "Saving machine state before installation..."
-
-if command -v timeshift &> /dev/null; then
-    timeshift --create --comments "Pre-install snapshot" --tags D --snapshot-device /  # Modify if needed
-else
-    echo "Timeshift not found, falling back to tar backup..."
-    mkdir -p "$BACKUP_DIR"
-    tar -czf "$BACKUP_DIR/backup.tar.gz" /etc /var /home
-fi
-
-trap 'echo "Installation failed! Restoring system..."; 
-      if command -v timeshift &> /dev/null; then 
-          timeshift --restore --snapshot $SNAPSHOT_NAME --yes;
-      else 
-          echo "Restoring from tar backup..."; 
-          tar -xzf "$BACKUP_DIR/backup.tar.gz" -C /;
-      fi
-      exit 1' ERR
-
 echo "Updating and upgrading the system..."
 apt update && apt upgrade -y
 
