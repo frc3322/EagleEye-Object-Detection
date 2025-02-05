@@ -5,7 +5,7 @@ SNAPSHOT_NAME="pre_install_$(date +%Y%m%d_%H%M%S)"
 BACKUP_DIR="/root/system_backup"
 
 echo "Installing timeshift"
-apt install timeshift
+apt install timeshift -y
 
 echo "Saving machine state before installation..."
 
