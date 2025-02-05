@@ -1,3 +1,6 @@
+#!/bin/bash
+set -e  # Exit immediately if any command fails
+
 # Function to get the latest libedgetpu1-std release link
 echo "Fetching latest libedgetpu1-std release link..."
 LATEST_URL=$(curl -s https://api.github.com/repos/feranick/libedgetpu/releases/latest \
