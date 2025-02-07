@@ -10,11 +10,14 @@ apt install -y libgl1
 echo "Installing Python3 and pip..."
 apt install python3-pip -y
 
-echo "Installing python venv"
+echo "Installing python venv..."
 apt install python3-venv -y
 
-echo "Installing git"
+echo "Installing git..."
 apt install git -y
+
+echo "Installing curl..."
+apt install curl -y
 
 REPO_PATH="/root/EagleEye-Object-Detection"
 
@@ -23,15 +26,25 @@ if [ -d "$REPO_PATH" ]; then
     rm -rf "$REPO_PATH"
 fi
 
-echo "Cloning Repo..."
-git clone "https://github.com/frc3322/EagleEye-Object-Detection.git"
+echo "Fetching latest release tag from GitHub..."
+# Query the GitHub API and extract the tag name
+LATEST_TAG=$(curl --silent "https://api.github.com/repos/frc3322/EagleEye-Object-Detection/releases/latest" | \
+             grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+if [ -z "$LATEST_TAG" ]; then
+    echo "Error: Could not determine the latest release tag."
+    exit 1
+fi
+echo "Latest release tag is: $LATEST_TAG"
+
+echo "Cloning Repo from tag $LATEST_TAG..."
+git clone --branch "$LATEST_TAG" --single-branch "https://github.com/frc3322/EagleEye-Object-Detection.git" "$REPO_PATH"
 
 echo "Navigating to EagleEye-Object-Detection directory..."
 cd "$REPO_PATH" || { echo "Failed to change directory to $REPO_PATH"; exit 1; }
 
 echo "Creating and activating Python virtual environment..."
 python3 -m venv venv
-. "$REPO_PATH"/venv/bin/activate
+. "$REPO_PATH/venv/bin/activate"
 
 echo "Installing PyTorch..."
 pip3 install --upgrade --force-reinstall typing-extensions
