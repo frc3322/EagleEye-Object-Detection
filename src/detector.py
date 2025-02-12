@@ -48,7 +48,6 @@ class Detector:
         :param model_paths: the paths to the models to use
         :param model_index: the index of the model to use
         """
-        model_paths = [convert_model(model) for model in model_paths]
         self.models = []
         for model_path in model_paths:
             log(f"Loading model from {model_path}")

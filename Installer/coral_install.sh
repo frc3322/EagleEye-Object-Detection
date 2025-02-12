@@ -21,21 +21,21 @@ case "$ARCH" in
 esac
 
 # Function to get the latest libedgetpu1-std release link
-echo "Fetching latest libedgetpu1-std release link for $PLATFORM..."
+echo "Fetching latest libedgetpu1-max release link for $PLATFORM..."
 LATEST_URL=$(curl -s https://api.github.com/repos/feranick/libedgetpu/releases/latest | 
-  grep -oP '"browser_download_url": "\K(https://github.com/feranick/libedgetpu/releases/download/[^"]+libedgetpu1-std_[^"]+'$PLATFORM'\.deb)' | head -n 1)
+  grep -oP '"browser_download_url": "\K(https://github.com/feranick/libedgetpu/releases/download/[^"]+libedgetpu1-max_[^"]+'$PLATFORM'\.deb)' | head -n 1)
 
 if [[ -z "$LATEST_URL" ]]; then
-    echo "Error: Could not find the latest libedgetpu1-std package for $PLATFORM. Check the repository manually."
+    echo "Error: Could not find the latest libedgetpu1-max package for $PLATFORM. Check the repository manually."
     exit 1
 fi
 
 echo "Downloading $LATEST_URL..."
-wget -O libedgetpu1-std.bookworm_"$PLATFORM".deb "$LATEST_URL"
+wget -O libedgetpu1-max.bookworm_"$PLATFORM".deb "$LATEST_URL"
 
 # Install the package
 echo "Installing libedgetpu1-std..."
-dpkg -i libedgetpu1-std.bookworm_"$PLATFORM".deb
+dpkg -i libedgetpu1-max.bookworm_"$PLATFORM".deb
 
 # Activate virtual environment
 VENV_PATH="/root/EagleEye-Object-Detection/venv/bin/activate"

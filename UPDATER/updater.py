@@ -82,16 +82,9 @@ if __name__ == '__main__':
         type=str,
         help="Hostname or IP address of the server for a direct connection."
     )
-    parser.add_argument(
-        "-f", "--folder",
-        type=str,
-        required=True,
-        help="Path to the folder that should be sent."
-    )
 
     args = parser.parse_args()
 
-    folder_path = args.folder
     server_ip = args.hostname
 
     if server_ip:
@@ -99,6 +92,8 @@ if __name__ == '__main__':
     else:
         print("[INFO] No hostname provided. Attempting UDP discovery...")
         server_ip = discover_server()
+
+    folder_path = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, "src"))
 
     if server_ip:
         tcp_client(server_ip, folder_path)
