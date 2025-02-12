@@ -1,6 +1,6 @@
 # EagleEye-Object-Detection
 
-**EagleEye Object Detection** is a Python-based project aimed at detecting objects using advanced algorithms. This project is part of the frc3322 organization.
+**EagleEye Object Detection** is a Python-based project aimed at detecting game pieces using YOLO Ai object detection. This project was created by FRC 3322 Team Eagle Evolution.
 
 ## Table of Contents
 - [Introduction](#introduction)
@@ -9,7 +9,7 @@
 - [License](#license)
 
 ## Introduction
-EagleEye Object Detection is designed to help identify and track objects in various environments. Leveraging Python and shell scripting, this project aims to provide accurate and efficient object detection capabilities.
+EagleEye Object Detection is designed to help identify and track game pieces in 3d space over differing years. Code similarity between years is a priority where teams can simply create their own detection model for each year while keeping the same simple and reliable code.
 
 ## Installation
 For installation and further instructions, please refer to the [wiki page](https://github.com/frc3322/EagleEye-Object-Detection/wiki).
