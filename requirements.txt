@@ -1,5 +1,5 @@
 opencv-python~=4.11.0.86
-numpy<2
+numpy<3
 pynetworktables~=2021.0.0
 ultralytics~=8.3.68
 Flask~=3.1.0
