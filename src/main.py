@@ -1,14 +1,16 @@
 import os
+import sys
 
-# Set working directory to the current directory of the script
-os.chdir(os.path.dirname(os.path.abspath(__file__)))
+# Set working directory to the directory one above the script's directory
+print(f"Setting Working Dir to: {os.path.dirname(os.path.dirname(os.path.abspath(__file__)))}")
+os.chdir(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import numpy as np
 from detector import Detector
 from custom_logging.log import log
 from math_conversions import calculate_local_position, convert_to_global_position, pixels_to_degrees
 
-import cv2
 from src.constants.constants import (
     DisplayConstants,
     CameraConstants,
@@ -41,21 +43,11 @@ smart_dashboard.putNumber("active_model", 0)
 smart_dashboard.putBoolean("restart_object_detection", False)
 
 
-def print_available_cameras():
-    for i in range(10):  # Check up to camera index 9 (adjust if needed)
-        cap = cv2.VideoCapture(i)
-        if not cap.isOpened():
-            log(RED + f"Camera index {i} is not available." + RESET)
-        else:
-            log(GREEN + f"Camera index {i} is available." + RESET)
-            cap.release()
-
-
-class ScytheVision:
+class EagleEye:
     def __init__(self):
         model_paths = [
-            f"models/{model}"
-            for model in os.listdir("models")
+            f"src/models/{model}"
+            for model in os.listdir("src/models")
             if not model.endswith(".md") and not model.startswith("_")
         ]
         log(f"Loading models: {model_paths}")
@@ -121,7 +113,7 @@ class ScytheVision:
 
     def detection_thread(self, camera_data, detector):
         log(f"Starting thread for {camera_data['name']} camera")
-        results_stream = detector.detect(camera_data["camera_id"])
+        results_stream = detector.detect(camera_data["camera_id"], camera_data["fov"][0], camera_data["fov"][1], 60)
 
         detections = []
 
@@ -158,9 +150,9 @@ class ScytheVision:
             with self.data_lock:
                 self.data[camera_data["name"]] = detections
 
-            total_inference_time = sum(results.speed)
+            total_inference_time = sum(results.speed.values()) + (time() - start_time)
             estimated_fps = 1000 / total_inference_time
-            log(f"Total processing time (ms): {(time() - start_time) + total_inference_time}", force_no_log=Constants.detection_logging)
+            log(f"Total processing time (ms): {total_inference_time}", force_no_log=Constants.detection_logging)
             log(f"Estimated fps: {estimated_fps}", force_no_log=Constants.detection_logging)
 
     def change_model(self, _, __, value, is_new):
@@ -169,4 +161,4 @@ class ScytheVision:
 
 
 if __name__ == "__main__":
-    ScytheVision()
+    EagleEye()

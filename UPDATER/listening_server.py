@@ -6,6 +6,10 @@ import os
 import shutil
 import subprocess
 
+# set working directory to current directory
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
 # Configuration
 TCP_PORT = 12345       # Port for TCP connections (data exchange)
 UDP_PORT = 54321       # Port for UDP discovery messages
@@ -19,10 +23,10 @@ def sys_print(msg):
 
 def restart_vision():
     try:
-        subprocess.run(["systemctl", "restart", "ScytheVision"], check=True)
-        sys_print("ScytheVision restarted successfully.")
+        subprocess.run(["systemctl", "restart", "EagleEye"], check=True)
+        sys_print("EagleEye restarted successfully.")
     except subprocess.CalledProcessError as e:
-        sys_print(f"Failed to restart ScytheVision: {e}")
+        sys_print(f"Failed to restart EagleEye: {e}")
 
 
 def udp_discovery_listener():
