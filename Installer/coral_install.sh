@@ -34,8 +34,8 @@ echo "Downloading $LATEST_URL..."
 wget -O libedgetpu1-max.bookworm_"$PLATFORM".deb "$LATEST_URL"
 
 # Install the package
-echo "Installing libedgetpu1-std..."
-dpkg -i libedgetpu1-max.bookworm_"$PLATFORM".deb
+echo "Installing libedgetpu1-max..."
+dpkg -i --force-confnew libedgetpu1-max.bookworm_"$PLATFORM".deb
 
 # Activate virtual environment
 VENV_PATH="/root/EagleEye-Object-Detection/venv/bin/activate"
