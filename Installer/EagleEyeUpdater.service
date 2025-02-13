@@ -6,7 +6,7 @@ After=network.target
 Type=idle
 Restart=on-failure
 User=root
-WorkingDirectory=/root/EagleEye-Object-Detection
+WorkingDirectory=/root/EagleEye-Object-Detection/UPDATER
 ExecStart=/root/EagleEye-Object-Detection/venv/bin/python /root/EagleEye-Object-Detection/UPDATER/listening_server.py
 
 [Install]
