@@ -22,8 +22,8 @@ esac
 
 # Function to get the latest libedgetpu1-std release link
 echo "Fetching latest libedgetpu1-max release link for $PLATFORM..."
-LATEST_URL=$(curl -s https://api.github.com/repos/feranick/libedgetpu/releases/latest | 
-  grep -oP '"browser_download_url": "\K(https://github.com/feranick/libedgetpu/releases/download/[^"]+libedgetpu1-max_[^"]+'$PLATFORM'\.deb)' | head -n 1)
+LATEST_URL=$(curl -s https://api.github.com/repos/DarkEden-coding/libedgetpu-no-interact/releases/latest | 
+  grep -oP '"browser_download_url": "\K(https://github.com/DarkEden-coding/libedgetpu-no-interact/releases/download/[^"]+libedgetpu1-max_[^"]+'$PLATFORM'\.deb)' | head -n 1)
 
 if [[ -z "$LATEST_URL" ]]; then
     echo "Error: Could not find the latest libedgetpu1-max package for $PLATFORM. Check the repository manually."
