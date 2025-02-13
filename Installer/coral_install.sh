@@ -20,6 +20,9 @@ case "$ARCH" in
         ;;
 esac
 
+# Set the EULA to be automatically accepted
+echo "libedgetpu/accepted-eula  true" | sudo debconf-set-selections
+
 # Function to get the latest libedgetpu1-std release link
 echo "Fetching latest libedgetpu1-max release link for $PLATFORM..."
 LATEST_URL=$(curl -s https://api.github.com/repos/DarkEden-coding/libedgetpu-no-interact/releases/latest | 
@@ -35,7 +38,7 @@ wget -O libedgetpu1-max.bookworm_"$PLATFORM".deb "$LATEST_URL"
 
 # Install the package
 echo "Installing libedgetpu1-max..."
-dpkg -i --force-confnew libedgetpu1-max.bookworm_"$PLATFORM".deb
+dpkg -i libedgetpu1-max.bookworm_"$PLATFORM".deb
 
 # Activate virtual environment
 VENV_PATH="/root/EagleEye-Object-Detection/venv/bin/activate"
