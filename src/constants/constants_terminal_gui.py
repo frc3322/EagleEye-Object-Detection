@@ -1,6 +1,6 @@
 import ast
 import numpy as np
-import constants  # Make sure constants.py is in the same directory
+import src.constants.constants as constants  # Make sure constants.py is in the same directory
 
 # Define the groups and their fields.
 GROUPS = {

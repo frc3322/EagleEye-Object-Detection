@@ -1,8 +1,7 @@
 from ultralytics import YOLO
 from src.constants.constants import ObjectDetectionConstants
-from format_conversion.convert_model import convert_model
-from format_conversion.detect_devices import detect_hardware
-from custom_logging.log import log
+from src.format_conversion.detect_devices import detect_hardware
+from src.custom_logging.log import log
 
 
 class Detector:

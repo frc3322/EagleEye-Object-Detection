@@ -4,9 +4,9 @@ import os
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 import numpy as np
-from detector import Detector
-from custom_logging.log import log
-from math_conversions import calculate_local_position, convert_to_global_position, pixels_to_degrees
+from src.detector import Detector
+from src.custom_logging.log import log
+from src.math_conversions import calculate_local_position, convert_to_global_position, pixels_to_degrees
 
 import cv2
 from src.constants.constants import (
