@@ -21,7 +21,7 @@ case "$ARCH" in
 esac
 
 # Set the EULA to be automatically accepted
-echo "libedgetpu/accepted-eula  true" | sudo debconf-set-selections
+debconf-set-selections <<< "libedgetpu libedgetpu/accepted-eula boolean true"
 
 # Function to get the latest libedgetpu1-std release link
 echo "Fetching latest libedgetpu1-max release link for $PLATFORM..."
