@@ -35,6 +35,7 @@ wget -O libedgetpu1-max.bookworm_"$PLATFORM".deb "$LATEST_URL"
 
 # Install the package
 echo "Installing libedgetpu1-max..."
+export DEBIAN_FRONTEND=noninteractive
 dpkg -i --force-confnew libedgetpu1-max.bookworm_"$PLATFORM".deb
 
 # Activate virtual environment
