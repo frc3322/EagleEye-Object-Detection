@@ -1,43 +1,8 @@
-import os
-import subprocess
-
+import cv2
 from ultralytics import YOLO
 from src.constants.constants import ObjectDetectionConstants
 from src.format_conversion.detect_devices import detect_hardware
 from src.custom_logging.log import log
-
-
-def setup_camera(camera_index, width, height, fps):
-    """
-    Changes camera settings to the given index, width, height, and fps.
-    If an error occurs, it lists available formats.
-
-    :param camera_index: the index of the camera to setup
-    :param width: the width of the camera
-    :param height: the height of the camera
-    :param fps: the fps of the camera
-    :return: nothing
-    """
-    log(f"Setting up camera {camera_index} with width {width}, height {height}, and fps {fps}")
-
-    def run_command(command):
-        log(f"Running command: {command}")
-        result = subprocess.run(command, shell=True, capture_output=True, text=True)
-        if result.returncode != 0:
-            log(f"Error: {result.stderr.strip()}")
-            log("Listing supported formats...")
-            os.system("v4l2-ctl --list-formats-ext")
-            return False
-        return True
-
-    # Set video format
-    fmt_command = f"v4l2-ctl -d {camera_index} --set-fmt-video=width={width},height={height},pixelformat=1"
-    if not run_command(fmt_command):
-        raise Exception("Error setting video format")
-
-    # Set frame rate
-    fps_command = f"v4l2-ctl -d {camera_index} --set-parm={fps}"
-    run_command(fps_command)
 
 
 class Detector:
@@ -71,35 +36,55 @@ class Detector:
 
     def detect(self, camera_index, width, height, fps):
         """
-        Detects notes in the given image
-        :param camera_index: the index of the camera to use
-        :param width: the width of the camera
-        :param height: the height of the camera
-        :param fps: the fps of the camera
-        :return: returns the detections generator
+        Captures frames directly with OpenCV and runs detection on each frame.
+        Yields detection results that mimic the original interface.
         """
-        setup_camera(camera_index, width, height, fps)
-        if not self.tpu_present:
-            log("Using GPU")
-            detections = self.models[self.model_index].predict(
-                camera_index,
-                show=False,
-                device="gpu" if self.gpu_present else "cpu",
-                conf=ObjectDetectionConstants.confidence_threshold,
-                imgsz=ObjectDetectionConstants.input_size,
-                stream=True,
-                verbose = False
-            )
-        else:
-            log("Using TPU")
-            detections = self.models[self.model_index].predict(
-                camera_index,
-                show=False,
-                conf=ObjectDetectionConstants.confidence_threshold,
-                imgsz=ObjectDetectionConstants.input_size,
-                stream=True,
-                device="tpu:0",
-                verbose=False
-            )
+        # Open the video capture device
+        cap = cv2.VideoCapture(camera_index)
+        cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*"MJPG"))
+        cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
+        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
+        cap.set(cv2.CAP_PROP_FPS, fps)
 
-        return detections
+        if not cap.isOpened():
+            raise RuntimeError(f"Error opening camera {camera_index}")
+
+        while True:
+            ret, frame = cap.read()
+            if not ret:
+                log("Failed to capture frame. Exiting detection loop.")
+                break
+
+            # Optionally, convert color if required (e.g., BGR -> RGB)
+            # frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+
+            # Run prediction on the captured frame.
+            # Note: When passing an image, predict() returns a list, so we extract the first element.
+            if not self.tpu_present:
+                log("Running detection using GPU/CPU")
+                results = self.models[self.model_index].predict(
+                    frame,
+                    show=False,
+                    device="gpu" if self.gpu_present else "cpu",
+                    conf=ObjectDetectionConstants.confidence_threshold,
+                    imgsz=ObjectDetectionConstants.input_size,
+                    verbose=False
+                )
+            else:
+                log("Running detection using TPU")
+                results = self.models[self.model_index].predict(
+                    frame,
+                    show=False,
+                    device="tpu:0",
+                    conf=ObjectDetectionConstants.confidence_threshold,
+                    imgsz=ObjectDetectionConstants.input_size,
+                    verbose=False
+                )
+
+            # If predict() returns a list, extract the first result.
+            if isinstance(results, list):
+                results = results[0]
+
+            yield results
+
+        cap.release()

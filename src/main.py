@@ -110,7 +110,6 @@ class EagleEye:
 
             sleep(0.1)
 
-
     def detection_thread(self, camera_data, detector):
         log(f"Starting thread for {camera_data['name']} camera")
         results_stream = detector.detect(camera_data["camera_id"], camera_data["fov"][0], camera_data["fov"][1], 60)
