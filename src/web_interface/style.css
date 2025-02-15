@@ -1,0 +1,158 @@
+/* Base Styles */
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #1e1e1e;
+  color: #fff;
+  height: 100vh;
+  display: flex;
+}
+
+/* Main Layout */
+.container {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+}
+
+/* Left Panel: Cameras & Logs */
+.left-panel {
+  flex: 2;
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+  background-color: #2e2e2e;
+  overflow: hidden;
+}
+
+/* Camera Section */
+.camera-section {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.camera-section h2 {
+  border-bottom: 2px solid #8b0000;
+  padding-bottom: 5px;
+}
+
+.camera-feed {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  border: 2px solid #8b0000;
+  border-radius: 5px;
+  background-color: #000;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+.camera-feed h3 {
+  margin: 0;
+  padding: 5px;
+  background-color: #8b0000;
+  width: 100%;
+  text-align: center;
+}
+
+/* Ensure the camera feed resizes dynamically without cropping */
+.camera-stream {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain; /* Ensures the full camera view is visible */
+}
+
+/* Log Section */
+.log-section {
+  flex-basis: 25%;
+  overflow-y: auto;
+  border: 2px solid #8b0000;
+  border-radius: 5px;
+  padding: 10px;
+}
+
+.log-section h2 {
+  border-bottom: 2px solid #8b0000;
+  padding-bottom: 5px;
+  margin-bottom: 10px;
+}
+
+/* Right Panel: Settings */
+.right-panel {
+  flex: 1;
+  padding: 20px;
+  background-color: #1e1e1e;
+  border-left: 2px solid #8b0000;
+  overflow-y: auto;
+}
+
+.right-panel h2 {
+  border-bottom: 2px solid #8b0000;
+  padding-bottom: 5px;
+  margin-bottom: 15px;
+}
+
+fieldset {
+  border: 1px solid #555;
+  margin-bottom: 15px;
+  padding: 10px;
+  border-radius: 5px;
+}
+
+legend {
+  padding: 0 5px;
+  font-weight: bold;
+}
+
+label {
+  display: block;
+  margin-top: 10px;
+}
+
+input[type="text"],
+input[type="number"] {
+  width: 100%;
+  padding: 5px;
+  margin-top: 5px;
+  background-color: #3e3e3e;
+  border: 1px solid #555;
+  border-radius: 3px;
+  color: #fff;
+}
+
+input[type="checkbox"] {
+  margin-right: 5px;
+}
+
+button {
+  margin-top: 15px;
+  padding: 10px 20px;
+  background-color: #8b0000;
+  border: none;
+  border-radius: 3px;
+  color: #fff;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #a30000;
+}
+
+/* Log Terminal */
+#logTerminal {
+  background-color: #000;
+  color: #0f0;
+  font-family: monospace;
+  padding: 10px;
+  height: 100%;
+  overflow-y: auto;
+  border-radius: 3px;
+}

@@ -1,15 +1,10 @@
 import subprocess
 import platform
-import sys
-
-def sys_print(msg):
-    print(msg)
-    sys.stdout.flush()
 
 try:
     import torch
 except ImportError:
-    sys_print("WARNING: torch not found")
+    print("WARNING: torch not found")
 
 def check_nvidia_gpu():
     try:
@@ -34,18 +29,13 @@ def check_coral_tpu():
     except Exception:
         return False
 
-def detect_hardware():
+def detect_hardware(log):
     """
     Detects the hardware available
     :return: tuple of (gpu_available, tpu_available)
     """
     gpu_available = check_nvidia_gpu() or check_amd_gpu()
     tpu_available = check_coral_tpu()
-    sys_print(f"GPU Available: {gpu_available}")
-    sys_print(f"TPU Available: {tpu_available}")
+    log(f"GPU Available: {gpu_available}")
+    log(f"TPU Available: {tpu_available}")
     return gpu_available, tpu_available
-
-if __name__ == "__main__":
-    gpu, tpu = detect_hardware()
-    sys_print(f"GPU Available: {gpu}")
-    sys_print(f"TPU Available: {tpu}")

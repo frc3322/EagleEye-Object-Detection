@@ -1,6 +1,4 @@
 import numpy as np
-from src.custom_logging.log import log
-
 
 def rotate2d(point, angle):
     """
@@ -17,7 +15,7 @@ def rotate2d(point, angle):
     qy = sin * px + cos * py
     return qx, qy
 
-def pixels_to_degrees(pixel_position, total_pixels, fov):
+def pixels_to_degrees(pixel_position, total_pixels, fov, log):
     """
     Converts a pixel position to a degree position
     :param pixel_position: the position in pixels (from the center) np.array([x, y])
@@ -34,16 +32,17 @@ def pixels_to_degrees(pixel_position, total_pixels, fov):
 
 
 def calculate_local_position(
-    pixel_position, total_pixels, camera_data
+    pixel_position, total_pixels, camera_data, log
 ):
     """
     Calculates the local position of the note
     :param pixel_position: the position of the note in pixels (from the center) np.array([x, y])
     :param total_pixels: the total number of pixels
     :param camera_data: the data of the camera
+    :param log: the logger to use
     :return:
     """
-    screen_angle = pixels_to_degrees(pixel_position, total_pixels, camera_data["fov"])
+    screen_angle = pixels_to_degrees(pixel_position, total_pixels, camera_data["fov"], log=log)
     flat_distance = camera_data["camera_offset_pos"][2] / np.arctan(np.radians(screen_angle[1]))
     return rotate2d([0, flat_distance], np.radians(screen_angle[0])) + np.array(camera_data["camera_offset_pos"][:2])
 

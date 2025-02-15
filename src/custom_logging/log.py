@@ -23,17 +23,29 @@ with open(log_file, "a") as file:
     file.write("\n\n")
 
 
-def log(message, force_log=False, force_no_log=False):
+class Logger:
+    def __init__(self, web_server):
+        self.web_server = web_server
+
+    def log(self, message, force_log=False, force_no_log=False):
+        log(message, self.web_server, force_log, force_no_log)
+
+
+def log(message, web_server, force_log=False, force_no_log=False):
     """
     Write message to log file and print to console
     :param message: the message to write to the log file
+    :param web_server: web server object to send logs to
     :param force_log: whether to force log to file
     :param force_no_log: whether to force not to log to file
     :return:
     """
-    if Constants.print_terminal:
+    if Constants.print_terminal and not force_no_log:
         print(message)
         sys.stdout.flush()
+
+    if web_server and Constants.print_terminal and not force_no_log:
+        web_server.log_message(message)
 
     if Constants.log or force_log and not force_no_log:
         message = str(message).replace(RED, "").replace(GREEN, "").replace(RESET, "")

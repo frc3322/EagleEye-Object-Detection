@@ -2,22 +2,23 @@ import cv2
 from ultralytics import YOLO
 from src.constants.constants import ObjectDetectionConstants
 from src.format_conversion.detect_devices import detect_hardware
-from src.custom_logging.log import log
 
 
 class Detector:
-    def __init__(self, model_paths, model_index=0):
+    def __init__(self, model_paths, log, model_index=0):
         """
         Initializes the detector with the given model paths
         :param model_paths: the paths to the models to use
+        :param log: the logger to use
         :param model_index: the index of the model to use
         """
         self.models = []
+        self.log = log
         for model_path in model_paths:
-            log(f"Loading model from {model_path}")
+            self.log(f"Loading model from {model_path}")
             self.models.append(YOLO(model_path, task="detect"))
-            log(f"Model loaded from {model_path}")
-        self.gpu_present, self.tpu_present = detect_hardware()
+            self.log(f"Model loaded from {model_path}")
+        self.gpu_present, self.tpu_present = detect_hardware(self.log)
         self.model_index = model_index
 
     def set_model_index(self, model_index):
@@ -40,7 +41,8 @@ class Detector:
         Yields detection results that mimic the original interface.
         """
         # Open the video capture device
-        cap = cv2.VideoCapture(camera_index)
+        cap = cv2.VideoCapture(camera_index, cv2.CAP_V4L2)
+        cap.set(cv2.CAP_PROP_HW_ACCELERATION, cv2.VIDEO_ACCELERATION_ANY)
         cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*"MJPG"))
         cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
         cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
@@ -52,7 +54,7 @@ class Detector:
         while True:
             ret, frame = cap.read()
             if not ret:
-                log("Failed to capture frame. Exiting detection loop.")
+                self.log("Failed to capture frame. Exiting detection loop.")
                 break
 
             # Optionally, convert color if required (e.g., BGR -> RGB)
@@ -61,7 +63,6 @@ class Detector:
             # Run prediction on the captured frame.
             # Note: When passing an image, predict() returns a list, so we extract the first element.
             if not self.tpu_present:
-                log("Running detection using GPU/CPU")
                 results = self.models[self.model_index].predict(
                     frame,
                     show=False,
@@ -71,7 +72,6 @@ class Detector:
                     verbose=False
                 )
             else:
-                log("Running detection using TPU")
                 results = self.models[self.model_index].predict(
                     frame,
                     show=False,
