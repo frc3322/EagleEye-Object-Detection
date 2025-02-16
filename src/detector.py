@@ -1,7 +1,20 @@
+from threading import Thread
+
 import cv2
 from ultralytics import YOLO
 from src.constants.constants import ObjectDetectionConstants, NetworkTableConstants
 from src.format_conversion.detect_devices import detect_hardware
+
+latest_frame = None
+running = True
+
+def reader_thread(cap):
+    global latest_frame
+    while running:
+        ret, frame = cap.read()
+        if not ret:
+            break
+        latest_frame = frame
 
 class Detector:
     def __init__(self, model_paths, log, simulation_mode, model_index=0):
@@ -57,17 +70,18 @@ class Detector:
                 raise RuntimeError(f"Error opening camera {camera_index}")
 
         else:
-            cap = cv2.VideoCapture(f"http://{NetworkTableConstants.server_address}:1181/1?fps=60")
+            cap = cv2.VideoCapture(f"http://{NetworkTableConstants.server_address}:1181/1?fps=60", cv2.CAP_FFMPEG)
+            cap.set(cv2.CAP_PROP_HW_ACCELERATION, cv2.VIDEO_ACCELERATION_ANY)
+            cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
 
             if not cap.isOpened():
                 raise RuntimeError(f"Error opening simulation feed from {NetworkTableConstants.server_address}:1181/1?fps=60")
 
-        while True:
-            ret, frame = cap.read()
-            if not ret:
-                self.log("Failed to capture frame. Exiting detection loop.")
-                break
+        # Start a thread to read frames from the camera
+        reader = Thread(target=reader_thread, args=(cap,))
+        reader.start()
 
+        while True:
             # Optionally, convert color if required (e.g., BGR -> RGB)
             # frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
@@ -75,7 +89,7 @@ class Detector:
             # Note: When passing an image, predict() returns a list, so we extract the first element.
             if not self.tpu_present:
                 results = self.models[self.model_index].predict(
-                    frame,
+                    latest_frame,
                     show=False,
                     device="gpu" if self.gpu_present else "cpu",
                     conf=ObjectDetectionConstants.confidence_threshold,
@@ -84,7 +98,7 @@ class Detector:
                 )
             else:
                 results = self.models[self.model_index].predict(
-                    frame,
+                    latest_frame,
                     show=False,
                     device="tpu:0",
                     conf=ObjectDetectionConstants.confidence_threshold,
@@ -98,4 +112,4 @@ class Detector:
 
             yield results
 
-        cap.release()
+        running = False

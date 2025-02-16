@@ -90,7 +90,7 @@ class EagleEye:
                     game_piece_nt.putNumberArray(f"{class_name}_yaw_angles", [])
                     game_piece_nt.putStringArray(f"{class_name}_local_positions", [])
                     game_piece_nt.putStringArray(f"{class_name}_global_positions", [])
-                sleep(0.01)
+                sleep(0.016)
                 continue
 
             # sort detections by distance using distance
@@ -174,10 +174,6 @@ class EagleEye:
             log(f"Total processing time (ms): {total_inference_time}", force_no_log=(not Constants.detection_logging))
             log(f"Post processing time (ms): {time() - start_time}", force_no_log=(not Constants.detection_logging))
             log(f"Estimated fps: {estimated_fps}", force_no_log=(not Constants.detection_logging))
-
-            # sleep to make it 100 fps max
-            sleep_time = max(0, 0.01 - total_inference_time)
-            sleep(sleep_time)
 
     def change_model(self, _, __, value, is_new):
         if is_new:
