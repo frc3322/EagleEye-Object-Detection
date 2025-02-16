@@ -1,25 +1,29 @@
 import cv2
 from ultralytics import YOLO
-from src.constants.constants import ObjectDetectionConstants
+from src.constants.constants import ObjectDetectionConstants, NetworkTableConstants
 from src.format_conversion.detect_devices import detect_hardware
 
-
 class Detector:
-    def __init__(self, model_paths, log, model_index=0):
+    def __init__(self, model_paths, log, simulation_mode, model_index=0):
         """
         Initializes the detector with the given model paths
         :param model_paths: the paths to the models to use
         :param log: the logger to use
+        :param simulation_mode: whether to run in simulation mode
         :param model_index: the index of the model to use
         """
         self.models = []
         self.log = log
+        self.simulation_mode = simulation_mode
         for model_path in model_paths:
             self.log(f"Loading model from {model_path}")
             self.models.append(YOLO(model_path, task="detect"))
             self.log(f"Model loaded from {model_path}")
         self.gpu_present, self.tpu_present = detect_hardware(self.log)
         self.model_index = model_index
+
+        if self.simulation_mode:
+            self.log(f"Running in simulation mode, getting data from: {NetworkTableConstants.server_address}:1181/1?fps=60")
 
     def set_model_index(self, model_index):
         """
@@ -40,16 +44,23 @@ class Detector:
         Captures frames directly with OpenCV and runs detection on each frame.
         Yields detection results that mimic the original interface.
         """
-        # Open the video capture device
-        cap = cv2.VideoCapture(camera_index, cv2.CAP_V4L2)
-        cap.set(cv2.CAP_PROP_HW_ACCELERATION, cv2.VIDEO_ACCELERATION_ANY)
-        cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*"MJPG"))
-        cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
-        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
-        cap.set(cv2.CAP_PROP_FPS, fps)
+        if not self.simulation_mode:
+            # Open the video capture device
+            cap = cv2.VideoCapture(camera_index, cv2.CAP_V4L2)
+            cap.set(cv2.CAP_PROP_HW_ACCELERATION, cv2.VIDEO_ACCELERATION_ANY)
+            cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*"MJPG"))
+            cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
+            cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
+            cap.set(cv2.CAP_PROP_FPS, fps)
 
-        if not cap.isOpened():
-            raise RuntimeError(f"Error opening camera {camera_index}")
+            if not cap.isOpened():
+                raise RuntimeError(f"Error opening camera {camera_index}")
+
+        else:
+            cap = cv2.VideoCapture(f"http://{NetworkTableConstants.server_address}:1181/1?fps=60")
+
+            if not cap.isOpened():
+                raise RuntimeError(f"Error opening simulation feed from {NetworkTableConstants.server_address}:1181/1?fps=60")
 
         while True:
             ret, frame = cap.read()

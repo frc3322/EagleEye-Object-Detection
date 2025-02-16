@@ -53,7 +53,7 @@ class EagleEye:
             if not model.endswith(".md") and not model.startswith("_")
         ]
         log(f"Loading models: {model_paths}")
-        self.detector = Detector(model_paths, log)
+        self.detector = Detector(model_paths, log, Constants.simulation_mode)
         log(f"{len(model_paths)} models loaded")
 
         self.data = {}

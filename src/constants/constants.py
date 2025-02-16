@@ -6,6 +6,8 @@ class Constants:
     print_terminal = True
     detection_logging = False
 
+    simulation_mode = False
+
 class NetworkTableConstants:
     server_address = '10.0.0.62'
     robot_position_key = 'robot_position'
