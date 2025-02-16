@@ -33,6 +33,8 @@ from time import sleep, time
 from threading import Thread, Lock
 from networktables import NetworkTables
 
+import line_profiler
+
 # ANSI color codes
 RED = "\033[91m"
 GREEN = "\033[92m"
@@ -44,8 +46,12 @@ game_piece_nt = NetworkTables.getTable("GamePieces")
 
 game_piece_nt.putNumber("active_model", 0)
 
+def time_ms():
+    return time() * 1000
+
 
 class EagleEye:
+    @line_profiler.profile
     def __init__(self):
         model_paths = [
             f"src/models/{model}"
@@ -123,12 +129,13 @@ class EagleEye:
 
             sleep(0.016)
 
+    @line_profiler.profile
     def detection_thread(self, camera_data, detector):
         log(f"Starting thread for {camera_data['name']} camera")
         results_stream = detector.detect(camera_data["camera_id"], camera_data["fov"][0], camera_data["fov"][1], 60)
 
         for results in results_stream:
-            start_time = time()
+            start_time = time_ms()
             log(f"Speeds: {results.speed}", force_no_log=(not Constants.detection_logging))
             web_interface.set_frame(camera_data["name"], results.plot())
 
@@ -169,10 +176,10 @@ class EagleEye:
             with self.data_lock:
                 self.data[camera_data["name"]] = detections
 
-            total_inference_time = sum(results.speed.values()) + (time() - start_time)
+            total_inference_time = sum(results.speed.values()) + (time_ms() - start_time)
             estimated_fps = 1000 / total_inference_time
             log(f"Total processing time (ms): {total_inference_time}", force_no_log=(not Constants.detection_logging))
-            log(f"Post processing time (ms): {time() - start_time}", force_no_log=(not Constants.detection_logging))
+            log(f"Post processing time (ms): {time_ms() - start_time}", force_no_log=(not Constants.detection_logging))
             log(f"Estimated fps: {estimated_fps}", force_no_log=(not Constants.detection_logging))
 
     def change_model(self, _, __, value, is_new):

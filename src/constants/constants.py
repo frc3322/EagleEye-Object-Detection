@@ -4,7 +4,7 @@ array = np.array
 class Constants:
     log = True
     print_terminal = True
-    detection_logging = False
+    detection_logging = True
 
     simulation_mode = True
 

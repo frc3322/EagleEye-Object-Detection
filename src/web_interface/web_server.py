@@ -1,6 +1,5 @@
 import time
 import queue
-
 import numpy as np
 from flask import Flask, Response, request, jsonify, send_from_directory, stream_with_context
 from threading import Thread
@@ -24,13 +23,19 @@ class EagleEyeInterface:
         """
         Initialize the interface.
 
-        :param settings_update_callback: a function to call when update settings happens.
+        :param settings_update_callback: a function to call when settings are updated.
         """
         self.settings_update_callback = settings_update_callback
         self.app = Flask(__name__, static_folder='.', static_url_path='')
         self.settings = {}
         self.log_queue = queue.Queue()
         self.camera_frames = {}  # Dictionary mapping camera name to frame (bytes)
+
+        # Queue and thread for asynchronous frame updates.
+        self.frame_queue = queue.Queue()
+        self.frame_thread = Thread(target=self._process_frame_queue, daemon=True)
+        self.frame_thread.start()
+
         self._register_routes()
 
         # Start Flask server in a separate thread
@@ -88,10 +93,23 @@ class EagleEyeInterface:
         self.log_queue.put(message)
 
     def set_frame(self, camera_name, frame_bytes):
-        """Setter to update the frame of a given camera."""
-        if type(frame_bytes) is np.ndarray:
-            frame_bytes = convert_ndarray_to_bytes(frame_bytes)
-        self.camera_frames[camera_name] = frame_bytes
+        """
+        Setter to update the frame of a given camera asynchronously.
+        Instead of updating immediately, it enqueues the frame update.
+        """
+        self.frame_queue.put((camera_name, frame_bytes))
+
+    def _process_frame_queue(self):
+        """
+        Process the frame update queue. If the provided frame is a numpy ndarray,
+        convert it to JPEG-encoded bytes before updating.
+        """
+        while True:
+            camera_name, frame = self.frame_queue.get()
+            if isinstance(frame, np.ndarray):
+                frame = convert_ndarray_to_bytes(frame)
+            self.camera_frames[camera_name] = frame
+            self.frame_queue.task_done()
 
     def available_cameras(self):
         """Returns a JSON list of available camera names."""
@@ -121,9 +139,7 @@ if __name__ == '__main__':
             for name, cap in caps.items():
                 ret, frame = cap.read()
                 if ret:
-                    ret2, buffer = cv2.imencode('.jpg', frame)
-                    if ret2:
-                        interface.set_frame(name, buffer.tobytes())
+                    interface.set_frame(name, frame)
             time.sleep(0.1)
 
     capture_thread = Thread(target=capture_loop, daemon=True)
