@@ -5,8 +5,6 @@ from ultralytics import YOLO
 from src.constants.constants import ObjectDetectionConstants, NetworkTableConstants
 from src.format_conversion.detect_devices import detect_hardware
 
-import line_profiler
-
 latest_frame = None
 
 def reader_thread(cap):
@@ -53,7 +51,6 @@ class Detector:
         """
         return self.models[self.model_index].names
 
-    @line_profiler.profile
     def detect(self, camera_index, width, height, fps):
         """
         Captures frames directly with OpenCV and runs detection on each frame.

@@ -33,8 +33,6 @@ from time import sleep, time
 from threading import Thread, Lock
 from networktables import NetworkTables
 
-import line_profiler
-
 # ANSI color codes
 RED = "\033[91m"
 GREEN = "\033[92m"
@@ -51,7 +49,6 @@ def time_ms():
 
 
 class EagleEye:
-    @line_profiler.profile
     def __init__(self):
         model_paths = [
             f"src/models/{model}"
@@ -129,7 +126,6 @@ class EagleEye:
 
             sleep(0.016)
 
-    @line_profiler.profile
     def detection_thread(self, camera_data, detector):
         log(f"Starting thread for {camera_data['name']} camera")
         results_stream = detector.detect(camera_data["camera_id"], camera_data["fov"][0], camera_data["fov"][1], 60)
