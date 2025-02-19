@@ -32,6 +32,7 @@ from src.math_conversions import calculate_local_position, convert_to_global_pos
 from time import sleep, time
 from threading import Thread, Lock
 from networktables import NetworkTables
+import struct
 
 # ANSI color codes
 RED = "\033[91m"
@@ -41,6 +42,7 @@ RESET = "\033[0m"
 # As a client to connect to a robot
 NetworkTables.initialize(server=NetworkTableConstants.server_address)
 game_piece_nt = NetworkTables.getTable("GamePieces")
+advantage_kit_nt = NetworkTables.getTable("AdvantageKit")
 
 game_piece_nt.putNumber("active_model", 0)
 
@@ -64,7 +66,7 @@ class EagleEye:
 
         detection_threads = []
         for camera in CameraConstants.camera_list:
-            t = Thread(target=self.detection_thread, args=(camera, self.detector))
+            t = Thread(target=self.detection_thread, args=(camera,))
             detection_threads.append(t)
             t.start()
 
@@ -105,7 +107,7 @@ class EagleEye:
                 if len(detections) > 1:
                     for i in range(len(detections) - 1):
                         for j in range(i + 1, len(detections)):
-                            if np.linalg.norm(detections[i]["local_position"] - detections[j]["local_position"]) < ObjectDetectionConstants.note_combined_threshold:
+                            if np.linalg.norm(detections[i]["local_position"] - detections[j]["local_position"]) < ObjectDetectionConstants.combined_threshold:
                                 detections.pop(j)
                                 break
 
@@ -126,14 +128,24 @@ class EagleEye:
 
             sleep(0.016)
 
-    def detection_thread(self, camera_data, detector):
+    def detection_thread(self, camera_data):
         log(f"Starting thread for {camera_data['name']} camera")
-        results_stream = detector.detect(camera_data["camera_id"], camera_data["fov"][0], camera_data["fov"][1], 60)
+        self.detector.start_camera(camera_data["camera_id"], camera_data["fov"][0], camera_data["fov"][1], 60)
 
-        for results in results_stream:
+        while self.detector.ready is False:
+            sleep(1)
+            log(f"Waiting for {camera_data['name']} camera to be ready")
+
+        while True:
+            results, frame_size = self.detector.detect()
+
+            if results is None:
+                log(f"{RED}No frame{RESET}", force_no_log=(not Constants.detection_logging))
+                sleep(0.02)
+                continue
+
             start_time = time_ms()
             log(f"Speeds: {results.speed}", force_no_log=(not Constants.detection_logging))
-            web_interface.set_frame(camera_data["name"], results.plot())
 
             # if no detections, continue
             if not results.boxes:
@@ -143,22 +155,37 @@ class EagleEye:
                 continue
 
             detections = []
+            debug_points = []
 
             for box in results.boxes:
                 box_class = self.detector.get_class_names()[int(box.cls[0])]
                 box_confidence = box.conf.tolist()[0]
-                box_x = box.xywh.tolist()[0][0] * ObjectDetectionConstants.input_size
-                box_y = box.xywh.tolist()[0][1] * ObjectDetectionConstants.input_size
+                box_lx = box.xyxy.tolist()[0][0]
+                box_bottom_center_y = box.xyxy.tolist()[0][3]
 
-                yaw_angle = pixels_to_degrees(np.array([box_x, box_y]), ObjectDetectionConstants.input_size, camera_data["fov"], log)[1]
+                box_rx = box.xyxy.tolist()[0][2]
+
+                box_bottom_center_x = (box_lx + box_rx) / 2
+
+                debug_points.append([int(box_bottom_center_x), int(box_bottom_center_y)])
+
+                # make pixel positions relative to the center
+                box_bottom_center_x -= frame_size[0] // 2
+                box_bottom_center_y -= frame_size[1] // 2
+                box_bottom_center_y = -box_bottom_center_y
+
+                yaw_angle = pixels_to_degrees(box_bottom_center_x, frame_size[0], camera_data["fov"][0], log)
                 object_local_position = calculate_local_position(
-                    np.array([box_x, box_y]), ObjectDetectionConstants.input_size, camera_data, log
+                    np.array([box_bottom_center_x, box_bottom_center_y]), frame_size, camera_data, log
                 )
+                robot_pose = np.array(struct.unpack("ddd", advantage_kit_nt.getValue("RealOutputs/Odometry/Robot", np.array([0, 0, 0]))))
                 object_global_position = convert_to_global_position(
-                    object_local_position, game_piece_nt.getNumberArray("robot_position", np.array([0, 0])), game_piece_nt.getNumber("robot_angle", 0)
+                    object_local_position, robot_pose
                 )
 
                 distance = np.linalg.norm(object_local_position)
+                if distance > ObjectDetectionConstants.max_distance:
+                    continue
 
                 detections.append({
                     "class": box_class,
@@ -168,6 +195,9 @@ class EagleEye:
                     "global_position": object_global_position,
                     "distance": distance,
                 })
+
+            if DisplayConstants.run_web_server:
+                web_interface.set_frame(camera_data["name"], results, debug_points)
 
             with self.data_lock:
                 self.data[camera_data["name"]] = detections

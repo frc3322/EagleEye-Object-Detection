@@ -4,6 +4,7 @@ import numpy as np
 from flask import Flask, Response, request, jsonify, send_from_directory, stream_with_context
 from threading import Thread
 import cv2
+from threading import Lock
 
 def index():
     """Serve the index.html file."""
@@ -31,8 +32,11 @@ class EagleEyeInterface:
         self.log_queue = queue.Queue()
         self.camera_frames = {}  # Dictionary mapping camera name to frame (bytes)
 
-        # Queue and thread for asynchronous frame updates.
-        self.frame_queue = queue.Queue()
+        # Replace the queue with a direct buffer
+        self.frame_buffer = {}  # Holds latest frames before processing
+        self.frame_lock = Lock()
+
+        # Start the processing thread
         self.frame_thread = Thread(target=self._process_frame_queue, daemon=True)
         self.frame_thread.start()
 
@@ -92,24 +96,37 @@ class EagleEyeInterface:
         """Add a message to the log."""
         self.log_queue.put(message)
 
-    def set_frame(self, camera_name, frame_bytes):
+    def set_frame(self, camera_name, results, points):
         """
-        Setter to update the frame of a given camera asynchronously.
-        Instead of updating immediately, it enqueues the frame update.
+        Store the latest frame in a buffer and let the background thread process it.
+        This minimizes time spent in the main thread.
         """
-        self.frame_queue.put((camera_name, frame_bytes))
+        with self.frame_lock:
+            self.frame_buffer[camera_name] = [results, points]
 
     def _process_frame_queue(self):
         """
-        Process the frame update queue. If the provided frame is a numpy ndarray,
-        convert it to JPEG-encoded bytes before updating.
+        Continuously process frames from frame_buffer and update camera_frames.
+        Only the latest frame per camera is stored, avoiding queue buildup.
         """
         while True:
-            camera_name, frame = self.frame_queue.get()
-            if isinstance(frame, np.ndarray):
-                frame = convert_ndarray_to_bytes(frame)
-            self.camera_frames[camera_name] = frame
-            self.frame_queue.task_done()
+            with self.frame_lock:
+                buffer_copy = self.frame_buffer.copy()
+                self.frame_buffer.clear()
+
+            for camera_name, data in buffer_copy.items():
+                frame, points = data
+                frame = frame.plot()
+
+                if len(points) > 0:
+                    for point in points:
+                        cv2.circle(frame, point, 5, (0, 255, 0), 4)
+
+                if isinstance(frame, np.ndarray):
+                    frame = convert_ndarray_to_bytes(frame)
+                self.camera_frames[camera_name] = frame
+
+            time.sleep(0.01)  # Small sleep to prevent busy looping
 
     def available_cameras(self):
         """Returns a JSON list of available camera names."""

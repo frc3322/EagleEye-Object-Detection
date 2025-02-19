@@ -6,14 +6,15 @@ body {
   background-color: #1e1e1e;
   color: #fff;
   height: 100vh;
+  width: 100vw;
   display: flex;
 }
 
-/* Main Layout */
+/* Main container holds left and right panels */
 .container {
   display: flex;
-  height: 100vh;
-  width: 100vw;
+  width: 100%;
+  height: 100%;
   overflow: hidden;
 }
 
@@ -24,59 +25,66 @@ body {
   flex-direction: column;
   padding: 10px;
   background-color: #2e2e2e;
-  overflow: hidden;
+  /* Let it scroll if camera feeds get tall */
+  overflow-y: auto;
 }
 
 /* Camera Section */
 .camera-section {
-  flex-grow: 1;
+  /* Takes up remaining vertical space, but can scroll if needed */
+  flex: 1;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
 }
 
 .camera-section h2 {
   border-bottom: 2px solid #8b0000;
+  margin-bottom: 10px;
   padding-bottom: 5px;
 }
 
+/* Individual Camera Feeds */
 .camera-feed {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  height: 100%;
+  margin-bottom: 20px;
   border: 2px solid #8b0000;
   border-radius: 5px;
   background-color: #000;
-  overflow: hidden;
-  margin-bottom: 10px;
+  display: flex;
+  flex-direction: column;
 }
 
+/* Camera Title Bar */
 .camera-feed h3 {
   margin: 0;
-  padding: 5px;
+  padding: 10px;
   background-color: #8b0000;
-  width: 100%;
   text-align: center;
 }
 
-/* Ensure the camera feed resizes dynamically without cropping */
+/* Container around the image to center it and allow space for it */
+.camera-feed div {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px;
+}
+
+/* The actual camera image */
 .camera-stream {
+  /* Let it scale proportionally to container width, up to 80% of viewport height */
+  max-width: 100%;
+  max-height: 80vh;
+  object-fit: contain;
   display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: contain; /* Ensures the full camera view is visible */
 }
 
 /* Log Section */
 .log-section {
-  flex-basis: 25%;
-  overflow-y: auto;
+  flex: 0;
   border: 2px solid #8b0000;
   border-radius: 5px;
   padding: 10px;
+  margin-top: 10px;
 }
 
 .log-section h2 {
@@ -152,7 +160,8 @@ button:hover {
   color: #0f0;
   font-family: monospace;
   padding: 10px;
-  height: 100%;
+  height: 200px; /* Example fixed height for log terminal */
   overflow-y: auto;
   border-radius: 3px;
+  margin-top: 10px;
 }

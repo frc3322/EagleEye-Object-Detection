@@ -1,19 +1,45 @@
-from threading import Thread
+import threading
+from threading import Lock
 
 import cv2
+import numpy as np
 from ultralytics import YOLO
 from src.constants.constants import ObjectDetectionConstants, NetworkTableConstants
 from src.format_conversion.detect_devices import detect_hardware
+from urllib.request import urlopen
 
 latest_frame = None
+frame_lock = Lock()
 
-def reader_thread(cap):
+
+def frame_reader(url):
     global latest_frame
+    stream = urlopen(url)
+    _bytes = bytearray()
     while True:
-        ret, frame = cap.read()
-        if not ret:
+        try:
+            # Continue reading until we extract a complete JPEG frame
+            while True:
+                # Flush the buffer if it grows too large
+                max_buffer_size = 100000  # adjust as needed
+                if len(_bytes) > max_buffer_size:
+                    _bytes = _bytes[-max_buffer_size:]
+
+                _bytes += stream.read(4096)
+                a = _bytes.find(b'\xff\xd8')  # JPEG start
+                b = _bytes.find(b'\xff\xd9')  # JPEG end
+                if a != -1 and b != -1:
+                    jpg = _bytes[a:b + 2]
+                    _bytes = _bytes[b + 2:]
+                    frame = cv2.imdecode(np.frombuffer(jpg, dtype=np.uint8), cv2.IMREAD_COLOR)
+                    if frame is not None:
+                        with frame_lock:
+                            latest_frame = frame
+                    break
+        except Exception as e:
+            print("Exception in frame_reader:", e)
             break
-        latest_frame = frame
+
 
 class Detector:
     def __init__(self, model_paths, log, simulation_mode, model_index=0):
@@ -24,6 +50,7 @@ class Detector:
         :param simulation_mode: whether to run in simulation mode
         :param model_index: the index of the model to use
         """
+        self.cap = None
         self.models = []
         self.log = log
         self.simulation_mode = simulation_mode
@@ -33,9 +60,7 @@ class Detector:
             self.log(f"Model loaded from {model_path}")
         self.gpu_present, self.tpu_present = detect_hardware(self.log)
         self.model_index = model_index
-
-        if self.simulation_mode:
-            self.log(f"Running in simulation mode, getting data from: {NetworkTableConstants.server_address}:1181/1?fps=60")
+        self.ready = False
 
     def set_model_index(self, model_index):
         """
@@ -44,69 +69,70 @@ class Detector:
         """
         self.model_index = model_index
 
+    def start_camera(self, camera_index, width, height, fps):
+        """
+        Initializes the camera or simulation stream.
+        """
+        if not self.simulation_mode:
+            self.cap = cv2.VideoCapture(camera_index, cv2.CAP_V4L2)
+            self.cap.set(cv2.CAP_PROP_HW_ACCELERATION, cv2.VIDEO_ACCELERATION_ANY)
+            self.cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*"MJPG"))
+            self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
+            self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
+            self.cap.set(cv2.CAP_PROP_FPS, fps)
+
+            if not self.cap.isOpened():
+                raise RuntimeError(f"Error opening camera {camera_index}")
+            self.ready = True
+        else:
+            self.cap = None
+            url = f"http://{NetworkTableConstants.server_address}:1181/1?fps=60"
+            self.log(f"Using simulation stream at {url}")
+
+            # Start the frame reading thread
+            reader_thread = threading.Thread(target=frame_reader, args=(url,), daemon=True)
+            reader_thread.start()
+
+            self.ready = True
+
+    def detect(self):
+        """
+        Captures frames directly and runs detection on each frame.
+        """
+        global latest_frame
+
+        if not self.simulation_mode:
+            ret, frame = self.cap.read()
+            if not ret:
+                return None, None
+        else:
+            with frame_lock:
+                frame = latest_frame
+
+        if frame is None:
+            return None, None
+
+        # Run prediction on the captured frame
+        device = "tpu:0" if self.tpu_present else ("gpu" if self.gpu_present else "cpu")
+        results = self.models[self.model_index].predict(
+            frame,
+            show=False,
+            device=device,
+            conf=ObjectDetectionConstants.confidence_threshold,
+            imgsz=ObjectDetectionConstants.input_size,
+            verbose=False,
+            iou=.5
+        )
+
+        frame_width = frame.shape[1]
+        frame_height = frame.shape[0]
+        frame_size = (frame_width, frame_height)
+
+        return results[0], frame_size
+
     def get_class_names(self):
         """
         Gets the class names of the model
         :return: the class names of the model
         """
         return self.models[self.model_index].names
-
-    def detect(self, camera_index, width, height, fps):
-        """
-        Captures frames directly with OpenCV and runs detection on each frame.
-        Yields detection results that mimic the original interface.
-        """
-        if not self.simulation_mode:
-            # Open the video capture device
-            cap = cv2.VideoCapture(camera_index, cv2.CAP_V4L2)
-            cap.set(cv2.CAP_PROP_HW_ACCELERATION, cv2.VIDEO_ACCELERATION_ANY)
-            cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*"MJPG"))
-            cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
-            cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
-            cap.set(cv2.CAP_PROP_FPS, fps)
-
-            if not cap.isOpened():
-                raise RuntimeError(f"Error opening camera {camera_index}")
-
-        else:
-            cap = cv2.VideoCapture(f"http://{NetworkTableConstants.server_address}:1181/1?fps=60", cv2.CAP_FFMPEG)
-            cap.set(cv2.CAP_PROP_HW_ACCELERATION, cv2.VIDEO_ACCELERATION_ANY)
-            cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
-
-            if not cap.isOpened():
-                raise RuntimeError(f"Error opening simulation feed from {NetworkTableConstants.server_address}:1181/1?fps=60")
-
-        # Start a thread to read frames from the camera
-        reader = Thread(target=reader_thread, args=(cap,))
-        reader.start()
-
-        while True:
-            # Optionally, convert color if required (e.g., BGR -> RGB)
-            # frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-
-            # Run prediction on the captured frame.
-            # Note: When passing an image, predict() returns a list, so we extract the first element.
-            if not self.tpu_present:
-                results = self.models[self.model_index].predict(
-                    latest_frame,
-                    show=False,
-                    device="gpu" if self.gpu_present else "cpu",
-                    conf=ObjectDetectionConstants.confidence_threshold,
-                    imgsz=ObjectDetectionConstants.input_size,
-                    verbose=False
-                )
-            else:
-                results = self.models[self.model_index].predict(
-                    latest_frame,
-                    show=False,
-                    device="tpu:0",
-                    conf=ObjectDetectionConstants.confidence_threshold,
-                    imgsz=ObjectDetectionConstants.input_size,
-                    verbose=False
-                )
-
-            # If predict() returns a list, extract the first result.
-            if isinstance(results, list):
-                results = results[0]
-
-            yield results
