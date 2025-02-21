@@ -3,7 +3,7 @@ import ast
 import numpy as np
 
 # Import your constants (make sure constants.py is in the same directory)
-import constants
+import src.constants.constants as constants
 
 
 def format_literal(val):

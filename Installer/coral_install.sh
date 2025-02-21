@@ -20,10 +20,13 @@ case "$ARCH" in
         ;;
 esac
 
+# Set the EULA to be automatically accepted
+debconf-set-selections <<< "libedgetpu libedgetpu/accepted-eula boolean true"
+
 # Function to get the latest libedgetpu1-std release link
 echo "Fetching latest libedgetpu1-max release link for $PLATFORM..."
-LATEST_URL=$(curl -s https://api.github.com/repos/feranick/libedgetpu/releases/latest | 
-  grep -oP '"browser_download_url": "\K(https://github.com/feranick/libedgetpu/releases/download/[^"]+libedgetpu1-max_[^"]+'$PLATFORM'\.deb)' | head -n 1)
+LATEST_URL=$(curl -s https://api.github.com/repos/DarkEden-coding/libedgetpu-no-interact/releases/latest | 
+  grep -oP '"browser_download_url": "\K(https://github.com/DarkEden-coding/libedgetpu-no-interact/releases/download/[^"]+libedgetpu1-max_[^"]+'$PLATFORM'\.deb)' | head -n 1)
 
 if [[ -z "$LATEST_URL" ]]; then
     echo "Error: Could not find the latest libedgetpu1-max package for $PLATFORM. Check the repository manually."
@@ -34,7 +37,7 @@ echo "Downloading $LATEST_URL..."
 wget -O libedgetpu1-max.bookworm_"$PLATFORM".deb "$LATEST_URL"
 
 # Install the package
-echo "Installing libedgetpu1-std..."
+echo "Installing libedgetpu1-max..."
 dpkg -i libedgetpu1-max.bookworm_"$PLATFORM".deb
 
 # Activate virtual environment

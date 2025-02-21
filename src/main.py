@@ -6,11 +6,7 @@ print(f"Setting Working Dir to: {os.path.dirname(os.path.dirname(os.path.abspath
 os.chdir(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import numpy as np
-from detector import Detector
-from custom_logging.log import log
-from math_conversions import calculate_local_position, convert_to_global_position, pixels_to_degrees
-
+from src.custom_logging.log import Logger
 from src.constants.constants import (
     DisplayConstants,
     CameraConstants,
@@ -18,29 +14,40 @@ from src.constants.constants import (
     NetworkTableConstants,
     Constants,
 )
+
+# run web server that streams video
+if DisplayConstants.run_web_server:
+    from src.web_interface.web_server import EagleEyeInterface
+
+    web_interface = EagleEyeInterface(lambda _: None)
+else:
+    web_interface = None
+
+logger = Logger(web_interface)
+log = logger.log
+
+import numpy as np
+from src.detector import Detector
+from src.math_conversions import calculate_local_position, convert_to_global_position, pixels_to_degrees
 from time import sleep, time
 from threading import Thread, Lock
 from networktables import NetworkTables
+import struct
 
 # ANSI color codes
 RED = "\033[91m"
 GREEN = "\033[92m"
 RESET = "\033[0m"
 
-# run web server that streams video
-if DisplayConstants.run_web_server:
-    from web_server import VideoStreamer, LogStreamer, run
-
-    video_streamer = VideoStreamer()
-    log_streamer = LogStreamer()
-    run()
-
 # As a client to connect to a robot
 NetworkTables.initialize(server=NetworkTableConstants.server_address)
-smart_dashboard = NetworkTables.getTable("SmartDashboard")
+game_piece_nt = NetworkTables.getTable("GamePieces")
+advantage_kit_nt = NetworkTables.getTable("AdvantageKit")
 
-smart_dashboard.putNumber("active_model", 0)
-smart_dashboard.putBoolean("restart_object_detection", False)
+game_piece_nt.putNumber("active_model", 0)
+
+def time_ms():
+    return time() * 1000
 
 
 class EagleEye:
@@ -51,7 +58,7 @@ class EagleEye:
             if not model.endswith(".md") and not model.startswith("_")
         ]
         log(f"Loading models: {model_paths}")
-        self.detector = Detector(model_paths)
+        self.detector = Detector(model_paths, log, Constants.simulation_mode)
         log(f"{len(model_paths)} models loaded")
 
         self.data = {}
@@ -59,15 +66,16 @@ class EagleEye:
 
         detection_threads = []
         for camera in CameraConstants.camera_list:
-            t = Thread(target=self.detection_thread, args=(camera, self.detector))
+            t = Thread(target=self.detection_thread, args=(camera,))
             detection_threads.append(t)
             t.start()
 
-        sleep(2)
+        sleep(5)
 
         log("All threads running")
 
-        smart_dashboard.addEntryListener(self.change_model, key="active_model", immediateNotify=True, localNotify=False)
+        game_piece_nt.addEntryListener(self.change_model, key="active_model", immediateNotify=True, localNotify=False)
+        game_piece_nt.putStringArray("class_names", list(self.detector.get_class_names().values()))
 
         while True:
             collected_detections = {}
@@ -80,6 +88,16 @@ class EagleEye:
                             collected_detections[detection["class"]] = []
                         collected_detections[detection["class"]].append(detection)
 
+            # if no detections, continue
+            if len(collected_detections) == 0:
+                # reset all values to empty
+                for class_name in self.detector.get_class_names().values():
+                    game_piece_nt.putNumberArray(f"{class_name}_yaw_angles", [])
+                    game_piece_nt.putStringArray(f"{class_name}_local_positions", [])
+                    game_piece_nt.putStringArray(f"{class_name}_global_positions", [])
+                sleep(0.016)
+                continue
+
             # sort detections by distance using distance
             for class_name, detections in collected_detections.items():
                 collected_detections[class_name] = sorted(detections, key=lambda x: x["distance"])
@@ -89,54 +107,85 @@ class EagleEye:
                 if len(detections) > 1:
                     for i in range(len(detections) - 1):
                         for j in range(i + 1, len(detections)):
-                            if np.linalg.norm(detections[i]["local_position"] - detections[j]["local_position"]) < ObjectDetectionConstants.note_combined_threshold:
+                            if np.linalg.norm(detections[i]["local_position"] - detections[j]["local_position"]) < ObjectDetectionConstants.combined_threshold:
                                 detections.pop(j)
                                 break
 
             # send detections to network table
             for class_name, detections in collected_detections.items():
-                smart_dashboard.putNumberArray(
+                game_piece_nt.putNumberArray(
                     f"{class_name}_yaw_angles",
                     [detection["yaw_angle"] for detection in detections]
                 )
-                smart_dashboard.putNumberArray(
+                game_piece_nt.putStringArray(
                     f"{class_name}_local_positions",
-                    [detection["local_position"].tolist() for detection in detections]
+                    [str(detection["local_position"].tolist()).replace("]", "").replace("[", "") for detection in detections]
                 )
-                smart_dashboard.putNumberArray(
+                game_piece_nt.putStringArray(
                     f"{class_name}_global_positions",
-                    [detection["global_position"].tolist() for detection in detections]
+                    [str(detection["global_position"].tolist()).replace("]", "").replace("[", "") for detection in detections]
                 )
 
-            sleep(0.1)
+            sleep(0.016)
 
-
-    def detection_thread(self, camera_data, detector):
+    def detection_thread(self, camera_data):
         log(f"Starting thread for {camera_data['name']} camera")
-        results_stream = detector.detect(camera_data["camera_id"], camera_data["fov"][0], camera_data["fov"][1], 60)
+        self.detector.start_camera(camera_data["camera_id"], camera_data["fov"][0], camera_data["fov"][1], 60)
 
-        detections = []
+        while self.detector.ready is False:
+            sleep(1)
+            log(f"Waiting for {camera_data['name']} camera to be ready")
 
-        for results in results_stream:
-            start_time = time()
-            log(f"Speeds: {results.speed}", force_no_log=Constants.detection_logging)
-            video_streamer.update_image(results.plot())
+        while True:
+            results, frame_size = self.detector.detect()
+
+            if results is None:
+                log(f"{RED}No frame{RESET}", force_no_log=(not Constants.detection_logging))
+                sleep(0.02)
+                continue
+
+            start_time = time_ms()
+            log(f"Speeds: {results.speed}", force_no_log=(not Constants.detection_logging))
+
+            # if no detections, continue
+            if not results.boxes:
+                with self.data_lock:
+                    self.data[camera_data["name"]] = []
+                sleep(0.02)
+                continue
+
+            detections = []
+            debug_points = []
 
             for box in results.boxes:
                 box_class = self.detector.get_class_names()[int(box.cls[0])]
                 box_confidence = box.conf.tolist()[0]
-                box_x = box.xywh.tolist()[0][0] * ObjectDetectionConstants.input_size
-                box_y = box.xywh.tolist()[0][1] * ObjectDetectionConstants.input_size
+                box_lx = box.xyxy.tolist()[0][0]
+                box_bottom_center_y = box.xyxy.tolist()[0][3]
 
-                yaw_angle = pixels_to_degrees(np.array([box_x, box_y]), ObjectDetectionConstants.input_size, camera_data["fov"])
+                box_rx = box.xyxy.tolist()[0][2]
+
+                box_bottom_center_x = (box_lx + box_rx) / 2
+
+                debug_points.append([int(box_bottom_center_x), int(box_bottom_center_y)])
+
+                # make pixel positions relative to the center
+                box_bottom_center_x -= frame_size[0] // 2
+                box_bottom_center_y -= frame_size[1] // 2
+                box_bottom_center_y = -box_bottom_center_y
+
+                yaw_angle = pixels_to_degrees(box_bottom_center_x, frame_size[0], camera_data["fov"][0], log)
                 object_local_position = calculate_local_position(
-                    np.array([box_x, box_y]), ObjectDetectionConstants.input_size, camera_data
+                    np.array([box_bottom_center_x, box_bottom_center_y]), frame_size, camera_data, log
                 )
+                robot_pose = np.array(struct.unpack("ddd", advantage_kit_nt.getValue("RealOutputs/Odometry/Robot", np.array([0, 0, 0]))))
                 object_global_position = convert_to_global_position(
-                    object_local_position, smart_dashboard.getNumberArray("robot_position", np.array([0, 0])), smart_dashboard.getNumber("robot_angle", 0)
+                    object_local_position, robot_pose
                 )
 
                 distance = np.linalg.norm(object_local_position)
+                if distance > ObjectDetectionConstants.max_distance:
+                    continue
 
                 detections.append({
                     "class": box_class,
@@ -147,13 +196,17 @@ class EagleEye:
                     "distance": distance,
                 })
 
+            if DisplayConstants.run_web_server:
+                web_interface.set_frame(camera_data["name"], results, debug_points)
+
             with self.data_lock:
                 self.data[camera_data["name"]] = detections
 
-            total_inference_time = sum(results.speed.values()) + (time() - start_time)
+            total_inference_time = sum(results.speed.values()) + (time_ms() - start_time)
             estimated_fps = 1000 / total_inference_time
-            log(f"Total processing time (ms): {total_inference_time}", force_no_log=Constants.detection_logging)
-            log(f"Estimated fps: {estimated_fps}", force_no_log=Constants.detection_logging)
+            log(f"Total processing time (ms): {total_inference_time}", force_no_log=(not Constants.detection_logging))
+            log(f"Post processing time (ms): {time_ms() - start_time}", force_no_log=(not Constants.detection_logging))
+            log(f"Estimated fps: {estimated_fps}", force_no_log=(not Constants.detection_logging))
 
     def change_model(self, _, __, value, is_new):
         if is_new:
