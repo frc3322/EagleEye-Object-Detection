@@ -37,7 +37,17 @@ class CameraConstants:
             "camera_offset_pos": array([0.25, 0.0, 0.75]),
             "camera_pitch": 0,
             "camera_yaw": 0,
-            "processing_device": "tpu:0",
+            "processing_device": "0",
+            "sim_camera": True,
+        },
+        {
+            "name": "front",
+            "camera_id": 1,
+            "fov": array([70, 38]),
+            "camera_offset_pos": array([0.25, 0.0, 0.75]),
+            "camera_pitch": 0,
+            "camera_yaw": 0,
+            "processing_device": "0",
             "sim_camera": True,
         }
     ]

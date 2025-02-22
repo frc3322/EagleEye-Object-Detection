@@ -51,8 +51,6 @@ game_piece_nt = NetworkTables.getTable("GamePieces")
 eagle_eye_nt = NetworkTables.getTable("EagleEye")
 advantage_kit_nt = NetworkTables.getTable("AdvantageKit")
 
-game_piece_nt.putNumber("active_model", 0)
-
 
 def time_ms():
     return time() * 1000
@@ -82,7 +80,7 @@ class EagleEye:
         self.devices = []
         for device, camera_list in cameras.items():
             device = GoogleCoral(
-                model_path, log, eagle_eye_nt, Constants.simulation_mode
+                model_path, log, eagle_eye_nt, len(self.devices)
             )
             for camera in camera_list:
                 device.add_camera(camera)
@@ -199,6 +197,10 @@ class EagleEye:
             if not results.boxes:
                 with self.data_lock:
                     self.data[device.get_current_camera().get_name()] = []
+                if DisplayConstants.run_web_server:
+                    web_interface.set_frame(
+                        device.get_current_camera().get_name(), results, []
+                    )
                 sleep(0.02)
                 continue
 

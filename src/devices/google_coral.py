@@ -1,5 +1,5 @@
 from ultralytics import YOLO
-from networktables import NetworkTablesInstance
+from networktables import NetworkTable
 
 from src.constants.constants import ObjectDetectionConstants
 from src.devices.utils.camera import Camera
@@ -10,7 +10,7 @@ class GoogleCoral:
         self,
         model_path: str,
         log: callable,
-        eagle_eye_nt: NetworkTablesInstance,
+        eagle_eye_nt: NetworkTable,
         device_index: int = 0,
     ):
         """
@@ -34,12 +34,17 @@ class GoogleCoral:
         self.cameras = []
         self.current_camera = 0
 
+        eagle_eye_nt.putNumber(f"tpu:{device_index}_active_camera", 0)
         self.eagle_eye_nt.addEntryListener(
-            self.change_model,
-            key="active_camera",
+            self._change_camera,
+            key=f"tpu:{device_index}_active_camera",
             immediateNotify=True,
             localNotify=False,
         )
+
+    def _change_camera(self, table, key, value, _) -> None:
+        if table == self.eagle_eye_nt and key == f"tpu:{self.device_index}_active_camera":
+            self.set_camera(value)
 
     def add_camera(self, camera_data: dict) -> None:
         """
@@ -53,7 +58,8 @@ class GoogleCoral:
         Sets the current camera index to the given index
         :param camera_index: the index of the camera to set
         """
-        self.current_camera = camera_index
+        self.log(f"Changing tpu:{self.device_index} camera to {camera_index}")
+        self.current_camera = int(camera_index)
 
     def get_camera_index(self) -> int:
         """
@@ -84,7 +90,7 @@ class GoogleCoral:
             return None, None
 
         # Run prediction on the captured frame
-        device = f"tpu:{self.device_index}"
+        device = 0 #f"tpu:{self.device_index}"
         results = self.model.predict(
             frame,
             show=False,

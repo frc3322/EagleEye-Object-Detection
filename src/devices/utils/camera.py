@@ -1,5 +1,4 @@
 import threading
-from typing import Any
 from urllib.request import urlopen
 
 import cv2
@@ -85,7 +84,7 @@ class Camera:
             if not self.cap.isOpened():
                 raise RuntimeError(f"Error opening camera {self.camera_id}")
         else:
-            url = f"http://{NetworkTableConstants.server_address}:1181/1?fps=60"
+            url = f"http://{NetworkTableConstants.server_address}:1181/{self.camera_id}?fps=60"
             self.log(f"Using simulation stream at {url}")
 
             # Start the frame reading thread
