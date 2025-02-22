@@ -24,7 +24,7 @@ exclude:
       - Installer/venv/*
 
 #Execute shell command before Qodana execution (Applied in CI/CD pipeline)
-bootstrap: pyenv install 3.13.0; pyenv global 3.13.0; python3 -m venv /data/cache/venv; source /data/cache/venv/bin/activate; pip install -r requirements.txt
+bootstrap: pyenv install 3.13.0; pyenv global 3.13.0; python3 -m venv /data/cache/venv; source /data/cache/venv/bin/activate; pip install -r requirements.txt; rm -rf .idea
 
 #Install IDE plugins before Qodana execution (Applied in CI/CD pipeline)
 #plugins:
