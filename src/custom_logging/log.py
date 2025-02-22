@@ -24,6 +24,7 @@ with open(log_file_path, "a") as log_file:
     log_file.write("-" * 100)
     log_file.write("\n\n")
 
+
 class Logger:
     def __init__(self, web_server):
         self.web_server = web_server
@@ -39,6 +40,7 @@ class Logger:
             message, force_log, force_no_log = self.log_queue.get()
             log(message, self.web_server, force_log, force_no_log)
             self.log_queue.task_done()
+
 
 def log(message, web_server, force_log=False, force_no_log=False):
     """
@@ -62,4 +64,6 @@ def log(message, web_server, force_log=False, force_no_log=False):
                 file.writelines(lines[100:])
 
         with open(log_file_path, "a") as file:
-            file.write(f"[{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}]:{message}\n")
+            file.write(
+                f"[{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}]:{message}\n"
+            )

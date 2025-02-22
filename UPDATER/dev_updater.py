@@ -11,7 +11,7 @@ TCP_PORT = 12345  # Must match the server's TCP port
 UDP_PORT = 54321  # Must match the server's UDP discovery port
 DISCOVERY_MSG = "DISCOVER_SERVER"
 RESPONSE_MSG = "SERVER_HERE"
-BROADCAST_ADDR = '<broadcast>'  # Special address for UDP broadcast
+BROADCAST_ADDR = "<broadcast>"  # Special address for UDP broadcast
 
 
 def discover_server(timeout=3):
@@ -26,9 +26,9 @@ def discover_server(timeout=3):
     try:
         print("[UDP] Sending discovery broadcast...")
         sys.stdout.flush()
-        udp_sock.sendto(DISCOVERY_MSG.encode('utf-8'), (BROADCAST_ADDR, UDP_PORT))
+        udp_sock.sendto(DISCOVERY_MSG.encode("utf-8"), (BROADCAST_ADDR, UDP_PORT))
         data, addr = udp_sock.recvfrom(9988)
-        if data.decode('utf-8') == RESPONSE_MSG:
+        if data.decode("utf-8") == RESPONSE_MSG:
             print(f"[UDP] Server discovered at {addr[0]}")
             return addr[0]
     except socket.timeout:
@@ -40,17 +40,25 @@ def discover_server(timeout=3):
 
 
 def send_folder(tcp_sock):
-    files = [os.path.join(root, file) for root, _, files in os.walk(folder_path) for file in files]
+    files = [
+        os.path.join(root, file)
+        for root, _, files in os.walk(folder_path)
+        for file in files
+    ]
 
     with tqdm(total=len(files), desc="Sending files", unit="file") as pbar:
         for file_path in files:
-            with open(file_path, 'rb') as f:
+            with open(file_path, "rb") as f:
                 file_data = f.read()
-                file_info = pickle.dumps({
-                    "file_name": os.path.relpath(file_path, folder_path).replace("\\", "/"),
-                    "file_data": file_data
-                })
-                tcp_sock.sendall(len(file_info).to_bytes(4, 'big'))  # Send length first
+                file_info = pickle.dumps(
+                    {
+                        "file_name": os.path.relpath(file_path, folder_path).replace(
+                            "\\", "/"
+                        ),
+                        "file_data": file_data,
+                    }
+                )
+                tcp_sock.sendall(len(file_info).to_bytes(4, "big"))  # Send length first
                 tcp_sock.sendall(file_info)  # Then send data
                 sleep(0.05)  # Allow the server to process
                 pbar.update(1)
@@ -76,15 +84,16 @@ def tcp_client():
         tcp_sock.close()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Client for sending a folder to a server via TCP. "
-                    "Either supply a hostname/IP for a direct connection, or let the client use UDP broadcast discovery."
+        "Either supply a hostname/IP for a direct connection, or let the client use UDP broadcast discovery."
     )
     parser.add_argument(
-        "-H", "--hostname",
+        "-H",
+        "--hostname",
         type=str,
-        help="Hostname or IP address of the server for a direct connection."
+        help="Hostname or IP address of the server for a direct connection.",
     )
 
     args = parser.parse_args()
@@ -97,7 +106,9 @@ if __name__ == '__main__':
         print("[INFO] No hostname provided. Attempting UDP discovery...")
         server_ip = discover_server()
 
-    folder_path = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, "src"))
+    folder_path = os.path.abspath(
+        os.path.join(os.path.dirname(__file__), os.pardir, "src")
+    )
 
     if server_ip:
         tcp_client()

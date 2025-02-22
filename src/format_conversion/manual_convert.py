@@ -1,5 +1,6 @@
 from ultralytics import YOLO
 
+
 def select_format():
     print("Select the format to export the model:")
     formats = {
@@ -18,7 +19,7 @@ def select_format():
         "13": "MNN (For mobile and embedded systems)",
         "14": "NCNN (For ARM and mobile devices)",
         "15": "IMX500 (For i.MX500 hardware)",
-        "16": "RKNN (For Rockchip devices)"
+        "16": "RKNN (For Rockchip devices)",
     }
 
     for key, value in formats.items():
@@ -42,10 +43,11 @@ def select_format():
         "13": "mnn",
         "14": "ncnn",
         "15": "imx",
-        "16": "rknn"
+        "16": "rknn",
     }
 
     return format_dict.get(choice, None)
+
 
 def export_model():
     # Load YOLO model
@@ -56,6 +58,7 @@ def export_model():
 
     print(f"Model exported to {export_path}")
     return export_path
+
 
 if __name__ == "__main__":
     model_path = input("Enter the model path: ")
