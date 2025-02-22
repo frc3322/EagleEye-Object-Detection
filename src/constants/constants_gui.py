@@ -165,13 +165,9 @@ class ConstantsEditor(ctk.CTk):
         Uses format_literal() to ensure NumPy arrays are saved as np.array([...]).
         (The formatting is fixed; comments from the original file are not preserved.)
         """
-        lines = []
-        lines.append("import numpy as np")
-        lines.append("array = np.array")
-        lines.append("")
+        lines = ["import numpy as np", "array = np.array", "", "class Constants:"]
 
         # --- Constants ---
-        lines.append("class Constants:")
         for field in ["log", "print_terminal", "detection_logging"]:
             widget = self.widgets["Constants"][field]
             val = widget.var.get()  # get the boolean value
@@ -202,14 +198,18 @@ class ConstantsEditor(ctk.CTk):
             confidence_threshold = float(entry.get())
         except ValueError:
             confidence_threshold = entry.get()
-        lines.append(f"    confidence_threshold = {format_literal(confidence_threshold)}")
+        lines.append(
+            f"    confidence_threshold = {format_literal(confidence_threshold)}"
+        )
         # note_combined_threshold (int)
         entry = self.widgets["ObjectDetectionConstants"]["note_combined_threshold"]
         try:
             note_combined_threshold = int(entry.get())
         except ValueError:
             note_combined_threshold = entry.get()
-        lines.append(f"    note_combined_threshold = {format_literal(note_combined_threshold)}")
+        lines.append(
+            f"    note_combined_threshold = {format_literal(note_combined_threshold)}"
+        )
         lines.append("")
 
         # --- DisplayConstants ---
@@ -244,6 +244,8 @@ class ConstantsEditor(ctk.CTk):
 if __name__ == "__main__":
     # Optionally set appearance and theme
     ctk.set_appearance_mode("System")  # Modes: "System" (standard), "Dark", "Light"
-    ctk.set_default_color_theme("blue")  # Themes: "blue" (standard), "green", "dark-blue"
+    ctk.set_default_color_theme(
+        "blue"
+    )  # Themes: "blue" (standard), "green", "dark-blue"
     app = ConstantsEditor()
     app.mainloop()

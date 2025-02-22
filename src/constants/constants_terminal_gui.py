@@ -5,10 +5,18 @@ import src.constants.constants as constants  # Make sure constants.py is in the 
 # Define the groups and their fields.
 GROUPS = {
     "Constants": ["log", "print_terminal", "detection_logging"],
-    "NetworkTableConstants": ["server_address", "robot_position_key", "robot_rotation_key"],
-    "ObjectDetectionConstants": ["input_size", "confidence_threshold", "note_combined_threshold"],
+    "NetworkTableConstants": [
+        "server_address",
+        "robot_position_key",
+        "robot_rotation_key",
+    ],
+    "ObjectDetectionConstants": [
+        "input_size",
+        "confidence_threshold",
+        "note_combined_threshold",
+    ],
     "DisplayConstants": ["run_web_server"],
-    "CameraConstants": ["camera_list"]
+    "CameraConstants": ["camera_list"],
 }
 
 
@@ -40,9 +48,9 @@ def convert_input(current_value, new_input):
     """
     if isinstance(current_value, bool):
         # Interpret various boolean inputs.
-        if new_input.lower() in ['true', 't', '1']:
+        if new_input.lower() in ["true", "t", "1"]:
             return True
-        elif new_input.lower() in ['false', 'f', '0']:
+        elif new_input.lower() in ["false", "f", "0"]:
             return False
         else:
             print("Invalid boolean input.")
@@ -122,10 +130,8 @@ def save_constants(updated):
     Uses `format_literal` to ensure NumPy arrays are saved as np.array([...]).
     (This version does not preserve original comments.)
     """
-    lines = []
-    lines.append("import numpy as np")
-    lines.append("array = np.array")
-    lines.append("")
+    lines = ["import numpy as np", "array = np.array", ""]
+
     for group, fields in GROUPS.items():
         lines.append(f"class {group}:")
         for field in fields:
@@ -185,7 +191,9 @@ def edit_group(updated, group):
         for i, field in enumerate(fields, 1):
             print(f"  {i}. {field} (current: {updated[group][field]})")
         print("  b. Back to main menu")
-        choice = input("Select a field to edit (number) or 'b' to go back: ").strip().lower()
+        choice = (
+            input("Select a field to edit (number) or 'b' to go back: ").strip().lower()
+        )
         if choice == "b":
             break
         else:

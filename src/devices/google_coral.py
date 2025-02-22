@@ -43,7 +43,10 @@ class GoogleCoral:
         )
 
     def _change_camera(self, table, key, value, _) -> None:
-        if table == self.eagle_eye_nt and key == f"tpu:{self.device_index}_active_camera":
+        if (
+            table == self.eagle_eye_nt
+            and key == f"tpu:{self.device_index}_active_camera"
+        ):
             self.set_camera(value)
 
     def add_camera(self, camera_data: dict) -> None:
