@@ -8,8 +8,6 @@ version: "1.0"
 profile:
   name: qodana.starter
 
-ide: QDPY
-
 #Enable inspections
 #include:
 #  - name: <SomeEnabledInspectionId>
@@ -26,11 +24,11 @@ exclude:
       - Installer/venv/*
 
 #Execute shell command before Qodana execution (Applied in CI/CD pipeline)
-bootstrap: pip install -r requirements.txt
+bootstrap: pyenv install 3.13.0; pyenv global 3.13.0; python3 -m venv /data/cache/venv; source /data/cache/venv/bin/activate; pip install -r requirements.txt
 
 #Install IDE plugins before Qodana execution (Applied in CI/CD pipeline)
 #plugins:
 #  - id: <plugin.id> #(plugin id can be found at https://plugins.jetbrains.com)
 
 #Specify Qodana linter for analysis (Applied in CI/CD pipeline)
-#linter: jetbrains/qodana-python:2024.3
+linter: jetbrains/qodana-python:2024.3
