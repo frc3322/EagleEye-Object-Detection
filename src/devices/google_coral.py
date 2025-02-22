@@ -90,7 +90,7 @@ class GoogleCoral:
             return None, None
 
         # Run prediction on the captured frame
-        device = 0 #f"tpu:{self.device_index}"
+        device = f"tpu:{self.device_index}"
         results = self.model.predict(
             frame,
             show=False,
