@@ -60,6 +60,7 @@ class Camera:
         self.camera_yaw = camera_data["camera_yaw"]
         self.processing_device = camera_data["processing_device"]
         self.sim_camera = camera_data["sim_camera"]
+        self.frame_rotation = camera_data["frame_rotation"]
 
         self.log = log
 
@@ -101,10 +102,11 @@ class Camera:
             ret, frame = self.cap.read()
             if not ret:
                 return None
+            frame = cv2.rotate(frame, self.frame_rotation)
             return frame
         else:
             with self.frame_lock:
-                return self.latest_frame
+                return cv2.rotate(self.latest_frame, self.frame_rotation)
 
     def _set_frame(self, frame) -> None:
         """
