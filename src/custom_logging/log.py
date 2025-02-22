@@ -5,24 +5,24 @@ import threading
 import queue
 from src.constants.constants import Constants
 
-log_file = "log.txt"
+log_file_path = "log.txt"
 
 RED = "\033[91m"
 GREEN = "\033[92m"
 RESET = "\033[0m"
 
-if not os.path.exists(log_file):
-    with open(log_file, "w") as file:
-        file.write("")
+if not os.path.exists(log_file_path):
+    with open(log_file_path, "w") as log_file:
+        log_file.write("")
 
 # Write space and date to log file to indicate a new run
 now = datetime.datetime.now()
-with open(log_file, "a") as file:
-    file.write("\n")
-    file.write("-" * 100)
-    file.write(f"\n{now.strftime('%Y-%m-%d %H:%M:%S')}\n")
-    file.write("-" * 100)
-    file.write("\n\n")
+with open(log_file_path, "a") as log_file:
+    log_file.write("\n")
+    log_file.write("-" * 100)
+    log_file.write(f"\n{now.strftime('%Y-%m-%d %H:%M:%S')}\n")
+    log_file.write("-" * 100)
+    log_file.write("\n\n")
 
 class Logger:
     def __init__(self, web_server):
@@ -55,11 +55,11 @@ def log(message, web_server, force_log=False, force_no_log=False):
         message = str(message).replace(RED, "").replace(GREEN, "").replace(RESET, "")
 
         # If file is over 25MB, remove the first 100 lines
-        if os.path.getsize(log_file) > 25 * 1024 * 1024:
-            with open(log_file, "r") as file:
+        if os.path.getsize(log_file_path) > 25 * 1024 * 1024:
+            with open(log_file_path, "r") as file:
                 lines = file.readlines()
-            with open(log_file, "w") as file:
+            with open(log_file_path, "w") as file:
                 file.writelines(lines[100:])
 
-        with open(log_file, "a") as file:
+        with open(log_file_path, "a") as file:
             file.write(f"[{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}]:{message}\n")

@@ -227,7 +227,7 @@ class ConstantsEditor(ctk.CTk):
         try:
             camera_list = ast.literal_eval(text_value)
             lines.append(f"    camera_list = {format_literal(camera_list)}")
-        except Exception as e:
+        except (ValueError, SyntaxError) as _:
             # If there is an error in the input, save the raw text
             lines.append(f"    camera_list = {text_value}")
         lines.append("")

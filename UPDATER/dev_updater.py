@@ -7,11 +7,12 @@ import argparse
 from tqdm import tqdm
 
 # Configuration
-TCP_PORT = 12345       # Must match the server's TCP port
-UDP_PORT = 54321       # Must match the server's UDP discovery port
+TCP_PORT = 12345  # Must match the server's TCP port
+UDP_PORT = 54321  # Must match the server's UDP discovery port
 DISCOVERY_MSG = "DISCOVER_SERVER"
 RESPONSE_MSG = "SERVER_HERE"
 BROADCAST_ADDR = '<broadcast>'  # Special address for UDP broadcast
+
 
 def discover_server(timeout=3):
     """
@@ -37,7 +38,8 @@ def discover_server(timeout=3):
 
     return None
 
-def send_folder(folder_path, tcp_sock):
+
+def send_folder(tcp_sock):
     files = [os.path.join(root, file) for root, _, files in os.walk(folder_path) for file in files]
 
     with tqdm(total=len(files), desc="Sending files", unit="file") as pbar:
@@ -56,7 +58,8 @@ def send_folder(folder_path, tcp_sock):
     tcp_sock.sendall(b"EOF")  # End of transmission
     print("[TCP] Folder transfer complete.")
 
-def tcp_client(server_ip, folder_path):
+
+def tcp_client():
     """
     Connect to the server via TCP and send a folder.
     """
@@ -65,12 +68,13 @@ def tcp_client(server_ip, folder_path):
         print(f"[TCP] Connecting to server at {server_ip}:{TCP_PORT} ...")
         tcp_sock.connect((server_ip, TCP_PORT))
         sleep(1)
-        send_folder(folder_path, tcp_sock)
+        send_folder(tcp_sock)
         print("[TCP] Folder sent successfully.")
     except Exception as e:
         print(f"[TCP] Error: {e}")
     finally:
         tcp_sock.close()
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
@@ -96,6 +100,6 @@ if __name__ == '__main__':
     folder_path = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, "src"))
 
     if server_ip:
-        tcp_client(server_ip, folder_path)
+        tcp_client()
     else:
         print("Server could not be discovered.")

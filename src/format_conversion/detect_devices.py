@@ -9,7 +9,7 @@ except ImportError:
 def check_nvidia_gpu():
     try:
         return torch.cuda.is_available()
-    except Exception:
+    except ImportError:
         return False
 
 def check_amd_gpu():
@@ -19,14 +19,14 @@ def check_amd_gpu():
         else:
             result = subprocess.run(["lspci"], capture_output=True, text=True)
         return "AMD" in result.stdout
-    except Exception:
+    except subprocess.CalledProcessError:
         return False
 
 def check_coral_tpu():
     try:
         result = subprocess.run(["lsusb"], capture_output=True, text=True)
         return ("Global Unichip Corp" in result.stdout) or ("Google Inc" in result.stdout)
-    except Exception:
+    except subprocess.CalledProcessError:
         return False
 
 def detect_hardware(log):

@@ -47,7 +47,7 @@ def select_format():
 
     return format_dict.get(choice, None)
 
-def export_model(model_path, selected_format):
+def export_model():
     # Load YOLO model
     model = YOLO(model_path)
 
@@ -63,6 +63,6 @@ if __name__ == "__main__":
     # Select format
     selected_format = select_format()
     if selected_format:
-        export_model(model_path, selected_format)
+        export_model()
     else:
         print("Invalid format selected!")
