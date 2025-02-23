@@ -24,7 +24,7 @@ exclude:
       - Installer/venv/*
 
 #Execute shell command before Qodana execution (Applied in CI/CD pipeline)
-bootstrap: ./qodana_setup.sh
+bootstrap: sh ./qodana_setup.sh
 
 #Install IDE plugins before Qodana execution (Applied in CI/CD pipeline)
 #plugins:
