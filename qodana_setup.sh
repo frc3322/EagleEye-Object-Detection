@@ -3,17 +3,6 @@
 # Exit on error
 set -e
 
-sudo apt install pyenv
-
-# Ensure pyenv is available
-export PYENV_ROOT="$HOME/.pyenv"
-export PATH="$PYENV_ROOT/bin:$PATH"
-eval "$(pyenv init --path)"
-
-# Install and set Python version
-pyenv install -s 3.13.0
-pyenv global 3.13.0
-
 # Create virtual environment
 python3 -m venv /data/cache/venv
 
