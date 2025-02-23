@@ -109,6 +109,7 @@ class EagleEye:
 
         while True:
             collected_detections = {}
+            num_detections = 0
 
             for camera in CameraConstants.camera_list:
                 with self.data_lock:
@@ -117,14 +118,17 @@ class EagleEye:
                         if detection["class"] not in collected_detections:
                             collected_detections[detection["class"]] = []
                         collected_detections[detection["class"]].append(detection)
+                        num_detections += 1
 
             # if no detections, continue
-            if len(collected_detections) == 0:
+            if num_detections == 0:
                 # reset all values to empty
                 for class_name in class_names:
                     game_piece_nt.putNumberArray(f"{class_name}_yaw_angles", [])
                     game_piece_nt.putStringArray(f"{class_name}_local_positions", [])
                     game_piece_nt.putStringArray(f"{class_name}_global_positions", [])
+                    game_piece_nt.putStringArray(f"{class_name}_distances", [])
+                    game_piece_nt.putStringArray(f"{class_name}_ratio", [])
                 sleep(0.016)
                 continue
 
@@ -171,6 +175,14 @@ class EagleEye:
                         for detection in detections
                     ],
                 )
+                game_piece_nt.putStringArray(
+                    f"{class_name}_distances",
+                    [str(detection["distance"]) for detection in detections],
+                )
+                game_piece_nt.putStringArray(
+                    f"{class_name}_ratio",
+                    [str(detection["ratio"]) for detection in detections],
+                )
 
             sleep(0.016)
 
@@ -214,6 +226,10 @@ class EagleEye:
                 box_bottom_center_y = box.xyxy.tolist()[0][3]
 
                 box_rx = box.xyxy.tolist()[0][2]
+
+                box_width = box_rx - box_lx
+                box_height = box_bottom_center_y - box.xyxy.tolist()[0][1]
+                box_ratio = box_width / box_height
 
                 box_bottom_center_x = (box_lx + box_rx) / 2
 
@@ -263,6 +279,7 @@ class EagleEye:
                         "local_position": object_local_position,
                         "global_position": object_global_position,
                         "distance": distance,
+                        "ratio": box_ratio,
                     }
                 )
 
