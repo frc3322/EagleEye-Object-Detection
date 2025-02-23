@@ -22,8 +22,13 @@ We welcome contributions to improve EagleEye Object Detection. To contribute:
 3. Submit a pull request with a detailed description of your changes.
 4. We will review your changes and merge them if they meet our standards
 
+You can see the status of current code in terms of clendliness and issues at this link: [sonar cloud](https://sonarcloud.io/project/overview?id=darkeden-coding_eagleeye)
+
 ## License
 This project is licensed under the GNU General Public License. See the [LICENSE](LICENSE) file for details.
 
 ## Contributors
 - [DarkEden-coding](https://github.com/DarkEden-coding) - Main Contributor
+
+## Action Statuses 
+- Sonar Cloud Upload: [![Sonar-Analyse](https://github.com/frc3322/EagleEye-Object-Detection/actions/workflows/sonar-cube.yaml/badge.svg)](https://github.com/frc3322/EagleEye-Object-Detection/actions/workflows/sonar-cube.yaml)
