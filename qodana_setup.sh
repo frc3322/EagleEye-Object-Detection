@@ -3,6 +3,8 @@
 # Exit on error
 set -e
 
+apt install pyenv
+
 # Ensure pyenv is available
 export PYENV_ROOT="$HOME/.pyenv"
 export PATH="$PYENV_ROOT/bin:$PATH"
