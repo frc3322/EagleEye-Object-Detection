@@ -1,8 +1,11 @@
-name: Build
+name: Sonar-Analyse
 on:
+  workflow_dispatch:
   push:
     branches:
-      - master
+      - main # The 'main' branch
+      - master # The 'master' branch
+      - 'releases/*' # The release branches
   pull_request:
     types: [ opened, synchronize, reopened ]
 jobs:
