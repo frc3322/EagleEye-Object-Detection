@@ -229,7 +229,7 @@ class EagleEye:
                 yaw_angle = pixels_to_degrees(
                     box_bottom_center_x,
                     frame_size[0],
-                    device.get_current_camera().get_fov()[0],
+                    float(device.get_current_camera().get_fov()[0]),
                     log,
                 )
                 object_local_position = calculate_local_position(
