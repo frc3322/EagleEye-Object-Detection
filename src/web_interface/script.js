@@ -88,8 +88,6 @@ function updateCameraFeeds() {
         cameraElement.appendChild(videoFeed);
         cameraContainer.appendChild(cameraElement);
       });
-
-      // addLogMessage('Camera feeds updated.');
     })
     .catch(error => {
       console.error('Error fetching camera feeds:', error);

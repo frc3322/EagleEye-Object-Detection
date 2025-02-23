@@ -4,9 +4,6 @@ array = np.array
 
 
 class Constants:
-    def __init__(self):
-        pass
-
     log = False
     print_terminal = True
     detection_logging = False
@@ -15,18 +12,12 @@ class Constants:
 
 
 class NetworkTableConstants:
-    def __init__(self):
-        pass
-
     server_address = "10.0.0.62"
     robot_position_key = "robot_position"
     robot_rotation_key = "robot_rotation"
 
 
 class ObjectDetectionConstants:
-    def __init__(self):
-        pass
-
     input_size = 320
     confidence_threshold = 0.5
     combined_threshold = 0.25  # in meters
@@ -34,16 +25,10 @@ class ObjectDetectionConstants:
 
 
 class DisplayConstants:
-    def __init__(self):
-        pass
-
     run_web_server = True
 
 
 class CameraConstants:
-    def __init__(self):
-        pass
-
     camera_list = [
         {
             "name": "front",
