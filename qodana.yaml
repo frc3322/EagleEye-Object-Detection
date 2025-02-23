@@ -24,7 +24,15 @@ exclude:
       - Installer/venv/*
 
 #Execute shell command before Qodana execution (Applied in CI/CD pipeline)
-bootstrap: /home/runner/work/EagleEye-Object-Detection/EagleEye-Object-Detection/qodana_setup.sh
+bootstrap: |
+  conda init bash
+  conda update -y conda
+  conda install -y python=3.8.5
+  python --version
+  python -m venv venv
+  source /data/project/venv/bin/activate
+  pip install -r requirements.txt
+  rm -rf .idea
 
 #Install IDE plugins before Qodana execution (Applied in CI/CD pipeline)
 #plugins:
