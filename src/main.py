@@ -127,8 +127,8 @@ class EagleEye:
                     game_piece_nt.putNumberArray(f"{class_name}_yaw_angles", [])
                     game_piece_nt.putStringArray(f"{class_name}_local_positions", [])
                     game_piece_nt.putStringArray(f"{class_name}_global_positions", [])
-                    game_piece_nt.putStringArray(f"{class_name}_distances", [])
-                    game_piece_nt.putStringArray(f"{class_name}_ratio", [])
+                    game_piece_nt.putNumberArray(f"{class_name}_distances", [])
+                    game_piece_nt.putNumberArray(f"{class_name}_ratio", [])
                 sleep(0.016)
                 continue
 
@@ -175,13 +175,13 @@ class EagleEye:
                         for detection in detections
                     ],
                 )
-                game_piece_nt.putStringArray(
+                game_piece_nt.putNumberArray(
                     f"{class_name}_distances",
-                    [str(detection["distance"]) for detection in detections],
+                    [detection["distance"] for detection in detections],
                 )
-                game_piece_nt.putStringArray(
+                game_piece_nt.putNumberArray(
                     f"{class_name}_ratio",
-                    [str(detection["ratio"]) for detection in detections],
+                    [detection["ratio"] for detection in detections],
                 )
 
             sleep(0.016)
