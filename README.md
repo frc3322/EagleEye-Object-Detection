@@ -26,6 +26,8 @@ You can see the status of current code in terms of clendliness and issues at thi
 
 ## License
 EagleEye Framework © 2025 by ScytheEngineering is licensed under CC BY-NC 4.0. See the [LICENSE](LICENSE) file for details.
+![image](https://github.com/user-attachments/assets/e16050ce-11b1-4567-98d5-f94c44065c28)
+
 
 ## Contributors
 - [DarkEden-coding](https://github.com/DarkEden-coding) - Main Contributor
