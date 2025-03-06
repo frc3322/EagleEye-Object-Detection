@@ -25,7 +25,7 @@ We welcome contributions to improve EagleEye Object Detection. To contribute:
 You can see the status of current code in terms of clendliness and issues at this link: [sonar cloud](https://sonarcloud.io/project/overview?id=darkeden-coding_eagleeye)
 
 ## License
-This project is licensed under the GNU General Public License. See the [LICENSE](LICENSE) file for details.
+EagleEye Framework © 2025 by ScytheEngineering is licensed under CC BY-NC 4.0. See the [LICENSE](LICENSE) file for details.
 
 ## Contributors
 - [DarkEden-coding](https://github.com/DarkEden-coding) - Main Contributor
