@@ -10,5 +10,5 @@ torch~=2.6.0
 tqdm~=4.67.1
 pip~=25.0
 pillow~=11.1.0
-filelock~=3.17.0
+filelock~=3.18.0
 clearml~=1.17.1
