@@ -189,6 +189,14 @@ class EagleEye:
     def detection_thread(self, device: GoogleCoral):
         log(f"Starting thread for {device.get_current_camera().get_name()} camera")
         while True:
+            robot_pose = np.array(
+                struct.unpack(
+                    "ddd",
+                    advantage_kit_nt.getValue(
+                        "RealOutputs/Odometry/Robot", np.array([0, 0, 0])
+                    ),
+                )
+            )
             results, frame_size = device.detect()
 
             if results is None:
@@ -254,14 +262,6 @@ class EagleEye:
                     device.get_current_camera().get_fov(),
                     device.get_current_camera().get_camera_offset_pos(),
                     log,
-                )
-                robot_pose = np.array(
-                    struct.unpack(
-                        "ddd",
-                        advantage_kit_nt.getValue(
-                            "RealOutputs/Odometry/Robot", np.array([0, 0, 0])
-                        ),
-                    )
                 )
                 object_global_position = convert_to_global_position(
                     object_local_position, robot_pose
