@@ -39,7 +39,7 @@ class CameraConstants:
             "camera_yaw": 0,
             "frame_rotation": 0,
             "processing_device": "tpu:0",
-            "sim_camera": False,
+            "sim_camera": True,
         },
         {
             "name": "back",
@@ -50,6 +50,6 @@ class CameraConstants:
             "camera_yaw": 180,
             "frame_rotation": 180,
             "processing_device": "tpu:0",
-            "sim_camera": False,
+            "sim_camera": True,
         },
     ]

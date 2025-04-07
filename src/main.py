@@ -29,7 +29,7 @@ logger = Logger(web_interface)
 log = logger.log
 
 import numpy as np
-from src.devices.google_coral import GoogleCoral
+from src.devices.simple_device import SimpleDevice
 from src.math_conversions import (
     calculate_local_position,
     convert_to_global_position,
@@ -79,8 +79,8 @@ class EagleEye:
 
         self.devices = []
         for device, camera_list in cameras.items():
-            device = GoogleCoral(
-                model_path, log, eagle_eye_nt, len(self.devices)
+            device = SimpleDevice(
+                "gpu", model_path, log, eagle_eye_nt, len(self.devices)
             )
             for camera in camera_list:
                 device.add_camera(camera)
@@ -186,7 +186,7 @@ class EagleEye:
 
             sleep(0.016)
 
-    def detection_thread(self, device: GoogleCoral):
+    def detection_thread(self, device: SimpleDevice):
         log(f"Starting thread for {device.get_current_camera().get_name()} camera")
         while True:
             robot_pose = np.array(
