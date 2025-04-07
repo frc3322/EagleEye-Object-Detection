@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Eagle Eye</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- Include Three.js, GLTFLoader, and PointerLockControls -->
+</head>
+<body>
+  <div class="main-container">
+    <!-- HEADER -->
+    <div class="header">EAGLE EYE</div>
+
+    <!-- CONTENT: Left view area and right sidebar -->
+    <div class="content">
+      <!-- LEFT CONTENT -->
+      <div class="left-content">
+        <!-- Default "Views" grid with feed controls -->
+        <div id="view-views" class="view active">
+          <div class="signal-grid">
+            <div class="signal-box">NO SIGNAL</div>
+            <div class="signal-box">NO SIGNAL</div>
+            <div class="signal-box">NO SIGNAL</div>
+            <div class="signal-box">NO SIGNAL</div>
+          </div>
+          <div class="feed-controls">
+            <button class="feed-btn" id="addFeedBtn">+</button>
+            <button class="feed-btn" id="removeFeedBtn">–</button>
+          </div>
+        </div>
+        <!-- 3D View (WebGL model will load here) -->
+        <div id="view-3d" class="view">
+          <!-- Loading overlay will be injected here by script.js -->
+        </div>
+        <!-- Settings placeholder -->
+        <div id="view-settings" class="view">
+          <div class="placeholder-view">
+            <h2>Settings Placeholder</h2>
+            <p>Configuration settings go here.</p>
+          </div>
+        </div>
+        <!-- Calibration placeholder -->
+        <div id="view-calibration" class="view">
+          <div class="placeholder-view">
+            <h2>Calibration Placeholder</h2>
+            <p>Calibration tools go here.</p>
+          </div>
+        </div>
+        <!-- Setup placeholder -->
+        <div id="view-setup" class="view">
+          <div class="placeholder-view">
+            <h2>Setup Placeholder</h2>
+            <p>Setup process info goes here.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- SIDEBAR -->
+      <nav class="sidebar">
+        <ul>
+          <li class="active" data-view="view-views">Views</li>
+          <li data-view="view-3d">3D View</li>
+          <li data-view="view-settings">Settings</li>
+          <li data-view="view-calibration">Calibration</li>
+          <li data-view="view-setup">Setup</li>
+        </ul>
+      </nav>
+    </div>
+  </div>
+
+  <script type="importmap">
+    {
+        "imports": {
+            "three": "../node_modules/three/build/three.module.js"
+        }
+    }</script>
+
+  <script type="module" src="script.js"></script>
+</body>
+</html>
