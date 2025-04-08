@@ -13,3 +13,5 @@ pip~=25.0
 pillow~=11.1.0
 filelock~=3.18.0
 clearml~=1.18.0
+
+pygrabber~=0.2
