@@ -23,6 +23,22 @@
     background-color: #666;
 }
 
+#toggleGamePiecesBtn {
+    position: absolute;
+    top: 125px;
+    left: 10px;
+    z-index: 5;
+    padding: 8px 12px;
+    background-color: #444;
+    color: #f9c84a;
+    border: none;
+    border-radius: 6px;
+}
+
+#toggleGamePiecesBtn:hover {
+    background-color: #666;
+}
+
 html,
 body {
     width: 100%;

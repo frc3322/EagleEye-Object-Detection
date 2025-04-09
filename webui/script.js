@@ -4,6 +4,7 @@ import { GLTFLoader } from "GLTFLoader";
 
 let renderer, scene, camera, directionalLight;
 let shadowsEnabled = true;
+let gamePiecesVisible = true;
 let statsDisplay;
 let frameCount = 0;
 let lastTime = performance.now();
@@ -148,6 +149,48 @@ function init3DView(modelUrl) {
             console.error("Error loading the model:", error);
         },
     );
+
+    const gamePiecePath =
+        modelUrl.split("/").slice(0, -2).join("/") +
+        "/game_pieces/" +
+        modelUrl.split("/").pop().slice(0, 7) +
+        "-GP.glb";
+
+    const gamePieces = [];
+
+    const gp_loader = new GLTFLoader();
+    gp_loader.load(
+        gamePiecePath,
+        (gltf) => {
+            const model = gltf.scene;
+
+            model.rotation.x = Math.PI / 2;
+
+            model.traverse((child) => {
+                if (child.isMesh) {
+                    child.castShadow = true;
+                    child.receiveShadow = true;
+                    child.geometry.computeVertexNormals();
+                    gamePieces.push(child);
+                }
+            });
+            scene.add(model);
+            animate();
+        },
+        undefined,
+        (error) => {
+            console.error("Error loading the model:", error);
+        },
+    );
+
+    document
+        .getElementById("toggleGamePiecesBtn")
+        .addEventListener("click", () => {
+            gamePiecesVisible = !gamePiecesVisible;
+            gamePieces.forEach((gp) => {
+                gp.visible = gamePiecesVisible;
+            });
+        });
 
     new THREE.Clock();
 
