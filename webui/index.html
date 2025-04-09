@@ -1,10 +1,9 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8"/>
+    <meta charset="UTF-8" />
     <title>Eagle Eye</title>
-    <link rel="stylesheet" href="style.css">
-    <!-- Include Three.js, GLTFLoader, and PointerLockControls -->
+    <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 <div class="main-container">
@@ -25,13 +24,30 @@
                 </div>
                 <div class="feed-controls">
                     <button class="feed-btn" id="addFeedBtn">+</button>
-                    <button class="feed-btn" id="removeFeedBtn">–</button>
+                    <button class="feed-btn" id="removeFeedBtn">
+                        –
+                    </button>
                 </div>
             </div>
+
             <!-- 3D View (WebGL model will load here) -->
             <div id="view-3d" class="view">
-                <!-- Loading overlay will be injected here by script.js -->
+                <button id="toggleShadowBtn">Toggle Shadows</button>
+                <div id="fieldDropdown">
+                    <label for="yearSelect"></label>
+                    <select id="yearSelect">
+                        <option disabled selected>Select Year</option>
+                    </select>
+                    <label for="fieldFileSelect"></label>
+                    <select id="fieldFileSelect">
+                        <option disabled selected>
+                            Select Field File
+                        </option>
+                    </select>
+                </div>
+                <div id="statsDisplay"></div> <!-- Added stats display container -->
             </div>
+
             <!-- Settings placeholder -->
             <div id="view-settings" class="view">
                 <div class="placeholder-view">
@@ -39,6 +55,7 @@
                     <p>Configuration settings go here.</p>
                 </div>
             </div>
+
             <!-- Calibration placeholder -->
             <div id="view-calibration" class="view">
                 <div class="placeholder-view">
@@ -46,6 +63,7 @@
                     <p>Calibration tools go here.</p>
                 </div>
             </div>
+
             <!-- Setup placeholder -->
             <div id="view-setup" class="view">
                 <div class="placeholder-view">

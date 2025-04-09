@@ -15,6 +15,7 @@
   "dependencies": {
     "@babel/core": "^7.26.10",
     "babel-loader": "^10.0.0",
+    "prettier": "^3.5.3",
     "three": "^0.175.0"
   },
   "devDependencies": {
@@ -22,5 +23,8 @@
     "webpack": "^5.99.2",
     "webpack-cli": "^6.0.1",
     "webpack-dev-server": "^5.2.1"
+  },
+  "prettier": {
+    "tabWidth": 4
   }
 }
