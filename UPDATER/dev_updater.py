@@ -16,8 +16,10 @@ BROADCAST_ADDR = "<broadcast>"  # Special address for UDP broadcast
 
 def discover_server(timeout=3):
     """
-    Send a UDP broadcast to discover the server.
-    Returns the server's IP address if found, otherwise None.
+    Sends a UDP broadcast to discover the server.
+
+    Returns:
+        str: The server's IP address if found, otherwise None.
     """
     udp_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
     udp_sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)

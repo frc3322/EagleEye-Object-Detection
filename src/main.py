@@ -9,16 +9,10 @@ os.chdir(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from src.custom_logging.log import Logger
-from src.constants.constants import (
-    DisplayConstants,
-    CameraConstants,
-    ObjectDetectionConstants,
-    NetworkTableConstants,
-    Constants,
-)
+from src.constants.constants import constants
 
 # run web server that streams video
-if DisplayConstants.run_web_server:
+if constants["DisplayConstants.run_web_server"]:
     from src.web_interface.web_server import EagleEyeInterface
 
     web_interface = EagleEyeInterface(lambda _: None)
@@ -46,7 +40,7 @@ GREEN = "\033[92m"
 RESET = "\033[0m"
 
 # As a client to connect to a robot
-NetworkTables.initialize(server=NetworkTableConstants.server_address)
+NetworkTables.initialize(server=constants["NetworkTableConstants.server_address"])
 game_piece_nt = NetworkTables.getTable("GamePieces")
 eagle_eye_nt = NetworkTables.getTable("EagleEye")
 advantage_kit_nt = NetworkTables.getTable("AdvantageKit")
@@ -68,7 +62,7 @@ class EagleEye:
 
         # separate cameras based on device
         cameras = {}
-        for camera in CameraConstants.camera_list:
+        for camera in constants["CameraConstants.camera_list"]:
             if camera["processing_device"] not in cameras:
                 cameras[camera["processing_device"]] = []
             cameras[camera["processing_device"]].append(camera)
@@ -111,7 +105,7 @@ class EagleEye:
             collected_detections = {}
             num_detections = 0
 
-            for camera in CameraConstants.camera_list:
+            for camera in constants["CameraConstants.camera_list"]:
                 with self.data_lock:
                     detections = self.data.get(camera["name"], [])
                     for detection in detections:
@@ -147,7 +141,7 @@ class EagleEye:
                                 detections[i]["local_position"]
                                 - detections[j]["local_position"]
                             )
-                            if distance < ObjectDetectionConstants.combined_threshold:
+                            if distance < constants["ObjectDetectionConstants.combined_threshold"]:
                                 detections.pop(j)
                                 break
 
@@ -202,7 +196,7 @@ class EagleEye:
             if results is None:
                 log(
                     f"{RED}No frame{RESET}",
-                    force_no_log=(not Constants.detection_logging),
+                    force_no_log=(not constants["detection_logging"]),
                 )
                 sleep(0.02)
                 continue
@@ -210,14 +204,14 @@ class EagleEye:
             start_time = time_ms()
             log(
                 f"Speeds: {results.speed}",
-                force_no_log=(not Constants.detection_logging),
+                force_no_log=(not constants["detection_logging"]),
             )
 
             # if no detections, continue
             if not results.boxes:
                 with self.data_lock:
                     self.data[device.get_current_camera().get_name()] = []
-                if DisplayConstants.run_web_server:
+                if constants["DisplayConstants.run_web_server"]:
                     web_interface.set_frame(
                         device.get_current_camera().get_name(), results, []
                     )
@@ -268,7 +262,7 @@ class EagleEye:
                 )
 
                 distance = np.linalg.norm(object_local_position)
-                if distance > ObjectDetectionConstants.max_distance:
+                if distance > constants["ObjectDetectionConstants.max_distance"]:
                     continue
 
                 detections.append(
@@ -283,7 +277,7 @@ class EagleEye:
                     }
                 )
 
-            if DisplayConstants.run_web_server:
+            if constants["DisplayConstants.run_web_server"]:
                 web_interface.set_frame(
                     device.get_current_camera().get_name(), results, debug_points
                 )
@@ -297,15 +291,15 @@ class EagleEye:
             estimated_fps = 1000 / total_inference_time
             log(
                 f"Total processing time (ms): {total_inference_time}",
-                force_no_log=(not Constants.detection_logging),
+                force_no_log=(not constants["detection_logging"]),
             )
             log(
                 f"Post processing time (ms): {time_ms() - start_time}",
-                force_no_log=(not Constants.detection_logging),
+                force_no_log=(not constants["detection_logging"]),
             )
             log(
                 f"Estimated fps: {estimated_fps}",
-                force_no_log=(not Constants.detection_logging),
+                force_no_log=(not constants["detection_logging"]),
             )
 
 

@@ -54,9 +54,64 @@
 
             <!-- Settings placeholder -->
             <div id="view-settings" class="view">
-                <div class="placeholder-view">
-                    <h2>Settings Placeholder</h2>
-                    <p>Configuration settings go here.</p>
+                <div class="settings-form">
+                    <h2>Settings</h2>
+                    <form id="settingsForm">
+                        <fieldset>
+                            <legend>General</legend>
+                            <label>
+                                <input type="checkbox" id="logCheckbox" />
+                                Enable Logging
+                            </label>
+                            <label>
+                                <input type="checkbox" id="printTerminalCheckbox" checked />
+                                Print to Terminal
+                            </label>
+                            <label>
+                                <input type="checkbox" id="detectionLoggingCheckbox" />
+                                Detection Logging
+                            </label>
+                            <label>
+                                <input type="checkbox" id="simulationModeCheckbox" checked />
+                                Simulation Mode
+                            </label>
+                        </fieldset>
+                        <fieldset>
+                            <legend>Network Table</legend>
+                            <label>
+                                Server Address:
+                                <input type="text" id="serverAddressInput" value="10.0.0.62" />
+                            </label>
+                            <label>
+                                Robot Position Key:
+                                <input type="text" id="robotPositionKeyInput" value="robot_position" />
+                            </label>
+                            <label>
+                                Robot Rotation Key:
+                                <input type="text" id="robotRotationKeyInput" value="robot_rotation" />
+                            </label>
+                        </fieldset>
+                        <fieldset>
+                            <legend>Object Detection</legend>
+                            <label>
+                                Input Size:
+                                <input type="number" id="inputSizeInput" value="320" />
+                            </label>
+                            <label>
+                                Confidence Threshold:
+                                <input type="number" id="confidenceThresholdInput" step="0.01" value="0.5" />
+                            </label>
+                            <label>
+                                Combined Threshold (meters):
+                                <input type="number" id="combinedThresholdInput" step="0.01" value="0.25" />
+                            </label>
+                            <label>
+                                Max Distance (meters):
+                                <input type="number" id="maxDistanceInput" value="15" />
+                            </label>
+                        </fieldset>
+                        <button type="button" id="saveSettingsBtn">Save Settings</button>
+                    </form>
                 </div>
             </div>
 

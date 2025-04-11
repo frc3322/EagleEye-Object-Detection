@@ -4,7 +4,9 @@ from urllib.request import urlopen
 import cv2
 import numpy as np
 
-from src.constants.constants import NetworkTableConstants
+from src.constants.constants import constants
+
+NetworkTableConstants = constants["NetworkTableConstants"]
 
 
 def sim_frame_reader(url, latest_frame_method):

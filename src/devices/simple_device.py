@@ -1,8 +1,10 @@
 from ultralytics import YOLO
 from networktables import NetworkTable
 
-from src.constants.constants import ObjectDetectionConstants
+from src.constants.constants import constants
 from src.devices.device import Device
+
+ObjectDetectionConstants = constants["ObjectDetectionConstants"]
 
 
 class SimpleDevice(Device):

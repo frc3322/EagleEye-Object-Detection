@@ -251,7 +251,41 @@ document.getElementById("removeFeedBtn").addEventListener("click", () => {
     alert("Remove Camera Feed clicked! Implement your logic here.");
 });
 
-// After DOM loads or sidebar click, call populate
-document.addEventListener("DOMContentLoaded", () => {
+// When the page loads, populate the field dropdown
+window.onload = () => {
     populateFieldDropdown();
+};
+
+// Settings form logic
+document.getElementById("saveSettingsBtn").addEventListener("click", () => {
+    const settings = {
+        log: document.getElementById("logCheckbox").checked,
+        print_terminal: document.getElementById("printTerminalCheckbox")
+            .checked,
+        detection_logging: document.getElementById("detectionLoggingCheckbox")
+            .checked,
+        simulation_mode: document.getElementById("simulationModeCheckbox")
+            .checked,
+        server_address: document.getElementById("serverAddressInput").value,
+        robot_position_key: document.getElementById("robotPositionKeyInput")
+            .value,
+        robot_rotation_key: document.getElementById("robotRotationKeyInput")
+            .value,
+        input_size: parseInt(
+            document.getElementById("inputSizeInput").value,
+            10,
+        ),
+        confidence_threshold: parseFloat(
+            document.getElementById("confidenceThresholdInput").value,
+        ),
+        combined_threshold: parseFloat(
+            document.getElementById("combinedThresholdInput").value,
+        ),
+        max_distance: parseFloat(
+            document.getElementById("maxDistanceInput").value,
+        ),
+    };
+
+    console.log("Settings saved:", settings);
+    alert("Settings have been saved!");
 });

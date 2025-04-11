@@ -1,55 +1,96 @@
-import numpy as np
+import json
+import os
 
-array = np.array
+current_folder = os.path.dirname(os.path.abspath(__file__))
 
 
 class Constants:
-    log = False
-    print_terminal = True
-    detection_logging = False
+    def __init__(self, config_path: str = os.path.join(current_folder, "config.json")):
+        """
+        Initialize the Constants class.
 
-    simulation_mode = True
+        Args:
+            config_path (str): Path to the configuration file.
+        """
+        self.config_path = config_path
+        self.config_json = None
+
+        self.load_config()
+
+    def load_config(self) -> dict:
+        """
+        Load the configuration file.
+
+        Returns:
+            dict: The loaded configuration as a dictionary.
+
+        Raises:
+            FileNotFoundError: If the configuration file does not exist.
+        """
+        if os.path.exists(self.config_path):
+            with open(self.config_path, "r") as file:
+                self.config_json = json.load(file)
+        else:
+            raise FileNotFoundError(f"Configuration file not found: {self.config_path}")
+        return self.config_json
+
+    def get_value(self, key: str, default=None) -> any:
+        """
+        Get a value from the loaded configuration.
+
+        Args:
+            key (str): The key to retrieve the value for. Supports nested keys separated by dots.
+            default (any): The default value to return if the key is not found.
+
+        Returns:
+            any: The value associated with the key, or the default value if the key is not found.
+        """
+        if "." in key:
+            keys = key.split(".")
+            value = self.config_json
+            for k in keys:
+                if isinstance(value, dict) and k in value:
+                    value = value[k]
+                else:
+                    return default
+            return value
+        return self.config_json.get(key, default)
+
+    def set_value(self, key: str, value) -> None:
+        """
+        Set a value in the loaded configuration.
+
+        Args:
+            key (str): The key to set the value for.
+            value (any): The value to set.
+        """
+        self.config_json[key] = value
+        with open(self.config_path, "w") as file:
+            json.dump(self.config_json, file, indent=4)
+
+    def save_config(self) -> None:
+        """
+        Save the current configuration to the file.
+        """
+        with open(self.config_path, "w") as file:
+            json.dump(self.config_json, file, indent=4)
+
+    def __getitem__(self, item):
+        """
+        Allow access to class attributes using square brackets.
+
+        Args:
+            item (str): The key to retrieve the value for.
+
+        Returns:
+            any: The value associated with the key.
+        """
+        return self.get_value(item)
 
 
-class NetworkTableConstants:
-    server_address = "10.0.0.62"
-    robot_position_key = "robot_position"
-    robot_rotation_key = "robot_rotation"
+constants = Constants()
+constants.load_config()
 
-
-class ObjectDetectionConstants:
-    input_size = 320
-    confidence_threshold = 0.5
-    combined_threshold = 0.25  # in meters
-    max_distance = 15  # in meters
-
-
-class DisplayConstants:
-    run_web_server = True
-
-
-class CameraConstants:
-    camera_list = [
-        {
-            "name": "front",
-            "camera_id": 0,
-            "fov": array([70, 38]),
-            "camera_offset_pos": array([0.25, 0.0, 0.75]),
-            "camera_pitch": 0,
-            "camera_yaw": 0,
-            "frame_rotation": 0,
-            "processing_device": "tpu:0",
-            "sim_camera": True,
-        },
-        {
-            "name": "back",
-            "camera_id": 1,
-            "fov": array([70, 38]),
-            "camera_offset_pos": array([0.25, 0.0, 0.75]),
-            "camera_pitch": 0,
-            "camera_yaw": 180,
-            "frame_rotation": 180,
-            "processing_device": "tpu:0",
-            "sim_camera": True,
-        },
-    ]
+if __name__ == "__main__":
+    # Example usage of the loaded configuration
+    print(constants["NetworkTableConstants.server_address"])

@@ -3,7 +3,7 @@ import datetime
 import sys
 import threading
 import queue
-from src.constants.constants import Constants
+from src.constants.constants import constants
 
 log_file_path = "log.txt"
 
@@ -27,15 +27,32 @@ with open(log_file_path, "a") as log_file:
 
 class Logger:
     def __init__(self, web_server):
+        """
+        Initialize the Logger.
+
+        Args:
+            web_server (object): The web server instance to send log messages to.
+        """
         self.web_server = web_server
         self.log_queue = queue.Queue()
         self.log_thread = threading.Thread(target=self._process_log_queue, daemon=True)
         self.log_thread.start()
 
     def log(self, message, force_log=False, force_no_log=False):
+        """
+        Add a log message to the queue.
+
+        Args:
+            message (str): The log message.
+            force_log (bool): Whether to force logging regardless of settings.
+            force_no_log (bool): Whether to suppress logging regardless of settings.
+        """
         self.log_queue.put((message, force_log, force_no_log))
 
     def _process_log_queue(self):
+        """
+        Process the log queue and write messages to the log file and console.
+        """
         while True:
             message, force_log, force_no_log = self.log_queue.get()
             log(message, self.web_server, force_log, force_no_log)
@@ -44,16 +61,22 @@ class Logger:
 
 def log(message, web_server, force_log=False, force_no_log=False):
     """
-    Write message to log file and print to console
+    Write a message to the log file and print it to the console.
+
+    Args:
+        message (str): The log message.
+        web_server (object): The web server instance to send log messages to.
+        force_log (bool): Whether to force logging regardless of settings.
+        force_no_log (bool): Whether to suppress logging regardless of settings.
     """
-    if Constants.print_terminal and not force_no_log:
+    if constants["print_terminal"] and not force_no_log:
         print(message)
         sys.stdout.flush()
 
-    if web_server and Constants.print_terminal and not force_no_log:
+    if web_server and constants["print_terminal"] and not force_no_log:
         web_server.log_message(message)
 
-    if Constants.log or force_log and not force_no_log:
+    if constants["log"] or force_log and not force_no_log:
         message = str(message).replace(RED, "").replace(GREEN, "").replace(RESET, "")
 
         # If file is over 25MB, remove the first 100 lines

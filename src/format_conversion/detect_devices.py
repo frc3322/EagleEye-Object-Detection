@@ -41,8 +41,12 @@ def check_coral_tpu():
 
 def detect_hardware(log):
     """
-    Detects the hardware available
-    :return: tuple of (gpu_available, tpu_available)
+    Detects the hardware available.
+
+    Returns:
+        tuple: A tuple containing two boolean values:
+            - gpu_available (bool): True if a GPU is available, False otherwise.
+            - tpu_available (bool): True if a TPU is available, False otherwise.
     """
     gpu_available = check_nvidia_gpu() or check_amd_gpu()
     tpu_available = check_coral_tpu()

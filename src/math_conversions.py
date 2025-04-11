@@ -3,9 +3,14 @@ import numpy as np
 
 def rotate2d(point: np.array, angle: float) -> np.array:
     """
-    Rotate a point around the origin
-    :param point: the point to rotate
-    :param angle: the angle to rotate the point by
+    Rotates a point around the origin.
+
+    Args:
+        point (np.array): The point to rotate as [x, y].
+        angle (float): The angle to rotate the point by, in radians.
+
+    Returns:
+        np.array: The rotated point as [x, y].
     """
     px, py = point
 
@@ -23,11 +28,14 @@ def pixels_to_degrees(
     """
     Converts a pixel position to a degree position.
 
-    :param pixel_position: float - The position in pixels (from the center)
-    :param total_pixels: int - The total number of pixels across the axis
-    :param fov: float - The field of view of the camera in degrees
-    :param log: function - Logging function to handle errors
-    :return: The position in degrees (from the center)
+    Args:
+        pixel_position (float): The position in pixels (from the center).
+        total_pixels (int): The total number of pixels across the axis.
+        fov (float): The field of view of the camera in degrees.
+        log (callable): Logging function to handle errors.
+
+    Returns:
+        float: The position in degrees (from the center).
     """
     pixel_percent = pixel_position / (total_pixels / 2)  # Normalize from -1 to 1
 
@@ -45,13 +53,17 @@ def calculate_local_position(
     log: callable,
 ) -> np.array:
     """
-    Calculates the local position of the note
-    :param pixel_position: the position of the note in pixels (from the center) np.array([x, y])
-    :param total_pixels: the total number of pixels
-    :param camera_fov: the field of view of the camera in degrees
-    :param camera_offset_pos: the offset position of the camera in meters
-    :param log: the logger to use
-    :return:
+    Calculates the local position of the note.
+
+    Args:
+        pixel_position (np.array): The position of the note in pixels (from the center) as [x, y].
+        total_pixels (np.array): The total number of pixels as [width, height].
+        camera_fov (np.array): The field of view of the camera in degrees as [fov_x, fov_y].
+        camera_offset_pos (np.array): The offset position of the camera in meters as [x, y, z].
+        log (callable): The logger to use for error handling.
+
+    Returns:
+        np.array: The local position of the note as [x, y].
     """
     screen_angle_x = (
         pixels_to_degrees(pixel_position[0], total_pixels[0], camera_fov[0], log=log)
@@ -71,9 +83,13 @@ def convert_to_global_position(
     local_position: np.array, robot_pose: np.array
 ) -> np.array:
     """
-    Converts the local position to the field global position
-    :param local_position: the local position of the note
-    :param robot_pose: the pose of the robot in meters and radians
-    :return: the global position of the note
+    Converts the local position to the global position on the field.
+
+    Args:
+        local_position (np.array): The local position of the note as [x, y].
+        robot_pose (np.array): The pose of the robot in meters and radians as [x, y, theta].
+
+    Returns:
+        np.array: The global position of the note as [x, y].
     """
     return rotate2d(local_position, robot_pose[2]) + robot_pose[:2]
