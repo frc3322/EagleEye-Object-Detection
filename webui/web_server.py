@@ -1,10 +1,20 @@
 import time
+from typing import Any, Generator
+import threading
 
+from PIL import Image
 from flask import (
     Flask,
     send_from_directory,
+    request, Response
 )
 from threading import Thread
+from src.constants.constants import Constants
+from src.devices.utils.get_available_cameras import detect_cameras_with_names
+import cv2
+
+with open("./assets/no_image.png", "rb") as f:
+    no_image = f.read()
 
 
 def index():
@@ -24,48 +34,180 @@ def serve_js():
     Returns:
         Response: The JavaScript file.
     """
-    print("Serving JavaScript file")
     return send_from_directory("./static", "bundle.js")
 
 
+def get_available_cameras() -> dict:
+    """
+    Get a dict of available cameras.
+
+    Returns:
+        dict: A dict of available cameras.
+    """
+    cameras = detect_cameras_with_names()
+    return cameras
+
+
 class EagleEyeInterface:
-    def __init__(self):
+    def __init__(self, settings_object: Constants | None = None, dev_mode: bool = False):
         """
         Initialize the EagleEyeInterface.
 
         Starts a Flask server in a separate thread.
+
+        Args:
+            settings_object (Constants | None): Optional settings object.
         """
         self.app = Flask(__name__, static_folder=".", static_url_path="")
 
+        self.cameras = get_available_cameras()
+        print(f"Detected Cameras: {self.cameras}")
+        self.frame_list = {}
+        for camera in self.cameras:
+            self.frame_list[camera] = None
+
+        self.frame_list_lock = threading.Lock()  # Add a lock for thread-safe access to frame_list
+
+        if settings_object is None:
+            self.settings_object = Constants()
+        else:
+            self.settings_object = settings_object
+
         self._register_routes()
 
-        # Start Flask server in a separate thread
-        self.app_thread = Thread(
-            target=self.app.run, kwargs={"host": "0.0.0.0", "port": 5001}, daemon=True
-        )
-        self.app_thread.start()
+        self.serve_camera_feed("HD Webcam USB", direct_serve=True)
 
-    def _register_routes(self):
+        if dev_mode:
+            self.run()
+        else:
+            # Start Flask server in a separate thread
+            self.app_thread = Thread(
+                target=self.app.run, kwargs={"host": "0.0.0.0", "port": 5001}, daemon=True
+            )
+            self.app_thread.start()
+
+    def _register_routes(self) -> None:
         """
         Register all Flask endpoints.
         """
         self.app.add_url_rule("/", "index", index)
         self.app.add_url_rule("/script.js", "script", lambda: serve_js())
+        self.app.add_url_rule("/save-settings", "save_settings", self.set_settings, methods=["POST"])
+        self.app.add_url_rule("/get-settings", "get_settings", self.get_settings, methods=["GET"])
+        self.app.add_url_rule("/get-available-cameras", "get_available_cameras", get_available_cameras, methods=["GET"])
 
-    def run(self):
+    def run(self) -> None:
         """
         Run the Flask application.
-
-        Note:
-            This method is not used since the server runs in a separate thread.
         """
-        self.app.run(host="0.0.0.0", port=5000, debug=False)
+        self.app.run(host="0.0.0.0", port=5001, debug=True, extra_files=["./static/bundle.js"])
+
+    def get_settings(self) -> dict:
+        """
+        Get the current settings.
+
+        Returns:
+            dict: The current settings.
+        """
+        return self.settings_object.get_config()
+
+    def set_settings(self) -> tuple[dict, int]:
+        """
+        Set the current settings.
+
+        Returns:
+            Response: A success or failure message.
+        """
+        try:
+            settings = request.get_json()  # Extract JSON data from the request
+            self.settings_object.load_config_from_json(settings)
+            print("Settings updated successfully")
+            return {"message": "Settings updated successfully"}, 200
+        except Exception as e:
+            print("Error updating settings:", e)
+            return {"message": "Failed to update settings"}, 500
+
+    def update_camera_frame(self, camera_name: str, frame: Image) -> None:
+        """
+        Update the camera frame.
+
+        Args:
+            camera_name (str): The ID of the camera.
+            frame: The frame to update.
+        """
+        with self.frame_list_lock:  # Use the lock to ensure thread-safe access
+            self.frame_list[camera_name] = frame
+
+    def _frame_generator(self, camera_name: str) -> Generator[bytes, Any, Any]:
+        """
+        Generate frames for the camera feed.
+
+        Args:
+            camera_name (str): The ID of the camera.
+
+        Yields:
+            Generator: The camera feed.
+        """
+        while True:
+            with self.frame_list_lock:  # Use the lock to safely access frame_list
+                frame = self.frame_list[camera_name]
+
+            if frame is None:
+                yield (b'--frame\r\n'
+                       b'Content-Type: image/jpeg\r\n\r\n' + no_image + b'\r\n')
+            else:
+                yield (b'--frame\r\n'
+                       b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+
+    def serve_camera_feed(self, camera_name: str, direct_serve: bool = False) -> None:
+        """
+        Serve the camera feed.
+
+        Args:
+            camera_name (str): The ID of the camera.
+            direct_serve (bool): Whether to directly serve the camera feed.
+
+        Returns:
+            Response: The camera feed.
+        """
+        @self.app.route(f"/feed/{camera_name.replace(' ', '_')}", methods=["GET"])
+        def serve_feed():
+            return Response(self._frame_generator(camera_name), mimetype='multipart/x-mixed-replace; boundary=frame')
+
+        if direct_serve:
+            # Start a thread to update the camera feed
+            camera_thread = Thread(target=self._update_camera_feed, args=(camera_name,), daemon=True)
+            camera_thread.start()
+
+        print(f"Serving camera feed for {camera_name} at /feed/{camera_name.replace(' ', '_')}")
+
+    def _update_camera_feed(self, camera_name: str) -> None:
+        """
+        Update the camera feed.
+
+        Args:
+            camera_name (str): The ID of the camera.
+        """
+        camera = cv2.VideoCapture(0)
+        while True:
+            ret, frame = camera.read()
+            if not ret:
+                break
+
+            ret, buffer = cv2.imencode('.jpg', frame)
+            frame_bytes = buffer.tobytes()
+
+            with self.frame_list_lock:  # Use the lock to safely update frame_list
+                self.frame_list[camera_name] = frame_bytes
+
+            time.sleep(1 / 30)
 
 
 # Example usage when running this file directly.
 if __name__ == "__main__":
-    interface = EagleEyeInterface()
+    interface = EagleEyeInterface(dev_mode=True)
 
     # Keep the main thread alive.
     while True:
         time.sleep(1)
+

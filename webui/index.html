@@ -16,17 +16,12 @@
         <div class="left-content">
             <!-- Default "Views" grid with feed controls -->
             <div id="view-views" class="view active">
-                <div class="signal-grid">
-                    <div class="signal-box">NO SIGNAL</div>
-                    <div class="signal-box">NO SIGNAL</div>
-                    <div class="signal-box">NO SIGNAL</div>
-                    <div class="signal-box">NO SIGNAL</div>
+                <div id="noCamerasMessage" class="no-cameras-message">
+                    No Cameras Available
                 </div>
+                <div id="cameraList" class="camera-list"></div>
                 <div class="feed-controls">
                     <button class="feed-btn" id="addFeedBtn">+</button>
-                    <button class="feed-btn" id="removeFeedBtn">
-                        –
-                    </button>
                 </div>
             </div>
 
@@ -145,15 +140,22 @@
     </div>
 </div>
 
-<script type="importmap">
-    {
-        "imports": {
-            "three": "../node_modules/three/build/three.module.js",
-            "OrbitControls": "../node_modules/three/examples/jsm/controls/OrbitControls.js",
-            "GLTFLoader": "../node_modules/three/examples/jsm/loaders/GLTFLoader.js"
-        }
-    }
-</script>
+<!-- Add Feed Modal -->
+<div id="addFeedModal" class="modal">
+    <div class="modal-content">
+        <h2>Add Feed Configuration</h2>
+        <form id="addFeedForm">
+            <label for="cameraSelect">Select Camera:</label>
+            <select id="cameraSelect">
+                <option disabled selected>Select a camera</option>
+            </select>
+            <!-- Placeholder for additional options -->
+            <div id="additionalOptions"></div>
+            <button type="button" id="saveFeedBtn">Save</button>
+            <button type="button" id="cancelFeedBtn">Cancel</button>
+        </form>
+    </div>
+</div>
 
 <script type="module" src="script.js"></script>
 </body>

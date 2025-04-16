@@ -1,7 +1,9 @@
+import comtypes
 import cv2
 import platform
 import glob
 import subprocess
+
 
 # For Windows camera enumeration using DirectShow via pygrabber.
 if platform.system() == "Windows":
@@ -23,12 +25,6 @@ def get_linux_camera_mapping():
     try:
         # Run v4l2-ctl to list devices
         output = subprocess.check_output(["v4l2-ctl", "--list-devices"], universal_newlines=True)
-        # Example output format:
-        #  HD Webcam:
-        #         /dev/video0
-        #         /dev/video1
-        #  USB Camera:
-        #         /dev/video2
         current_name = None
         for line in output.splitlines():
             # If the line starts without whitespace, it's a device name:
@@ -59,7 +55,7 @@ def detect_cameras_with_names(max_tested=10):
                       and 'name' (the friendly device name if available).
     """
     system = platform.system()
-    cameras = []
+    cameras = {}
 
     if system == "Linux":
         # Get mapping from device file to name using v4l2-ctl.
@@ -74,32 +70,17 @@ def detect_cameras_with_names(max_tested=10):
                 index = int(device.replace("/dev/video", ""))
             except ValueError:
                 continue
-            # Try opening the device to verify it's working
-            cap = cv2.VideoCapture(index)
-            if cap is not None and cap.isOpened():
-                ret, frame = cap.read()
-                if ret:
-                    # Fetch name from mapping if available; if not, fallback to 'Unknown'
-                    name = dev_name_mapping.get(device, "Unknown")
-                    cameras.append({"index": index, "device": device, "name": name})
-                cap.release()
+
+            name = dev_name_mapping.get(device, "Unknown")
+            cameras[name] = index
 
     elif system == "Windows":
-        # Use pygrabber to list available DirectShow video devices.
+        comtypes.CoInitialize()
         graph = FilterGraph()
-        device_names = graph.get_input_devices()  # This returns a list of friendly names.
-        # Iterate through indices (sometimes there may be gaps so we test up to max_tested)
-        for index in range(max_tested):
-            cap = cv2.VideoCapture(index)
-            if cap is not None and cap.isOpened():
-                ret, frame = cap.read()
-                if ret:
-                    # Map index to name if available from pygrabber.
-                    # Note: Device ordering in pygrabber usually matches the index order,
-                    # but if index >= len(device_names) we fallback.
-                    name = device_names[index] if index < len(device_names) else "Unknown"
-                    cameras.append({"index": index, "device": index, "name": name})
-                cap.release()
+        device_names = graph.get_input_devices()
+
+        for index, name in enumerate(device_names):
+            cameras[name] = index
     else:
         # For any other OS, perform a simple index scan.
         for index in range(max_tested):
@@ -107,7 +88,7 @@ def detect_cameras_with_names(max_tested=10):
             if cap is not None and cap.isOpened():
                 ret, frame = cap.read()
                 if ret:
-                    cameras.append({"index": index, "device": index, "name": "Unknown"})
+                    cameras[f"Camera {index}"] = index
                 cap.release()
 
     return cameras
@@ -118,6 +99,6 @@ if __name__ == "__main__":
     if detected:
         print("Detected Cameras:")
         for cam in detected:
-            print(f"Index: {cam['index']}, Device: {cam['device']}, Name: {cam['name']}")
+            print(f"Index: {detected[cam]}, Name: {cam}")
     else:
         print("No cameras detected.")

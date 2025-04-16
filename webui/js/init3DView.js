@@ -1,6 +1,15 @@
-import * as THREE from "three";
 import { OrbitControls } from "OrbitControls";
 import { GLTFLoader } from "GLTFLoader";
+import {
+    PCFSoftShadowMap,
+    WebGLRenderer,
+    AmbientLight,
+    DirectionalLight,
+    PerspectiveCamera,
+    Scene,
+    Color,
+    Clock,
+} from "three";
 
 let renderer, scene, camera, directionalLight;
 let shadowsEnabled = true;
@@ -8,42 +17,6 @@ let gamePiecesVisible = true;
 let statsDisplay;
 let frameCount = 0;
 let lastTime = performance.now();
-
-function populateFieldDropdown() {
-    const fields = {
-        2025: ["FE-2025-NGP-Simple.glb", "FE-2025-NGP.glb"],
-    };
-
-    const yearSelect = document.getElementById("yearSelect");
-    const fileSelect = document.getElementById("fieldFileSelect");
-
-    Object.keys(fields).forEach((year) => {
-        const option = document.createElement("option");
-        option.value = year;
-        option.textContent = year;
-        yearSelect.appendChild(option);
-    });
-
-    yearSelect.addEventListener("change", () => {
-        fileSelect.innerHTML =
-            "<option disabled selected>Select Field File</option>";
-        const year = yearSelect.value;
-        if (fields[year]) {
-            fields[year].forEach((file) => {
-                const opt = document.createElement("option");
-                opt.value = file;
-                opt.textContent = file;
-                fileSelect.appendChild(opt);
-            });
-        }
-    });
-
-    fileSelect.addEventListener("change", () => {
-        const year = yearSelect.value;
-        const file = fileSelect.value;
-        init3DView(`./assets/fields/${year}/field_files/${file}`);
-    });
-}
 
 function updateStats() {
     const currentTime = performance.now();
@@ -64,9 +37,9 @@ function updateStats() {
     }
 }
 
-function init3DView(modelUrl) {
+export function init3DView(modelUrl) {
     const container = document.getElementById("view-3d");
-    statsDisplay = document.getElementById("statsDisplay"); // Initialize stats display
+    statsDisplay = document.getElementById("statsDisplay");
     statsDisplay.style.position = "absolute";
     statsDisplay.style.bottom = "10px";
     statsDisplay.style.right = "10px";
@@ -85,12 +58,12 @@ function init3DView(modelUrl) {
         scene.clear();
     }
 
-    scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x222222);
+    scene = new Scene();
+    scene.background = new Color(0x222222);
 
     const scale = 40;
 
-    camera = new THREE.PerspectiveCamera(
+    camera = new PerspectiveCamera(
         75,
         container.clientWidth / container.clientHeight,
         100,
@@ -98,18 +71,18 @@ function init3DView(modelUrl) {
     );
     camera.position.set(100 * scale, 100 * scale, 100 * scale);
 
-    renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer = new WebGLRenderer({ antialias: true });
     renderer.setSize(container.clientWidth, container.clientHeight);
     renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.shadowMap.type = PCFSoftShadowMap;
     renderer.domElement.style.width = "100%";
     renderer.domElement.style.height = "100%";
     renderer.domElement.style.display = "block";
     container.appendChild(renderer.domElement);
 
-    scene.add(new THREE.AmbientLight(0xffffff, 0.2));
+    scene.add(new AmbientLight(0xffffff, 0.2));
 
-    directionalLight = new THREE.DirectionalLight(0xffffff, 2);
+    directionalLight = new DirectionalLight(0xffffff, 2);
     directionalLight.position.set(100 * scale, 200 * scale, 200 * scale);
     directionalLight.castShadow = true;
     directionalLight.shadow.bias = -0.0005;
@@ -192,12 +165,20 @@ function init3DView(modelUrl) {
             });
         });
 
-    new THREE.Clock();
+    let clock = new Clock();
+    let delta = 0;
+    let interval = 1 / 60;
 
     function animate() {
         requestAnimationFrame(animate);
-        renderer.render(scene, camera);
-        updateStats(); // Update stats on each frame
+        delta += clock.getDelta();
+
+        if (delta > interval) {
+            renderer.render(scene, camera);
+            updateStats();
+
+            delta = delta % interval;
+        }
     }
 
     window.addEventListener("resize", () => {
@@ -207,7 +188,6 @@ function init3DView(modelUrl) {
         camera.updateProjectionMatrix();
     });
 
-    // Add toggle shadow button event
     document.getElementById("toggleShadowBtn").addEventListener("click", () => {
         shadowsEnabled = !shadowsEnabled;
         scene.traverse((object) => {
@@ -220,72 +200,3 @@ function init3DView(modelUrl) {
         renderer.shadowMap.enabled = shadowsEnabled;
     });
 }
-
-// Sidebar view switching
-const sidebarItems = document.querySelectorAll(".sidebar li");
-const views = document.querySelectorAll(".view");
-sidebarItems.forEach((item) => {
-    item.addEventListener("click", () => {
-        sidebarItems.forEach((i) => i.classList.remove("active"));
-        item.classList.add("active");
-        views.forEach((v) => v.classList.remove("active"));
-        const targetView = document.getElementById(
-            item.getAttribute("data-view"),
-        );
-        if (targetView) {
-            targetView.classList.add("active");
-            if (targetView.id === "view-3d") {
-                init3DView(
-                    "./assets/fields/2025/field_files/FE-2025-NGP-Simple.glb",
-                );
-            }
-        }
-    });
-});
-
-// Feed button actions
-document.getElementById("addFeedBtn").addEventListener("click", () => {
-    alert("Add Camera Feed clicked! Implement your logic here.");
-});
-document.getElementById("removeFeedBtn").addEventListener("click", () => {
-    alert("Remove Camera Feed clicked! Implement your logic here.");
-});
-
-// When the page loads, populate the field dropdown
-window.onload = () => {
-    populateFieldDropdown();
-};
-
-// Settings form logic
-document.getElementById("saveSettingsBtn").addEventListener("click", () => {
-    const settings = {
-        log: document.getElementById("logCheckbox").checked,
-        print_terminal: document.getElementById("printTerminalCheckbox")
-            .checked,
-        detection_logging: document.getElementById("detectionLoggingCheckbox")
-            .checked,
-        simulation_mode: document.getElementById("simulationModeCheckbox")
-            .checked,
-        server_address: document.getElementById("serverAddressInput").value,
-        robot_position_key: document.getElementById("robotPositionKeyInput")
-            .value,
-        robot_rotation_key: document.getElementById("robotRotationKeyInput")
-            .value,
-        input_size: parseInt(
-            document.getElementById("inputSizeInput").value,
-            10,
-        ),
-        confidence_threshold: parseFloat(
-            document.getElementById("confidenceThresholdInput").value,
-        ),
-        combined_threshold: parseFloat(
-            document.getElementById("combinedThresholdInput").value,
-        ),
-        max_distance: parseFloat(
-            document.getElementById("maxDistanceInput").value,
-        ),
-    };
-
-    console.log("Settings saved:", settings);
-    alert("Settings have been saved!");
-});

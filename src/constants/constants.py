@@ -15,9 +15,9 @@ class Constants:
         self.config_path = config_path
         self.config_json = None
 
-        self.load_config()
+        self.load_config_from_file()
 
-    def load_config(self) -> dict:
+    def load_config_from_file(self) -> dict:
         """
         Load the configuration file.
 
@@ -32,6 +32,37 @@ class Constants:
                 self.config_json = json.load(file)
         else:
             raise FileNotFoundError(f"Configuration file not found: {self.config_path}")
+        return self.config_json
+
+    def load_config_from_json(self, json_data: dict) -> dict:
+        """
+        Load the configuration from a dictionary.
+
+        Args:
+            json_data (dict): The configuration data as a dictionary.
+
+        Returns:
+            dict: The loaded configuration as a dictionary.
+        """
+
+        for key, value in json_data.items():
+            if isinstance(value, dict):
+                if key not in self.config_json:
+                    self.config_json[key] = {}
+                self.config_json[key].update(value)
+            else:
+                self.config_json[key] = value
+
+        self.save_config()
+        return self.config_json
+
+    def get_config(self) -> dict:
+        """
+        Get the loaded configuration.
+
+        Returns:
+            dict: The loaded configuration as a dictionary.
+        """
         return self.config_json
 
     def get_value(self, key: str, default=None) -> any:
@@ -89,7 +120,7 @@ class Constants:
 
 
 constants = Constants()
-constants.load_config()
+constants.load_config_from_file()
 
 if __name__ == "__main__":
     # Example usage of the loaded configuration
