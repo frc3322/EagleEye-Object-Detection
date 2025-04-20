@@ -1,19 +1,20 @@
-import time
-from typing import Any, Generator
+import os
 import threading
+import time
+from threading import Thread
+from typing import Any, Generator
 
-from PIL import Image
+import cv2
 from flask import (
     Flask,
     send_from_directory,
     request, Response
 )
-from threading import Thread
+
 from src.constants.constants import Constants
 from src.devices.utils.get_available_cameras import detect_cameras_with_names
-import cv2
 
-with open("./assets/no_image.png", "rb") as f:
+with open(os.path.join(".", "assets", "no_image.png"), "rb") as f:  # "./assets/no_image.png"
     no_image = f.read()
 
 
@@ -75,7 +76,7 @@ class EagleEyeInterface:
 
         self._register_routes()
 
-        self.serve_camera_feed("HD Webcam USB", direct_serve=True)
+        self.serve_camera_feed(list(self.cameras.keys())[0], direct_serve=True)
 
         if dev_mode:
             self.run()
@@ -100,7 +101,8 @@ class EagleEyeInterface:
         """
         Run the Flask application.
         """
-        self.app.run(host="0.0.0.0", port=5001, debug=True, extra_files=["./static/bundle.js"])
+        self.app.run(host="0.0.0.0", port=5001, debug=True,
+                     extra_files=["./static/bundle.js", "./style.css", "./index.html"])
 
     def get_settings(self) -> dict:
         """
@@ -127,7 +129,7 @@ class EagleEyeInterface:
             print("Error updating settings:", e)
             return {"message": "Failed to update settings"}, 500
 
-    def update_camera_frame(self, camera_name: str, frame: Image) -> None:
+    def update_camera_frame(self, camera_name: str, frame: bytes) -> None:
         """
         Update the camera frame.
 
@@ -149,6 +151,7 @@ class EagleEyeInterface:
             Generator: The camera feed.
         """
         while True:
+            time_start = time.time()
             with self.frame_list_lock:  # Use the lock to safely access frame_list
                 frame = self.frame_list[camera_name]
 
@@ -158,6 +161,8 @@ class EagleEyeInterface:
             else:
                 yield (b'--frame\r\n'
                        b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+
+            time.sleep(max((1 / 120) - (time.time() - time_start), 0))
 
     def serve_camera_feed(self, camera_name: str, direct_serve: bool = False) -> None:
         """
@@ -189,6 +194,10 @@ class EagleEyeInterface:
             camera_name (str): The ID of the camera.
         """
         camera = cv2.VideoCapture(0)
+        camera.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+        camera.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+
+        time_start = time.time()
         while True:
             ret, frame = camera.read()
             if not ret:
@@ -197,17 +206,17 @@ class EagleEyeInterface:
             ret, buffer = cv2.imencode('.jpg', frame)
             frame_bytes = buffer.tobytes()
 
-            with self.frame_list_lock:  # Use the lock to safely update frame_list
-                self.frame_list[camera_name] = frame_bytes
-
-            time.sleep(1 / 30)
+            # Check if processing time exceeds target frame time
+            processing_time = time.time() - time_start
+            if processing_time > (1 / 30):
+                self.update_camera_frame(camera_name, frame_bytes)
+                time_start = time.time()
 
 
 # Example usage when running this file directly.
 if __name__ == "__main__":
     interface = EagleEyeInterface(dev_mode=True)
 
-    # Keep the main thread alive.
     while True:
         time.sleep(1)
 

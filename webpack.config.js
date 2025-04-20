@@ -53,11 +53,4 @@ module.exports = {
 
     // Enable source maps for easier debugging
     devtool: "source-map",
-
-    // Development server configuration
-    devServer: {
-        static: path.resolve(__dirname, "dist"),
-        port: 8051,
-        open: true, // Automatically open the browser upon server start
-    },
 };

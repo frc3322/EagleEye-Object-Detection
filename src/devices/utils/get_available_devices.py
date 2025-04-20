@@ -1,11 +1,11 @@
 import os
+import platform
 import subprocess
 
 import torch
-import platform
+
 
 def get_cpu_name():
-
     try:
         if os.name == "nt":
             return platform.processor()

@@ -365,7 +365,17 @@ body {
     align-items: center;
     justify-content: center;
     min-height: 100px;
-    height: 100%;
+}
+
+.camera-view {
+    width: 100%;
+    object-fit: contain;
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    padding: 5px;
+    border-radius: 10px;
 }
 
 /* X button for camera boxes */

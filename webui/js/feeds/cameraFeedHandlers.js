@@ -1,6 +1,4 @@
 export function setupCameraFeedHandlers() {
-    // Remove the event listener for the global remove button
-
     const addFeedModal = document.getElementById("addFeedModal");
     const cameraSelect = document.getElementById("cameraSelect");
     const saveFeedBtn = document.getElementById("saveFeedBtn");
@@ -17,12 +15,12 @@ export function setupCameraFeedHandlers() {
             .then((data) => {
                 cameraSelect.innerHTML =
                     "<option disabled selected>Select a camera</option>";
-                data.forEach((camera) => {
+                for (const key of Object.keys(data)) {
                     const option = document.createElement("option");
-                    option.value = camera.index;
-                    option.textContent = camera.name;
+                    option.value = data[key];
+                    option.textContent = key;
                     cameraSelect.appendChild(option);
-                });
+                }
             })
             .catch((error) => {
                 console.error("Error fetching cameras:", error);
@@ -72,6 +70,17 @@ export function setupCameraFeedHandlers() {
         const cameraBox = document.createElement("div");
         cameraBox.className = "camera-box";
         cameraBox.textContent = selectedCameraName;
+
+        // Create video view
+        const cameraView = document.createElement("img");
+        cameraView.className = "camera-view";
+
+        // Replace spaces with underscores in the camera name for the video URL
+        cameraView.src = `/feed/${selectedCameraName.replace(/ /g, "_")}`;
+
+        cameraBox.appendChild(cameraView);
+
+        console.log("Reading camera stream at: " + cameraView.src);
 
         // Add X button for individual camera removal
         const removeButton = document.createElement("button");
