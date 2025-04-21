@@ -4,9 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "webpack serve --mode development --open",
-    "build": "webpack --mode production",
-    "watch": "webpack --mode development --watch"
+    "dev": "vite",
+    "build": "vite build",
+    "watch": "vite build --watch"
   },
   "repository": {
     "type": "git",
@@ -15,12 +15,15 @@
   "private": true,
   "dependencies": {
     "@babel/core": "^7.26.10",
+    "@tailwindcss/vite": "^4.1.4",
     "babel-loader": "^10.0.0",
     "prettier": "^3.5.3",
+    "tailwindcss": "^4.1.4",
     "three": "^0.175.0"
   },
   "devDependencies": {
     "@babel/preset-env": "^7.26.9",
+    "vite": "^6.3.2",
     "webpack": "^5.99.2",
     "webpack-bundle-analyzer": "^4.10.2",
     "webpack-cli": "^6.0.1",
@@ -29,5 +32,6 @@
   "prettier": {
     "tabWidth": 4
   },
+  "type": "module",
   "sideEffects": false
 }

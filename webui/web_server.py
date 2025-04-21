@@ -101,7 +101,7 @@ class EagleEyeInterface:
         """
         Run the Flask application.
         """
-        self.app.run(host="0.0.0.0", port=5001, debug=True,
+        self.app.run(host="0.0.0.0", port=5001, debug=False,
                      extra_files=["./static/bundle.js", "./style.css", "./index.html"])
 
     def get_settings(self) -> dict:
@@ -137,7 +137,7 @@ class EagleEyeInterface:
             camera_name (str): The ID of the camera.
             frame: The frame to update.
         """
-        with self.frame_list_lock:  # Use the lock to ensure thread-safe access
+        with self.frame_list_lock:
             self.frame_list[camera_name] = frame
 
     def _frame_generator(self, camera_name: str) -> Generator[bytes, Any, Any]:
@@ -152,7 +152,7 @@ class EagleEyeInterface:
         """
         while True:
             time_start = time.time()
-            with self.frame_list_lock:  # Use the lock to safely access frame_list
+            with self.frame_list_lock:
                 frame = self.frame_list[camera_name]
 
             if frame is None:
@@ -180,7 +180,6 @@ class EagleEyeInterface:
             return Response(self._frame_generator(camera_name), mimetype='multipart/x-mixed-replace; boundary=frame')
 
         if direct_serve:
-            # Start a thread to update the camera feed
             camera_thread = Thread(target=self._update_camera_feed, args=(camera_name,), daemon=True)
             camera_thread.start()
 
@@ -197,26 +196,38 @@ class EagleEyeInterface:
         camera.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
         camera.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
 
-        time_start = time.time()
-        while True:
-            ret, frame = camera.read()
-            if not ret:
-                break
+        if not camera.isOpened():
+            print(f"Error: Unable to open camera: {camera_name}.")
+            return
 
-            ret, buffer = cv2.imencode('.jpg', frame)
-            frame_bytes = buffer.tobytes()
+        try:
+            time_start = time.time()
+            while True:
+                ret, frame = camera.read()
 
-            # Check if processing time exceeds target frame time
-            processing_time = time.time() - time_start
-            if processing_time > (1 / 30):
-                self.update_camera_frame(camera_name, frame_bytes)
-                time_start = time.time()
+                if not ret:
+                    print(f"Warning: Unable to grab frame from camera {camera_name}.")
+                    time.sleep(1)
+                    continue
+
+                ret, buffer = cv2.imencode('.jpg', frame)
+                frame_bytes = buffer.tobytes()
+
+                # Check if processing time exceeds target frame time
+                processing_time = time.time() - time_start
+                if processing_time > (1 / 30):
+                    self.update_camera_frame(camera_name, frame_bytes)
+                    time_start = time.time()
+        finally:
+            camera.release()
 
 
-# Example usage when running this file directly.
 if __name__ == "__main__":
     interface = EagleEyeInterface(dev_mode=True)
 
-    while True:
-        time.sleep(1)
+    try:
+        while True:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        print("Program terminated.")
 
