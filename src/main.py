@@ -144,7 +144,12 @@ class EagleEye:
                                 detections[i]["local_position"]
                                 - detections[j]["local_position"]
                             )
-                            if distance < constants["ObjectDetectionConstants.combined_threshold"]:
+                            if (
+                                    distance
+                                    < constants[
+                                "ObjectDetectionConstants.combined_threshold"
+                            ]
+                            ):
                                 detections.pop(j)
                                 break
 
@@ -220,7 +225,7 @@ class EagleEye:
                     estimated_fps = int(1000 / (time_ms() - start_time))
                     web_interface.update_camera_frame(
                         device.get_current_camera().get_name(),
-                        results_to_image(frame=frame, results=[], fps=estimated_fps)
+                        results_to_image(frame=frame, results=[], fps=estimated_fps),
                     )
                 sleep(0.002)
                 continue
@@ -287,7 +292,7 @@ class EagleEye:
             if constants["DisplayConstants.run_web_server"]:
                 web_interface.update_camera_frame(
                     device.get_current_camera().get_name(),
-                    results_to_image(frame=frame, results=results, fps=estimated_fps)
+                    results_to_image(frame=frame, results=results, fps=estimated_fps),
                 )
 
             with self.data_lock:

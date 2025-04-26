@@ -22,10 +22,17 @@ def results_to_image(frame: np.ndarray, results: list | Results, fps: float) -> 
     frame = cv2.resize(frame, (0, 0), fx=compression_ratio, fy=compression_ratio)
 
     # Correct FPS text placement and formatting, adjusted for compression ratio
-    cv2.putText(frame, f"FPS: {fps:.2f}", (int(10 * compression_ratio), int(30 * compression_ratio)),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.7 * compression_ratio, (255, 255, 255), int(2 * compression_ratio))
+    cv2.putText(
+        frame,
+        f"FPS: {fps:.2f}",
+        (int(10 * compression_ratio), int(30 * compression_ratio)),
+        cv2.FONT_HERSHEY_SIMPLEX,
+        0.7 * compression_ratio,
+        (255, 255, 255),
+        int(2 * compression_ratio),
+    )
 
-    _, buffer = cv2.imencode('.jpg', frame)
+    _, buffer = cv2.imencode(".jpg", frame)
     frame_bytes = buffer.tobytes()
 
     return frame_bytes

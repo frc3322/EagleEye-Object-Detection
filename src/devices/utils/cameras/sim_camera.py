@@ -12,7 +12,9 @@ from src.devices.utils.cameras.camera import Camera
 NetworkTableConstants = constants["NetworkTableConstants"]
 
 
-def sim_frame_reader(url: str, latest_frame_method: Callable[[np.ndarray], None]) -> None:
+def sim_frame_reader(
+        url: str, latest_frame_method: Callable[[np.ndarray], None]
+) -> None:
     """
     Continuously read JPEG frames from an HTTP MJPEG stream
     and hand them to the provided callback.
