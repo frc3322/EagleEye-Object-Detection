@@ -38,10 +38,10 @@ def serve_js():
 
 class EagleEyeInterface:
     def __init__(
-            self,
-            settings_object: Constants | None = None,
-            dev_mode: bool = False,
-            log: Callable = None,
+        self,
+        settings_object: Constants | None = None,
+        dev_mode: bool = False,
+        log: Callable = None,
     ):
         """
         Initialize the EagleEyeInterface.

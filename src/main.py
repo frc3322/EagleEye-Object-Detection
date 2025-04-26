@@ -145,10 +145,10 @@ class EagleEye:
                                 - detections[j]["local_position"]
                             )
                             if (
-                                    distance
-                                    < constants[
-                                "ObjectDetectionConstants.combined_threshold"
-                            ]
+                                distance
+                                < constants[
+                                    "ObjectDetectionConstants.combined_threshold"
+                                ]
                             ):
                                 detections.pop(j)
                                 break

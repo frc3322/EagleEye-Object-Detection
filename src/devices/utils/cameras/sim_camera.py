@@ -13,7 +13,7 @@ NetworkTableConstants = constants["NetworkTableConstants"]
 
 
 def sim_frame_reader(
-        url: str, latest_frame_method: Callable[[np.ndarray], None]
+    url: str, latest_frame_method: Callable[[np.ndarray], None]
 ) -> None:
     """
     Continuously read JPEG frames from an HTTP MJPEG stream
@@ -31,8 +31,8 @@ def sim_frame_reader(
                 a = buffer.find(b"\xff\xd8")
                 b = buffer.find(b"\xff\xd9")
                 if a != -1 and b != -1:
-                    jpg = buffer[a: b + 2]
-                    buffer = buffer[b + 2:]
+                    jpg = buffer[a : b + 2]
+                    buffer = buffer[b + 2 :]
                     frame = cv2.imdecode(
                         np.frombuffer(jpg, dtype=np.uint8), cv2.IMREAD_COLOR
                     )
