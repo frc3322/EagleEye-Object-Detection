@@ -2,7 +2,7 @@ import os
 import threading
 import time
 from threading import Thread
-from typing import Any, Generator
+from typing import Any, Generator, Callable
 
 import cv2
 from flask import (
@@ -14,7 +14,9 @@ from flask import (
 from src.constants.constants import Constants
 from src.devices.utils.get_available_cameras import detect_cameras_with_names
 
-with open(os.path.join(".", "assets", "no_image.png"), "rb") as f:  # "./assets/no_image.png"
+current_path = os.path.dirname(__file__)
+
+with open(os.path.join(current_path, "assets", "no_image.png"), "rb") as f:
     no_image = f.read()
 
 
@@ -38,19 +40,8 @@ def serve_js():
     return send_from_directory("./static", "bundle.js")
 
 
-def get_available_cameras() -> dict:
-    """
-    Get a dict of available cameras.
-
-    Returns:
-        dict: A dict of available cameras.
-    """
-    cameras = detect_cameras_with_names()
-    return cameras
-
-
 class EagleEyeInterface:
-    def __init__(self, settings_object: Constants | None = None, dev_mode: bool = False):
+    def __init__(self, settings_object: Constants | None = None, dev_mode: bool = False, log: Callable = None):
         """
         Initialize the EagleEyeInterface.
 
@@ -59,13 +50,19 @@ class EagleEyeInterface:
         Args:
             settings_object (Constants | None): Optional settings object.
         """
-        self.app = Flask(__name__, static_folder=".", static_url_path="")
+        if log is None:
+            self.log = print
+        else:
+            self.log = log
 
-        self.cameras = get_available_cameras()
-        print(f"Detected Cameras: {self.cameras}")
+        self.app = Flask(__name__, static_folder=current_path, static_url_path="")
+
+        self.cameras = detect_cameras_with_names()
+        self.log(f"Detected Cameras: {self.cameras}")
         self.frame_list = {}
         for camera in self.cameras:
-            self.frame_list[camera] = None
+            self.frame_list[camera] = no_image
+        self.available_cameras = {}
 
         self.frame_list_lock = threading.Lock()  # Add a lock for thread-safe access to frame_list
 
@@ -76,8 +73,6 @@ class EagleEyeInterface:
 
         self._register_routes()
 
-        self.serve_camera_feed(list(self.cameras.keys())[0], direct_serve=True)
-
         if dev_mode:
             self.run()
         else:
@@ -87,15 +82,34 @@ class EagleEyeInterface:
             )
             self.app_thread.start()
 
+        @self.app.errorhandler(Exception)
+        def _log_and_raise(e):
+            self.log("Error:", e)
+            raise
+
     def _register_routes(self) -> None:
         """
         Register all Flask endpoints.
         """
         self.app.add_url_rule("/", "index", index)
         self.app.add_url_rule("/script.js", "script", lambda: serve_js())
+        self.app.add_url_rule("/bundle.js.map", "bundle", lambda: send_from_directory("./static", "bundle.js.map"))
         self.app.add_url_rule("/save-settings", "save_settings", self.set_settings, methods=["POST"])
         self.app.add_url_rule("/get-settings", "get_settings", self.get_settings, methods=["GET"])
-        self.app.add_url_rule("/get-available-cameras", "get_available_cameras", get_available_cameras, methods=["GET"])
+        self.app.add_url_rule("/get-available-cameras", "get_available_cameras", self.get_available_cameras,
+                              methods=["GET"])
+        self.app.add_url_rule("/background.png", "background",
+                              lambda: send_from_directory("./static", "background.png"))
+
+    def get_available_cameras(self) -> dict:
+        """
+        Get a dict of available cameras.
+
+        Returns:
+            dict: A dict of available cameras.
+        """
+        self.cameras = detect_cameras_with_names()
+        return self.available_cameras
 
     def run(self) -> None:
         """
@@ -123,10 +137,10 @@ class EagleEyeInterface:
         try:
             settings = request.get_json()  # Extract JSON data from the request
             self.settings_object.load_config_from_json(settings)
-            print("Settings updated successfully")
+            self.log("Settings updated successfully")
             return {"message": "Settings updated successfully"}, 200
         except Exception as e:
-            print("Error updating settings:", e)
+            self.log("Error updating settings:", e)
             return {"message": "Failed to update settings"}, 500
 
     def update_camera_frame(self, camera_name: str, frame: bytes) -> None:
@@ -155,12 +169,8 @@ class EagleEyeInterface:
             with self.frame_list_lock:
                 frame = self.frame_list[camera_name]
 
-            if frame is None:
-                yield (b'--frame\r\n'
-                       b'Content-Type: image/jpeg\r\n\r\n' + no_image + b'\r\n')
-            else:
-                yield (b'--frame\r\n'
-                       b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+            yield (b'--frame\r\n'
+                   b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
 
             time.sleep(max((1 / 120) - (time.time() - time_start), 0))
 
@@ -175,15 +185,28 @@ class EagleEyeInterface:
         Returns:
             Response: The camera feed.
         """
-        @self.app.route(f"/feed/{camera_name.replace(' ', '_')}", methods=["GET"])
-        def serve_feed():
-            return Response(self._frame_generator(camera_name), mimetype='multipart/x-mixed-replace; boundary=frame')
+        # Create URL path and unique endpoint
+        url_name = camera_name.replace(' ', '_')
+        route = f"/feed/{url_name}"
+        endpoint = f"feed_{url_name}"
+
+        # Define view function for this camera
+        def _make_feed(name: str = camera_name) -> Response:
+            return Response(
+                self._frame_generator(name),
+                mimetype='multipart/x-mixed-replace; boundary=frame'
+            )
+
+        # Register the route with a unique endpoint
+        self.app.add_url_rule(route, endpoint, _make_feed, methods=["GET"])
 
         if direct_serve:
             camera_thread = Thread(target=self._update_camera_feed, args=(camera_name,), daemon=True)
             camera_thread.start()
 
-        print(f"Serving camera feed for {camera_name} at /feed/{camera_name.replace(' ', '_')}")
+        self.available_cameras[camera_name] = self.cameras[camera_name]
+
+        self.log(f"Serving camera feed for {camera_name} at /feed/{camera_name.replace(' ', '_')}")
 
     def _update_camera_feed(self, camera_name: str) -> None:
         """
@@ -197,7 +220,7 @@ class EagleEyeInterface:
         camera.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
 
         if not camera.isOpened():
-            print(f"Error: Unable to open camera: {camera_name}.")
+            self.log(f"Error: Unable to open camera: {camera_name}.")
             return
 
         try:
@@ -206,7 +229,7 @@ class EagleEyeInterface:
                 ret, frame = camera.read()
 
                 if not ret:
-                    print(f"Warning: Unable to grab frame from camera {camera_name}.")
+                    self.log(f"Warning: Unable to grab frame from camera {camera_name}.")
                     time.sleep(1)
                     continue
 

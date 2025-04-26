@@ -1,5 +1,7 @@
+from importlib import import_module
+
 from networktables import NetworkTable
-from src.devices.utils.camera import Camera
+from src.devices.utils.cameras.camera import Camera
 
 class Device:
     def __init__(
@@ -36,11 +38,30 @@ class Device:
         if table == self.eagle_eye_nt and key == f"device:{self.device_index}_active_camera":
             self.set_camera(value)
 
-    def add_camera(self, camera_data: dict) -> None:
+    def add_camera(self, camera_data: dict) -> Camera:
         """
         Adds a camera to this device’s camera list
+
+        Args:
+            camera_data (dict): A dictionary containing camera data.
+                Must contain the key "camera_type" to determine the type of camera.
+
+        returns:
+            Camera: The camera object that was added.
         """
-        self.cameras.append(Camera(camera_data, self.log))
+        camera_type = camera_data["camera_type"]
+
+        module_path = f"src.devices.utils.cameras.{camera_type}"
+        module = import_module(module_path)
+        class_name = "".join(part.capitalize() for part in camera_type.split("_"))
+        camera_class = getattr(module, class_name)
+
+        camera_object = camera_class(camera_data, self.log)
+
+        self.log(f"Adding camera {camera_data['name']} of type: {camera_object.type}")
+
+        self.cameras.append(camera_object)
+        return camera_object
 
     def set_camera(self, camera_index: int) -> None:
         """

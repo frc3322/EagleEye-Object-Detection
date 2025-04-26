@@ -1,5 +1,8 @@
+from line_profiler import profile
+from numpy import ndarray
 from ultralytics import YOLO
 from networktables import NetworkTable
+from ultralytics.engine.results import Results
 
 from src.constants.constants import constants
 from src.devices.device import Device
@@ -51,17 +54,21 @@ class SimpleDevice(Device):
         if table == self.eagle_eye_nt and key == expected_key:
             self.set_camera(value)
 
-    def detect(self) -> tuple:
+    @profile
+    def detect(self) -> tuple[None, None, None] | tuple[Results, tuple[int, int], ndarray]:
         """
         Captures a frame from the active camera and runs YOLO detection using the configured device.
 
-        :return: A tuple (detection_result, frame_size) where detection_result is the first
-                 element of the YOLO prediction output and frame_size is a tuple (width, height).
+        Returns:
+            tuple: A tuple containing:
+                - detection_result: The first element of the YOLO prediction output.
+                - frame_size (tuple): A tuple (width, height) representing the frame size.
+                - frame (numpy.ndarray): The captured frame.
         """
         camera = self.get_current_camera()
         frame = camera.get_frame()
         if frame is None:
-            return None, None
+            return None, None, None
 
         # Determine the inference device string based on the device type
         if self.device_type == "gpu":
@@ -73,21 +80,19 @@ class SimpleDevice(Device):
         else:
             raise ValueError(f"Unsupported device type: {self.device_type}")
 
-        print(f"Using inference device: {infer_device}")
-
         results = self.model.predict(
             frame,
             show=False,
             device=infer_device,
-            conf=ObjectDetectionConstants.confidence_threshold,
-            imgsz=ObjectDetectionConstants.input_size,
+            conf=ObjectDetectionConstants["confidence_threshold"],
+            imgsz=ObjectDetectionConstants["input_size"],
             verbose=False,
             iou=0.5,
         )
 
         frame_height, frame_width = frame.shape[0], frame.shape[1]
         frame_size = (frame_width, frame_height)
-        return results[0], frame_size
+        return results[0], frame_size, frame
 
     def get_class_names(self) -> dict[int, str]:
         """

@@ -3,6 +3,7 @@ export function setupCameraFeedHandlers() {
     const cameraSelect = document.getElementById("cameraSelect");
     const saveFeedBtn = document.getElementById("saveFeedBtn");
     const cancelFeedBtn = document.getElementById("cancelFeedBtn");
+    // Removed rotationInput reference
 
     document.getElementById("addFeedBtn").addEventListener("click", () => {
         fetch("/get-available-cameras", {
@@ -69,7 +70,7 @@ export function setupCameraFeedHandlers() {
         // Create a camera box with selected camera name
         const cameraBox = document.createElement("div");
         cameraBox.className = "camera-box";
-        cameraBox.textContent = selectedCameraName;
+        cameraBox.textContent = `${selectedCameraName}`; // Removed rotation text
 
         // Create video view
         const cameraView = document.createElement("img");
@@ -80,7 +81,7 @@ export function setupCameraFeedHandlers() {
 
         cameraBox.appendChild(cameraView);
 
-        console.log("Reading camera stream at: " + cameraView.src);
+        console.log(`Reading camera stream at: ${cameraView.src}`);
 
         // Add X button for individual camera removal
         const removeButton = document.createElement("button");

@@ -22,7 +22,7 @@
     "CameraConstants": {
         "camera_list": [
             {
-                "name": "front",
+              "name": "HD Webcam USB",
                 "camera_id": 0,
                 "fov": [70, 38],
                 "camera_offset_pos": [0.25, 0.0, 0.75],
@@ -30,18 +30,9 @@
                 "camera_yaw": 0,
                 "frame_rotation": 0,
                 "processing_device": "tpu:0",
-                "sim_camera": true
-            },
-            {
-                "name": "back",
-                "camera_id": 1,
-                "fov": [70, 38],
-                "camera_offset_pos": [0.25, 0.0, 0.75],
-                "camera_pitch": 0,
-                "camera_yaw": 180,
-                "frame_rotation": 180,
-                "processing_device": "tpu:0",
-                "sim_camera": true
+              "camera_type": "video_file_camera",
+              "loop": true,
+              "video_path": "E:\\Ceph-Mirror\\Python-Files\\Projects\\FIRST-Note-Detection\\src\\testing\\test-render.mp4"
             }
         ]
     }

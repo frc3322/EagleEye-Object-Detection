@@ -116,7 +116,10 @@ class Constants:
         Returns:
             any: The value associated with the key.
         """
-        return self.get_value(item)
+        value = self.get_value(item)
+        if value is None:
+            raise KeyError(f"Key '{item}' not found in configuration.")
+        return value
 
 
 constants = Constants()

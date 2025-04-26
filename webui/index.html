@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8" />
     <title>Eagle Eye</title>
-    <link rel="stylesheet" href="style.css" />
+    <!--  <link rel="stylesheet" href="./style.css" /> -->
+    <link rel="stylesheet" href="./static/main.css" />
 </head>
 <body>
 <div class="main-container">
@@ -149,12 +150,14 @@
             <select id="cameraSelect">
                 <option disabled selected>Select a camera</option>
             </select>
-            <button type="button" id="saveFeedBtn">Save</button>
-            <button type="button" id="cancelFeedBtn">Cancel</button>
+            <!-- Removed rotation input and label -->
+            <div class="button-container">
+                <button type="button" id="saveFeedBtn">Save</button>
+                <button type="button" id="cancelFeedBtn">Cancel</button>
+            </div>
         </form>
     </div>
 </div>
-
-<script type="module" src="script.js"></script>
+<script src="./script.js"></script>
 </body>
 </html>

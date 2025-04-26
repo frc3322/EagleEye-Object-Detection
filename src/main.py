@@ -1,7 +1,8 @@
 import os
 import sys
 
-# Set working directory to the directory one above the script's directory
+from line_profiler import profile
+
 print(
     f"Setting Working Dir to: {os.path.dirname(os.path.dirname(os.path.abspath(__file__)))}"
 )
@@ -11,16 +12,16 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from src.custom_logging.log import Logger
 from src.constants.constants import constants
 
+logger = Logger(None)
+log = logger.log
+
 # run web server that streams video
 if constants["DisplayConstants.run_web_server"]:
-    from src.web_interface.web_server import EagleEyeInterface
+    from webui.web_server import EagleEyeInterface
 
-    web_interface = EagleEyeInterface(lambda _: None)
+    web_interface = EagleEyeInterface(settings_object=constants, log=log)
 else:
     web_interface = None
-
-logger = Logger(web_interface)
-log = logger.log
 
 import numpy as np
 from src.devices.simple_device import SimpleDevice
@@ -29,6 +30,7 @@ from src.math_conversions import (
     convert_to_global_position,
     pixels_to_degrees,
 )
+from src.utils.results_to_image import results_to_image
 from time import sleep, time
 from threading import Thread, Lock
 from networktables import NetworkTables
@@ -78,6 +80,7 @@ class EagleEye:
             )
             for camera in camera_list:
                 device.add_camera(camera)
+                web_interface.serve_camera_feed(camera["name"])
             self.devices.append(device)
 
         log(f"{len(self.devices)} devices started")
@@ -180,9 +183,12 @@ class EagleEye:
 
             sleep(0.016)
 
+    @profile
     def detection_thread(self, device: SimpleDevice):
         log(f"Starting thread for {device.get_current_camera().get_name()} camera")
+        estimated_fps = 0
         while True:
+            start_time = time_ms()
             robot_pose = np.array(
                 struct.unpack(
                     "ddd",
@@ -191,20 +197,19 @@ class EagleEye:
                     ),
                 )
             )
-            results, frame_size = device.detect()
+            results, frame_size, frame = device.detect()
 
             if results is None:
                 log(
                     f"{RED}No frame{RESET}",
-                    force_no_log=(not constants["detection_logging"]),
+                    force_no_log=(not constants["Constants"]["detection_logging"]),
                 )
-                sleep(0.02)
+                sleep(0.002)
                 continue
 
-            start_time = time_ms()
             log(
                 f"Speeds: {results.speed}",
-                force_no_log=(not constants["detection_logging"]),
+                force_no_log=(not constants["Constants"]["detection_logging"]),
             )
 
             # if no detections, continue
@@ -212,10 +217,12 @@ class EagleEye:
                 with self.data_lock:
                     self.data[device.get_current_camera().get_name()] = []
                 if constants["DisplayConstants.run_web_server"]:
-                    web_interface.set_frame(
-                        device.get_current_camera().get_name(), results, []
+                    estimated_fps = int(1000 / (time_ms() - start_time))
+                    web_interface.update_camera_frame(
+                        device.get_current_camera().get_name(),
+                        results_to_image(frame=frame, results=[], fps=estimated_fps)
                     )
-                sleep(0.02)
+                sleep(0.002)
                 continue
 
             detections = []
@@ -278,8 +285,9 @@ class EagleEye:
                 )
 
             if constants["DisplayConstants.run_web_server"]:
-                web_interface.set_frame(
-                    device.get_current_camera().get_name(), results, debug_points
+                web_interface.update_camera_frame(
+                    device.get_current_camera().get_name(),
+                    results_to_image(frame=frame, results=results, fps=estimated_fps)
                 )
 
             with self.data_lock:
@@ -291,15 +299,15 @@ class EagleEye:
             estimated_fps = 1000 / total_inference_time
             log(
                 f"Total processing time (ms): {total_inference_time}",
-                force_no_log=(not constants["detection_logging"]),
+                force_no_log=(not constants["Constants"]["detection_logging"]),
             )
             log(
                 f"Post processing time (ms): {time_ms() - start_time}",
-                force_no_log=(not constants["detection_logging"]),
+                force_no_log=(not constants["Constants"]["detection_logging"]),
             )
             log(
                 f"Estimated fps: {estimated_fps}",
-                force_no_log=(not constants["detection_logging"]),
+                force_no_log=(not constants["Constants"]["detection_logging"]),
             )
 
 

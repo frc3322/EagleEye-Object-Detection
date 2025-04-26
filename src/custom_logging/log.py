@@ -69,14 +69,11 @@ def log(message, web_server, force_log=False, force_no_log=False):
         force_log (bool): Whether to force logging regardless of settings.
         force_no_log (bool): Whether to suppress logging regardless of settings.
     """
-    if constants["print_terminal"] and not force_no_log:
+    if constants["Constants"]["print_terminal"] and not force_no_log:
         print(message)
         sys.stdout.flush()
 
-    if web_server and constants["print_terminal"] and not force_no_log:
-        web_server.log_message(message)
-
-    if constants["log"] or force_log and not force_no_log:
+    if constants["Constants"]["log"] or force_log and not force_no_log:
         message = str(message).replace(RED, "").replace(GREEN, "").replace(RESET, "")
 
         # If file is over 25MB, remove the first 100 lines
