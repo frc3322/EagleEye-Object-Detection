@@ -1,3 +1,4 @@
+import os
 from typing import Union
 
 import cv2
@@ -5,15 +6,17 @@ import numpy as np
 from PIL import Image
 
 # Shared constants
-SCALE_FACTOR = 0.30
+SCALE_FACTOR = 0.3
 CONF_THRESHOLD = 0.4
 MIN_GROUP_SIZE = 2
-VIDEO_PATH = "test.mp4"
-MODEL_PATH = "model.pth"
+SRC_PATH = os.path.dirname(__file__)
+VIDEO_PATH = os.path.join(SRC_PATH, "test.mp4")
+MODEL_PATH = os.path.join(SRC_PATH, "model.pth")
+AI_EVAL_FRAME_INTERVAL = 5
 
 
 def scale_with_aspect(
-        img: Union[Image.Image, np.ndarray], scale_factor: float
+    img: Union[Image.Image, np.ndarray], scale_factor: float
 ) -> Union[Image.Image, np.ndarray]:
     """
     Scale an image while maintaining aspect ratio.
@@ -46,7 +49,7 @@ class ScaleTransform:
 
 
 def calculate_crop_regions_from_grid(
-        conf_grid_mask: np.ndarray, cell_w: int, cell_h: int
+    conf_grid_mask: np.ndarray, cell_w: int, cell_h: int
 ) -> list:
     """
     Calculate the crop regions based on the connected components in the grid mask.

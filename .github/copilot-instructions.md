@@ -1,2 +1,2 @@
 This repo uses google docstring style. Please follow the style in the codebase and use docstrings in all function
-definitions. You should also add typehints to Python function args and returns.
+definitions. You should also add typehints to Python function args and returns. Only preform the actions that the user asks you to do. If you want to do anything else, you should ask the user to ask you to do it.

@@ -1,0 +1,7 @@
+1. All code should be generated with best practices in mind.
+2. All python code should be formatted with black style.
+3. All python functions should have google style docstrings.
+4. All python functions should have type hints.
+5. All python variables should be named descriptively. Do not have undescriptive variables.
+6. Avoid using comments in all code, prefer to use more descriptive variable names or seperate into more functions.
+7. Website is built with vite.

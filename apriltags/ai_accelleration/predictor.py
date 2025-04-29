@@ -3,7 +3,7 @@ from torch import nn
 
 
 class GridPredictor(nn.Module):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.features = nn.Sequential(
             nn.Conv2d(3, 16, kernel_size=3, padding=1),
@@ -26,6 +26,14 @@ class GridPredictor(nn.Module):
         self.dropout = nn.Dropout(p=0.4)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Forward pass for grid prediction.
+
+        Args:
+            x (torch.Tensor): Input tensor of shape (N, 3, H, W) representing batch of RGB images.
+
+        Returns:
+            torch.Tensor: Output tensor of shape (N, 10, 10) containing grid cell predictions.
+        """
         x = self.features(x)
         x = self.dropout(x)
         x = self.classifier(x)

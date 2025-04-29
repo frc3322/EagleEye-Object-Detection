@@ -90,7 +90,7 @@ def visualize_grid_on_image_cv2(frame, grid, tag_boxes):
 
 
 def detect_apriltags_in_images(
-        input_dir: str, output_dir: str = "training_data"
+    input_dir: str, output_dir: str = "apriltags/ai_accelleration/training_data"
 ) -> None:
     """Process all images in a folder, detect AprilTags, and save raw frames + grid data."""
     os.makedirs(output_dir, exist_ok=True)
@@ -135,7 +135,7 @@ def detect_apriltags_in_images(
         tag_cells = set()
         tag_boxes = []
 
-        buffer_px = 20  # Number of pixels to pad around detected tags
+        buffer_px = 10  # Number of pixels to pad around detected tags
 
         # Scale factor from original to resized
         scale_x = w / frame.shape[1]
@@ -190,7 +190,7 @@ def detect_apriltags_in_images(
 
 
 def main() -> None:
-    input_dir = "input_data"
+    input_dir = "apriltags/ai_accelleration/input_data"
     detect_apriltags_in_images(input_dir)
 
 

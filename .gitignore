@@ -239,3 +239,34 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 
+node_modules/
+
+apriltags/ai_accelleration/input_data/
+apriltags/ai_accelleration/training_data/
+apriltags/ai_accelleration/model.pth
+apriltags/ai_accelleration/test.mp4
+training_data/
+
+/.vscode/
+/.venv/
+
+log.txt
+
+/src/model_creation/runs
+/src/model_creation/yolo
+
+.idea
+.idea/
+
+.idea_modules
+.idea_modules/
+apriltags/ai_accelleration/model_v1_(0.3).pth
+apriltags/ai_accelleration/model_v1_(0.15).pth
+apriltags/ai_accelleration/model_v1_s_(0.3).pth
+src/main.py.lprof
+src/model_creation/yolo11m.pt
+src/model_creation/yolo11n.pt
+src/model_creation/yolov8n.pt
+webui/static/bundle.js
+webui/static/bundle.js.LICENSE.txt
+webui/static/bundle.js.map

@@ -54,7 +54,7 @@ class GridDataset(Dataset):
 
 
 # ——— Config ———
-data_dir = "training_data"
+data_dir = "apriltags/ai_accelleration/training_data"
 epochs = 400
 batch_size = 64
 lr = 1e-3
