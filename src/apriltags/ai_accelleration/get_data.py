@@ -7,7 +7,7 @@ from PIL import Image, ImageDraw
 from pupil_apriltags import Detector
 from tqdm import tqdm
 
-from utils import SCALE_FACTOR, scale_with_aspect
+from utils import TARGET_WIDTH, TARGET_HEIGHT, letterbox_image, GRID_WIDTH, GRID_HEIGHT
 
 
 def confidence_to_color(conf, min_conf, max_conf):
@@ -24,15 +24,15 @@ def visualize_grid_on_image(img, grid):
     """
     draw = ImageDraw.Draw(img)
     width, height = img.size
-    cell_width = width // 10
-    cell_height = height // 10
+    cell_width = width // GRID_WIDTH
+    cell_height = height // GRID_HEIGHT
 
     # Normalize confidence values for hue adjustment
     min_conf = min(min(row) for row in grid)
     max_conf = max(max(row) for row in grid)
 
-    for i in range(10):
-        for j in range(10):
+    for i in range(GRID_HEIGHT):
+        for j in range(GRID_WIDTH):
             conf = grid[i][j]
             x0, y0 = j * cell_width, i * cell_height
             x1, y1 = x0 + cell_width, y0 + cell_height
@@ -58,11 +58,11 @@ def visualize_grid_on_image_cv2(frame, grid, tag_boxes):
     and slightly darken grid tiles without tags.
     """
     h, w, _ = frame.shape
-    cell_width = w // 10
-    cell_height = h // 10
+    cell_width = w // GRID_WIDTH
+    cell_height = h // GRID_HEIGHT
 
-    for i in range(10):
-        for j in range(10):
+    for i in range(GRID_HEIGHT):
+        for j in range(GRID_WIDTH):
             x0, y0 = j * cell_width, i * cell_height
             x1, y1 = x0 + cell_width, y0 + cell_height
 
@@ -121,42 +121,47 @@ def detect_apriltags_in_images(
         if frame is None:
             raise RuntimeError(f"Unable to read image: {img_path}")
 
-        raw_frame = frame.copy()  # Save original for output
-
         # --- Detection on full image ---
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         tags = detector.detect(gray)
 
         # --- Scale for grid/model ---
-        resized_frame = scale_with_aspect(frame, SCALE_FACTOR)
+        resized_frame, (nw, nh) = letterbox_image(frame, (TARGET_WIDTH, TARGET_HEIGHT), greyscale=False, return_resized_size=True)
         h, w = resized_frame.shape[:2]
-        rows, cols = 10, 10
+        rows, cols = GRID_HEIGHT, GRID_WIDTH
         ch, cw = h // rows, w // cols
         tag_cells = set()
         tag_boxes = []
 
-        buffer_px = 10  # Number of pixels to pad around detected tags
+        buffer_percentage = 1 # the percentage of the tag width to buffer around the tag
 
         # Scale factor from original to resized
-        scale_x = w / frame.shape[1]
-        scale_y = h / frame.shape[0]
+        scale_x = nw / frame.shape[1]
+        scale_y = nh / frame.shape[0]
+        
+        # Calculate padding offsets
+        pad_x = (w - nw) // 2
+        pad_y = (h - nh) // 2
 
         for tag in tags:
             pts = tag.corners
-            # Scale tag corners to resized image
+            # Scale tag corners to resized image and add padding offset
             pts_resized = pts.copy()
-            pts_resized[:, 0] = pts[:, 0] * scale_x
-            pts_resized[:, 1] = pts[:, 1] * scale_y
+            pts_resized[:, 0] = pts[:, 0] * scale_x + pad_x
+            pts_resized[:, 1] = pts[:, 1] * scale_y + pad_y
             tag_boxes.append(pts_resized)
 
             min_x, min_y = pts_resized.min(axis=0)
             max_x, max_y = pts_resized.max(axis=0)
+            
+            tag_width = max_x - min_x
+            tag_height = max_y - min_y
 
             # Add buffer in pixels around detected tag bounds
-            min_x = max(0, min_x - buffer_px)
-            min_y = max(0, min_y - buffer_px)
-            max_x = min(w - 1, max_x + buffer_px)
-            max_y = min(h - 1, max_y + buffer_px)
+            min_x = max(0, min_x - buffer_percentage * tag_width)
+            min_y = max(0, min_y - buffer_percentage * tag_height)
+            max_x = min(w - 1, max_x + buffer_percentage * tag_width)
+            max_y = min(h - 1, max_y + buffer_percentage * tag_height)
 
             sr, sc = int(min_y // ch), int(min_x // cw)
             er, ec = int(max_y // ch), int(max_x // cw)

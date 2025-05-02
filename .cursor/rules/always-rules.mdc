@@ -1,3 +1,8 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
 1. All code should be generated with best practices in mind.
 2. All python code should be formatted with black style.
 3. All python functions should have google style docstrings.

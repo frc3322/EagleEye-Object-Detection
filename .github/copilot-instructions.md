@@ -1,2 +1,13 @@
-This repo uses google docstring style. Please follow the style in the codebase and use docstrings in all function
-definitions. You should also add typehints to Python function args and returns. Only preform the actions that the user asks you to do. If you want to do anything else, you should ask the user to ask you to do it.
+1. All code should be generated with best practices in mind.
+2. All python code should be formatted with black style.
+3. All python functions should have google style docstrings.
+4. All python functions should have type hints for args and for return value.
+5. All python variables should be named descriptively. Do not have undescriptive variables.
+6. Avoid using comments in all code, prefer to use more descriptive variable names or seperate into more functions.
+7. Commit Message Format:
+<main change>
+
+<related changes>
+    format of change; change; change; ...
+
+8. Always context7 for getting libary information if the libary is often updated or is a nich libary. If context7 is not available warn the user and then continue with other methods.

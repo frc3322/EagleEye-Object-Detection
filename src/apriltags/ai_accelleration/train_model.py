@@ -4,23 +4,30 @@ from typing import Tuple
 
 import torch
 import torch.optim.lr_scheduler as lr_scheduler
-from PIL import Image
+from cv2 import imread
 from torch import nn, optim
 from torch.amp import GradScaler, autocast
 from torch.utils.data import Dataset, DataLoader, random_split
 from torchvision import transforms
 from tqdm import tqdm
 
-from predictor import GridPredictor
-from utils import SCALE_FACTOR, MODEL_PATH, ScaleTransform
+from grid_detectors.predictor import GridPredictor
+from utils import TARGET_WIDTH, TARGET_HEIGHT, MODEL_PATH, LetterboxTransform, GRID_WIDTH, GRID_HEIGHT
 
 
 class GridDataset(Dataset):
-    """Dataset of raw frames and 10×10 occupancy grids saved as JSON."""
+    """Dataset of raw frames and occupancy grids of size GRID_HEIGHT×GRID_WIDTH saved as JSON."""
 
     def __init__(
             self, data_dir: str, transform: transforms.Compose, cache: bool = False
     ):
+        """ Initialize the GridDataset.
+
+        Args:
+            data_dir (str): The directory containing the training data.
+            transform (transforms.Compose): The transform to apply to the images.
+            cache (bool, optional): Whether to cache the images and labels in memory. Defaults to False.
+        """
         self.data_dir = data_dir
         self.transform = transform
         files = sorted(f[:-4] for f in os.listdir(data_dir) if f.endswith(".png"))
@@ -32,7 +39,7 @@ class GridDataset(Dataset):
             self.imgs = []
             self.labels = []
             for b in self.bases:
-                img = Image.open(os.path.join(data_dir, b + ".png")).convert("RGB")
+                img = imread(os.path.join(data_dir, b + ".png"))
                 self.imgs.append(self.transform(img))
                 with open(os.path.join(data_dir, b + ".json")) as jf:
                     grid = json.load(jf)["grid"]
@@ -42,10 +49,18 @@ class GridDataset(Dataset):
         return len(self.bases)
 
     def __getitem__(self, idx: int) -> Tuple[torch.Tensor, torch.Tensor]:
+        """Get an item from the dataset.
+
+        Args:
+            idx (int): The index of the item to get.
+
+        Returns:
+            Tuple[torch.Tensor, torch.Tensor]: The image and label.
+        """
         if self.cache:
             return self.imgs[idx], self.labels[idx]
         base = self.bases[idx]
-        img = Image.open(os.path.join(self.data_dir, base + ".png")).convert("RGB")
+        img = imread(os.path.join(self.data_dir, base + ".png"))
         img_t = self.transform(img)
         with open(os.path.join(self.data_dir, base + ".json"), "r") as jf:
             grid = json.load(jf)["grid"]
@@ -69,7 +84,7 @@ def train():
 
     tf = transforms.Compose(
         [
-            ScaleTransform(SCALE_FACTOR),
+            LetterboxTransform((TARGET_WIDTH, TARGET_HEIGHT)),
             transforms.ToTensor(),
         ]
     )
@@ -115,20 +130,17 @@ def train():
         running_loss = 0.0
 
         for imgs, grids in tqdm(
-                train_loader, desc=f" Epoch {epoch}/{epochs}", unit="batch", leave=False
+            train_loader, desc=f" Epoch {epoch}/{epochs}", unit="batch", leave=False
         ):
             imgs = imgs.to(device, non_blocking=True)
             grids = grids.to(device, non_blocking=True)
-
             optimizer.zero_grad()
             with autocast("cuda"):
                 logits = model(imgs)
                 loss = criterion(logits, grids)
-
             scaler.scale(loss).backward()
             scaler.step(optimizer)
             scaler.update()
-
             running_loss += loss.item() * imgs.size(0)
 
         avg_loss = running_loss / len(train_ds)
