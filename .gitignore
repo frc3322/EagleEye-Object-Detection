@@ -241,12 +241,6 @@ cython_debug/
 
 node_modules/
 
-src/apriltags/ai_accelleration/input_data/
-src/apriltags/ai_accelleration/training_data/
-src/apriltags/ai_accelleration/model.pth
-src/apriltags/ai_accelleration/test.mp4
-*/training_data/
-
 /.vscode/
 /.venv/
 
@@ -265,3 +259,13 @@ src/object_detection/src/main.py.lprof
 src/object_detection/src/model_creation/yolo11m.pt
 src/object_detection/src/model_creation/yolo11n.pt
 src/object_detection/src/model_creation/yolov8n.pt
+
+src/apriltags/pre-processing/ai_accelleration/input_data/*
+src/apriltags/pre-processing/ai_accelleration/training_data/*
+src/apriltags/ai_accelleration/model.pth
+src/apriltags/ai_accelleration/test.mp4
+
+*test.mp4
+*model.pth
+*input_data
+*training_data

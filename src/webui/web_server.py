@@ -7,8 +7,10 @@ from typing import Any, Generator, Callable
 import cv2
 from flask import Flask, send_from_directory, request, Response
 
-from src.constants.constants import Constants
-from src.devices.utils.get_available_cameras import detect_cameras_with_names
+from src.object_detection.src.constants.constants import Constants
+from src.object_detection.src.devices.utils.get_available_cameras import (
+    detect_cameras_with_names,
+)
 
 current_path = os.path.dirname(__file__)
 
