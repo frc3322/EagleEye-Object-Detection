@@ -269,3 +269,7 @@ src/apriltags/ai_accelleration/test.mp4
 *model.pth
 *input_data
 *training_data
+
+src/utils/camera_calibration/calibration_images/*
+src/utils/camera_calibration/camera_intrinsics.json
+src/utils/camera_calibration/apriltag_test.png
