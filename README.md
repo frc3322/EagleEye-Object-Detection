@@ -22,7 +22,7 @@ We welcome contributions to improve EagleEye Object Detection. To contribute:
 3. Submit a pull request with a detailed description of your changes.
 4. We will review your changes and merge them if they meet our standards
 
-You can see the status of current code in terms of clendliness and issues at this link: [sonar cloud](https://sonarcloud.io/project/overview?id=darkeden-coding_eagleeye)
+You can see the status of the current code in terms of cleanliness and issues at this link: [sonar cloud](https://sonarcloud.io/project/overview?id=Scythe-Engineering_EagleEye-Object-Detection)
 
 ## License
 EagleEye Framework © 2025 by (ScytheEngineering/FRC3322) is licensed under CC BY-NC 4.0. See the [LICENSE](LICENSE) file for details.
