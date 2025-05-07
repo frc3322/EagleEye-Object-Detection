@@ -9,7 +9,7 @@
 - [License](#license)
 
 ## Introduction
-EagleEye Object Detection is designed to help identify and track game pieces in 3d space over different years. Code similarity between years is a priority where teams can simply create their own detection model for each year while keeping the same simple and reliable code.
+EagleEye Object Detection is designed to help identify and track game pieces in 3d space over different years. Code similarity between years is a priority where teams can simply create their detection model for each year while keeping the same simple and reliable code.
 
 ## Installation
 For installation and further instructions, please refer to the [wiki page](https://github.com/frc3322/EagleEye-Object-Detection/wiki).
