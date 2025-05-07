@@ -1,5 +1,3 @@
-![CodeRabbit Pull Request Reviews](https://img.shields.io/coderabbit/prs/github/Scythe-Engineering/EagleEye-Object-Detection?utm_source=oss&utm_medium=github&utm_campaign=Scythe-Engineering%2FEagleEye-Object-Detection&labelColor=171717&color=FF570A&link=https%3A%2F%2Fcoderabbit.ai&label=CodeRabbit+Reviews)
-
 # EagleEye-Object-Detection 
 
 **EagleEye Object Detection** is a Python-based project aimed at detecting game pieces using YOLO Ai object detection. This project was created by DarkEden-Coding on the FRC Team 3322 Eagle Evolution.
