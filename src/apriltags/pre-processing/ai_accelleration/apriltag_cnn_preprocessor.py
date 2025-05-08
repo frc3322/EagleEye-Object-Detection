@@ -60,7 +60,7 @@ class ApriltagCnnPreprocessor:
 
         Raises:
             FileNotFoundError: If the model file is not found.
-            Exception: If there's an error loading the model.
+            RuntimeError: If there's an error loading the model.
         """
         model = GridPredictor().to(self.device)
         try:
@@ -72,7 +72,7 @@ class ApriltagCnnPreprocessor:
         except FileNotFoundError:
             raise FileNotFoundError(f"Model file not found at {self.model_path}")
         except Exception as e:
-            raise Exception(f"Error loading model: {e}")
+            raise RuntimeError(f"Error loading model: {e}")
 
     def _overlay_grid_cv2(
         self, frame: np.ndarray, grid: np.ndarray

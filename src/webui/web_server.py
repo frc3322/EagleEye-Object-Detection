@@ -92,7 +92,7 @@ class EagleEyeInterface:
         @self.app.errorhandler(Exception)
         def _log_and_raise(e):
             self.log("Error:", e)
-            raise
+            return {"message": "Internal server error"}, 500
 
     def _register_routes(self) -> None:
         """
@@ -195,7 +195,7 @@ class EagleEyeInterface:
             with self.frame_list_lock:
                 frame = self.frame_list[camera_name]
 
-            yield (b"--frame\r\n" b"Content-Type: image/jpeg\r\n\r\n" + frame + b"\r\n")
+            yield b"--frame\r\nContent-Type: image/jpeg\r\n\r\n" + frame + b"\r\n"
 
             time.sleep(max((1 / 120) - (time.time() - time_start), 0))
 

@@ -67,63 +67,55 @@ def get_macos_camera_mapping():
     return mapping
 
 
-def detect_cameras_with_names(max_tested=10):
-    """
-    Detect available cameras along with their names.
-    For Linux, it uses v4l2-ctl to map /dev/video* to friendly names.
-    For Windows, it uses pygrabber's FilterGraph to get device names.
-
-    Args:
-        max_tested (int): Maximum number of devices to test.
-
-    Returns:
-        list of dict: Each dictionary has 'index', 'device' (e.g. '/dev/video0' on Linux or index on Windows),
-                      and 'name' (the friendly device name if available).
-    """
-    system = platform.system()
+def _detect_linux_cameras():
+    dev_name_mapping = get_linux_camera_mapping()
+    devices = glob.glob("/dev/video*")
+    devices.sort(key=lambda x: int(x.replace("/dev/video", "")))
     cameras = {}
-
-    if system == "Linux":
-        # Get mapping from device file to name using v4l2-ctl.
-        dev_name_mapping = get_linux_camera_mapping()
-        # List video devices
-        devices = glob.glob("/dev/video*")
-        # Sort by the numeric part (e.g. /dev/video0, /dev/video1, …)
-        devices.sort(key=lambda x: int(x.replace("/dev/video", "")))
-        for device in devices:
-            # Convert device file to index (assumes the filename contains the index)
-            try:
-                index = int(device.replace("/dev/video", ""))
-            except ValueError:
-                continue
-
-            name = dev_name_mapping.get(device, "Unknown")
-            cameras[name] = index
-
-    elif system == "Windows":
-        comtypes.CoInitialize()
-        graph = FilterGraph()
-        device_names = graph.get_input_devices()
-
-        for index, name in enumerate(device_names):
-            cameras[name] = index
-
-    elif system == "Darwin":  # macOS
-        dev_name_mapping = get_macos_camera_mapping()
-        for index, name in enumerate(dev_name_mapping.values()):
-            cameras[name] = index
-
-    else:
-        # For any other OS, perform a simple index scan.
-        for index in range(max_tested):
-            cap = cv2.VideoCapture(index)
-            if cap is not None and cap.isOpened():
-                ret, frame = cap.read()
-                if ret:
-                    cameras[f"Camera {index}"] = index
-                cap.release()
-
+    for device in devices:
+        try:
+            index = int(device.replace("/dev/video", ""))
+        except ValueError:
+            continue
+        name = dev_name_mapping.get(device, "Unknown")
+        cameras[name] = index
     return cameras
+
+
+def _detect_windows_cameras():
+    comtypes.CoInitialize()
+    graph = FilterGraph()
+    device_names = graph.get_input_devices()
+    return {name: index for index, name in enumerate(device_names)}
+
+
+def _detect_macos_cameras():
+    dev_name_mapping = get_macos_camera_mapping()
+    return {name: index for index, name in enumerate(dev_name_mapping.values())}
+
+
+def _detect_generic_cameras(max_tested):
+    cameras = {}
+    for index in range(max_tested):
+        cap = cv2.VideoCapture(index)
+        if cap is not None and cap.isOpened():
+            ret, _ = cap.read()
+            if ret:
+                cameras[f"Camera {index}"] = index
+            cap.release()
+    return cameras
+
+
+def detect_cameras_with_names(max_tested=10):
+    system = platform.system()
+    if system == "Linux":
+        return _detect_linux_cameras()
+    elif system == "Windows":
+        return _detect_windows_cameras()
+    elif system == "Darwin":
+        return _detect_macos_cameras()
+    else:
+        return _detect_generic_cameras(max_tested)
 
 
 if __name__ == "__main__":

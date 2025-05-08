@@ -1,4 +1,3 @@
-import { OrbitControls } from "OrbitControls";
 import { GLTFLoader } from "GLTFLoader";
 import {
     PCFSoftShadowMap,
@@ -96,8 +95,6 @@ export function init3DView(modelUrl) {
     directionalLight.shadow.camera.near = 100 * scale;
     directionalLight.shadow.camera.far = 400 * scale;
     scene.add(directionalLight);
-
-    new OrbitControls(camera, renderer.domElement);
 
     const loader = new GLTFLoader();
     loader.load(

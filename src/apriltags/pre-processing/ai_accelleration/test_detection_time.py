@@ -58,6 +58,34 @@ def run_full_frame_detection(video_path: str) -> tuple[float, float]:
         return avg_ms, percent_detect
     return 0.0, 0.0
 
+def detect_tags_in_crops(
+    frame: np.ndarray, crop_regions: list, detector: Detector
+) -> list:
+    """Detect AprilTags in the given crop regions of the frame.
+
+    Args:
+        frame: The video frame.
+        crop_regions: List of (left, top, right, bottom) tuples.
+        detector: AprilTag detector instance.
+
+    Returns:
+        List of detected tags with adjusted coordinates.
+    """
+    tags = []
+    for left, top, right, bottom in crop_regions:
+        crop = frame[top:bottom, left:right]
+        if crop.size == 0:
+            continue
+        gray_crop = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY)
+        detected = detector.detect(gray_crop)
+        for tag in detected:
+            tag_corners = tag.corners.copy()
+            tag_corners[:, 0] += left
+            tag_corners[:, 1] += top
+            tag.corners = tag_corners
+            tags.append(tag)
+    return tags
+
 def run_selective_detection(video_path: str, model_path: str) -> tuple[float, float]:
     """Run AprilTag detection only on regions predicted by the CNN and return (average detection time in ms, percent frames with detection). Displays detections and regions."""
     cap = cv2.VideoCapture(video_path)
@@ -72,6 +100,7 @@ def run_selective_detection(video_path: str, model_path: str) -> tuple[float, fl
     frame_count = 0
     total_time = 0.0
     detection_frames = 0
+    crop_regions = []
     while True:
         ret, frame = cap.read()
         if not ret:
@@ -79,20 +108,10 @@ def run_selective_detection(video_path: str, model_path: str) -> tuple[float, fl
         cap_size = frame.shape[:2]
         start = time.time()
         if frame_count % 5 == 0:
-            crop_regions, _ = preprocessor.process_frame(frame, output_size=cap_size, return_visualization=False)
-        tags = []
-        for left, top, right, bottom in crop_regions:
-            crop = frame[top:bottom, left:right]
-            if crop.size == 0:
-                continue
-            gray_crop = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY)
-            detected = detector.detect(gray_crop)
-            for tag in detected:
-                tag_corners = tag.corners.copy()
-                tag_corners[:, 0] += left
-                tag_corners[:, 1] += top
-                tag.corners = tag_corners
-                tags.append(tag)
+            crop_regions, _ = preprocessor.process_frame(
+                frame, output_size=cap_size, return_visualization=False
+            )
+        tags = detect_tags_in_crops(frame, crop_regions, detector)
         elapsed = time.time() - start
         if frame_count > 0:
             total_time += elapsed
