@@ -12,6 +12,16 @@ from src.devices.utils.cameras.camera import Camera
 NetworkTableConstants = constants["NetworkTableConstants"]
 
 
+def extract_and_decode_jpeg(buffer: bytearray) -> tuple[np.ndarray | None, bytearray]:
+    a = buffer.find(b"\xff\xd8")
+    b = buffer.find(b"\xff\xd9")
+    if a != -1 and b != -1:
+        jpg = buffer[a : b + 2]
+        buffer = buffer[b + 2 :]
+        frame = cv2.imdecode(np.frombuffer(jpg, dtype=np.uint8), cv2.IMREAD_COLOR)
+        return frame, buffer
+    return None, buffer
+
 def sim_frame_reader(
     url: str, latest_frame_method: Callable[[np.ndarray], None]
 ) -> None:
@@ -28,16 +38,9 @@ def sim_frame_reader(
                 if len(buffer) > 100_000:
                     buffer = buffer[-100_000:]
                 buffer += stream.read(4096)
-                a = buffer.find(b"\xff\xd8")
-                b = buffer.find(b"\xff\xd9")
-                if a != -1 and b != -1:
-                    jpg = buffer[a : b + 2]
-                    buffer = buffer[b + 2 :]
-                    frame = cv2.imdecode(
-                        np.frombuffer(jpg, dtype=np.uint8), cv2.IMREAD_COLOR
-                    )
-                    if frame is not None:
-                        latest_frame_method(frame)
+                frame, buffer = extract_and_decode_jpeg(buffer)
+                if frame is not None:
+                    latest_frame_method(frame)
                     break
         except Exception as e:
             print("Exception in sim_frame_reader:", e)

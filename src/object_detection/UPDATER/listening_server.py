@@ -72,6 +72,32 @@ def save_file(file_info):
         f.write(file_data)
     sys_print(f"[TCP] Received and saved file: {file_path}")
 
+def handle_tcp_connection(conn, addr):
+    try:
+        remove_and_create_folder(RECEIVE_DIR)
+        while True:
+            length_data = conn.recv(4)
+            if not length_data:
+                break
+            if length_data == b"EOF":
+                sys_print("[TCP] Folder transfer complete.")
+                restart_vision()
+                break
+            length = int.from_bytes(length_data, 'big')
+            data = b""
+            while len(data) < length:
+                packet = conn.recv(length - len(data))
+                if not packet:
+                    raise ValueError("Incomplete data received")
+                data += packet
+            file_info = pickle.loads(data)
+            save_file(file_info)
+    except Exception as e:
+        sys_print(f"[TCP] Error processing data: {e}")
+    finally:
+        conn.close()
+        sys_print(f"[TCP] Connection closed with {addr}")
+
 def tcp_server():
     tcp_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     tcp_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -82,40 +108,7 @@ def tcp_server():
     while True:
         conn, addr = tcp_sock.accept()
         sys_print(f"[TCP] Connection accepted from {addr}")
-
-        try:
-            remove_and_create_folder(RECEIVE_DIR)
-
-            while True:
-                # Read 4-byte length first
-                length_data = conn.recv(4)
-                if not length_data:
-                    break  # Connection closed
-
-                # If we receive "EOF", terminate the transfer
-                if length_data == b"EOF":
-                    sys_print("[TCP] Folder transfer complete.")
-                    restart_vision()
-                    break
-
-                length = int.from_bytes(length_data, 'big')
-
-                # Read the actual file data
-                data = b""
-                while len(data) < length:
-                    packet = conn.recv(length - len(data))
-                    if not packet:
-                        raise ValueError("Incomplete data received")  # Prevent empty pickle.loads()
-                    data += packet
-
-                file_info = pickle.loads(data)  # Deserialize file info
-                save_file(file_info)
-
-        except Exception as e:
-            sys_print(f"[TCP] Error processing data: {e}")
-        finally:
-            conn.close()
-            sys_print(f"[TCP] Connection closed with {addr}")
+        handle_tcp_connection(conn, addr)
 
 if __name__ == '__main__':
     # Start UDP discovery listener in a background thread

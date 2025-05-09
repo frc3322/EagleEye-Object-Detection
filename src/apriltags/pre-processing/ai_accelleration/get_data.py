@@ -89,13 +89,80 @@ def visualize_grid_on_image_cv2(frame, grid, tag_boxes):
     return frame
 
 
+def process_single_image(img_path: str, output_dir: str, frame_index: int, detector: Detector) -> bool:
+    """Process a single image: detect tags, save outputs, and visualize.
+
+    Args:
+        img_path: Path to the image file.
+        output_dir: Directory to save outputs.
+        frame_index: Index of the frame for naming outputs.
+        detector: AprilTag detector instance.
+
+    Returns:
+        True to continue processing, False to break early (if 'q' is pressed).
+    """
+    frame = cv2.imread(img_path)
+    if frame is None:
+        raise RuntimeError(f"Unable to read image: {img_path}")
+
+    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    tags = detector.detect(gray)
+
+    resized_frame, (nw, nh) = letterbox_image(frame, (TARGET_WIDTH, TARGET_HEIGHT), greyscale=False, return_resized_size=True)
+    h, w = resized_frame.shape[:2]
+    rows, cols = GRID_HEIGHT, GRID_WIDTH
+    ch, cw = h // rows, w // cols
+    tag_cells = set()
+    tag_boxes = []
+
+    buffer_percentage = 1
+    scale_x = nw / frame.shape[1]
+    scale_y = nh / frame.shape[0]
+    pad_x = (w - nw) // 2
+    pad_y = (h - nh) // 2
+
+    for tag in tags:
+        pts = tag.corners
+        pts_resized = pts.copy()
+        pts_resized[:, 0] = pts[:, 0] * scale_x + pad_x
+        pts_resized[:, 1] = pts[:, 1] * scale_y + pad_y
+        tag_boxes.append(pts_resized)
+
+        min_x, min_y = pts_resized.min(axis=0)
+        max_x, max_y = pts_resized.max(axis=0)
+        tag_width = max_x - min_x
+        tag_height = max_y - min_y
+        min_x = max(0, min_x - buffer_percentage * tag_width)
+        min_y = max(0, min_y - buffer_percentage * tag_height)
+        max_x = min(w - 1, max_x + buffer_percentage * tag_width)
+        max_y = min(h - 1, max_y + buffer_percentage * tag_height)
+        sr, sc = int(min_y // ch), int(min_x // cw)
+        er, ec = int(max_y // ch), int(max_x // cw)
+        for r in range(sr, er + 1):
+            for c in range(sc, ec + 1):
+                tag_cells.add((r, c))
+
+    fname = f"{frame_index:06d}"
+    output_img_path = os.path.join(output_dir, fname + ".png")
+    output_json_path = os.path.join(output_dir, fname + ".json")
+    cv2.imwrite(output_img_path, resized_frame)
+    grid = [
+        [1 if (r, c) in tag_cells else 0 for c in range(cols)] for r in range(rows)
+    ]
+    with open(output_json_path, "w") as jf:
+        json.dump({"grid": grid}, jf, indent=2)
+    vis_frame = visualize_grid_on_image_cv2(resized_frame.copy(), grid, tag_boxes)
+    cv2.imshow("Visualization", vis_frame)
+    if cv2.waitKey(1) & 0xFF == ord("q"):
+        return False
+    return True
+
+
 def detect_apriltags_in_images(
     input_dir: str, output_dir: str = "apriltags/ai_accelleration/training_data"
 ) -> None:
     """Process all images in a folder, detect AprilTags, and save raw frames + grid data."""
     os.makedirs(output_dir, exist_ok=True)
-
-    # Get all image files in the input directory
     image_files = sorted(
         f
         for f in os.listdir(input_dir)
@@ -103,8 +170,6 @@ def detect_apriltags_in_images(
     )
     if not image_files:
         raise RuntimeError(f"No image files found in directory: {input_dir}")
-
-    # Configure the detector for optimal performance
     detector = Detector(
         families="tag36h11",
         nthreads=32,
@@ -112,84 +177,11 @@ def detect_apriltags_in_images(
         quad_sigma=0.0,
         refine_edges=1,
     )
-
     pbar = tqdm(image_files, unit="image", desc="Processing images")
-
     for frame_index, image_file in enumerate(pbar):
         img_path = os.path.join(input_dir, image_file)
-        frame = cv2.imread(img_path)
-        if frame is None:
-            raise RuntimeError(f"Unable to read image: {img_path}")
-
-        # --- Detection on full image ---
-        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        tags = detector.detect(gray)
-
-        # --- Scale for grid/model ---
-        resized_frame, (nw, nh) = letterbox_image(frame, (TARGET_WIDTH, TARGET_HEIGHT), greyscale=False, return_resized_size=True)
-        h, w = resized_frame.shape[:2]
-        rows, cols = GRID_HEIGHT, GRID_WIDTH
-        ch, cw = h // rows, w // cols
-        tag_cells = set()
-        tag_boxes = []
-
-        buffer_percentage = 1 # the percentage of the tag width to buffer around the tag
-
-        # Scale factor from original to resized
-        scale_x = nw / frame.shape[1]
-        scale_y = nh / frame.shape[0]
-        
-        # Calculate padding offsets
-        pad_x = (w - nw) // 2
-        pad_y = (h - nh) // 2
-
-        for tag in tags:
-            pts = tag.corners
-            # Scale tag corners to resized image and add padding offset
-            pts_resized = pts.copy()
-            pts_resized[:, 0] = pts[:, 0] * scale_x + pad_x
-            pts_resized[:, 1] = pts[:, 1] * scale_y + pad_y
-            tag_boxes.append(pts_resized)
-
-            min_x, min_y = pts_resized.min(axis=0)
-            max_x, max_y = pts_resized.max(axis=0)
-            
-            tag_width = max_x - min_x
-            tag_height = max_y - min_y
-
-            # Add buffer in pixels around detected tag bounds
-            min_x = max(0, min_x - buffer_percentage * tag_width)
-            min_y = max(0, min_y - buffer_percentage * tag_height)
-            max_x = min(w - 1, max_x + buffer_percentage * tag_width)
-            max_y = min(h - 1, max_y + buffer_percentage * tag_height)
-
-            sr, sc = int(min_y // ch), int(min_x // cw)
-            er, ec = int(max_y // ch), int(max_x // cw)
-
-            for r in range(sr, er + 1):
-                for c in range(sc, ec + 1):
-                    tag_cells.add((r, c))
-
-        fname = f"{frame_index:06d}"
-        output_img_path = os.path.join(output_dir, fname + ".png")
-        output_json_path = os.path.join(output_dir, fname + ".json")
-
-        # Save the scaled frame (for model training)
-        cv2.imwrite(output_img_path, resized_frame)
-
-        # Save the grid data
-        grid = [
-            [1 if (r, c) in tag_cells else 0 for c in range(cols)] for r in range(rows)
-        ]
-        with open(output_json_path, "w") as jf:
-            json.dump({"grid": grid}, jf, indent=2)
-
-        # Visualize the grid and tag boxes on the scaled image using OpenCV
-        vis_frame = visualize_grid_on_image_cv2(resized_frame.copy(), grid, tag_boxes)
-        cv2.imshow("Visualization", vis_frame)
-        if cv2.waitKey(1) & 0xFF == ord("q"):  # Press 'q' to quit early
+        if not process_single_image(img_path, output_dir, frame_index, detector):
             break
-
     pbar.close()
     cv2.destroyAllWindows()
 

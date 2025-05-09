@@ -54,6 +54,19 @@ def time_ms():
 
 class EagleEye:
     def __init__(self):
+        model_path = self._select_model_path()
+        cameras = self._group_cameras_by_device()
+        self.devices = self._initialize_devices_and_cameras(cameras, model_path)
+        self.data = {}
+        self.data_lock = Lock()
+        self._start_detection_threads()
+        class_names = self._aggregate_class_names()
+        sleep(1)
+        log("All threads running")
+        game_piece_nt.putStringArray("class_names", class_names)
+        self._main_detection_loop(class_names)
+
+    def _select_model_path(self) -> str:
         model_paths = [
             f"src/models/{model}"
             for model in os.listdir("src/models")
@@ -61,19 +74,21 @@ class EagleEye:
         ]
         model_path = model_paths[0]  # only load first found model
         log(f"Loading model: {model_path}")
+        return model_path
 
-        # separate cameras based on device
+    def _group_cameras_by_device(self) -> dict:
         cameras = {}
         for camera in constants["CameraConstants.camera_list"]:
             if camera["processing_device"] not in cameras:
                 cameras[camera["processing_device"]] = []
             cameras[camera["processing_device"]].append(camera)
-
         log(f"{len(cameras)} devices found")
         log(f"Cameras: {cameras}")
         log("Starting devices...")
+        return cameras
 
-        self.devices = []
+    def _initialize_devices_and_cameras(self, cameras: dict, model_path: str) -> list:
+        devices = []
         for device, camera_list in cameras.items():
             device = SimpleDevice(
                 "gpu", model_path, log, eagle_eye_nt, len(self.devices)
@@ -81,112 +96,114 @@ class EagleEye:
             for camera in camera_list:
                 device.add_camera(camera)
                 web_interface.serve_camera_feed(camera["name"])
-            self.devices.append(device)
-
+            devices.append(device)
         log(f"{len(self.devices)} devices started")
+        return devices
 
-        self.data = {}
-        self.data_lock = Lock()
-
+    def _start_detection_threads(self):
         detection_threads = []
         for device in self.devices:
             t = Thread(target=self.detection_thread, args=(device,))
             detection_threads.append(t)
             t.start()
 
+    def _aggregate_class_names(self) -> list:
         class_names = []
         for device in self.devices:
             class_names += list(device.get_class_names().values())
+        return class_names
 
-        sleep(1)
-
-        log("All threads running")
-
-        game_piece_nt.putStringArray("class_names", class_names)
-
+    def _main_detection_loop(self, class_names: list):
         while True:
-            collected_detections = {}
-            num_detections = 0
-
-            for camera in constants["CameraConstants.camera_list"]:
-                with self.data_lock:
-                    detections = self.data.get(camera["name"], [])
-                    for detection in detections:
-                        if detection["class"] not in collected_detections:
-                            collected_detections[detection["class"]] = []
-                        collected_detections[detection["class"]].append(detection)
-                        num_detections += 1
-
-            # if no detections, continue
+            collected_detections, num_detections = self._collect_detections()
             if num_detections == 0:
-                # reset all values to empty
-                for class_name in class_names:
-                    game_piece_nt.putNumberArray(f"{class_name}_yaw_angles", [])
-                    game_piece_nt.putStringArray(f"{class_name}_local_positions", [])
-                    game_piece_nt.putStringArray(f"{class_name}_global_positions", [])
-                    game_piece_nt.putNumberArray(f"{class_name}_distances", [])
-                    game_piece_nt.putNumberArray(f"{class_name}_ratio", [])
+                self._reset_network_tables(class_names)
                 sleep(0.016)
                 continue
-
-            # sort detections by distance using distance
-            for class_name, detections in collected_detections.items():
-                collected_detections[class_name] = sorted(
-                    detections, key=lambda x: x["distance"]
-                )
-
-            # remove detections that are too close to each other
-            for class_name, detections in collected_detections.items():
-                if len(detections) > 1:
-                    for i in range(len(detections) - 1):
-                        for j in range(i + 1, len(detections)):
-                            distance = np.linalg.norm(
-                                detections[i]["local_position"]
-                                - detections[j]["local_position"]
-                            )
-                            if (
-                                distance
-                                < constants[
-                                    "ObjectDetectionConstants.combined_threshold"
-                                ]
-                            ):
-                                detections.pop(j)
-                                break
-
-            # send detections to network table
-            for class_name, detections in collected_detections.items():
-                game_piece_nt.putNumberArray(
-                    f"{class_name}_yaw_angles",
-                    [detection["yaw_angle"] for detection in detections],
-                )
-                game_piece_nt.putStringArray(
-                    f"{class_name}_local_positions",
-                    [
-                        str(detection["local_position"].tolist())
-                        .replace("]", "")
-                        .replace("[", "")
-                        for detection in detections
-                    ],
-                )
-                game_piece_nt.putStringArray(
-                    f"{class_name}_global_positions",
-                    [
-                        str(detection["global_position"].tolist())
-                        .replace("]", "")
-                        .replace("[", "")
-                        for detection in detections
-                    ],
-                )
-                game_piece_nt.putNumberArray(
-                    f"{class_name}_distances",
-                    [detection["distance"] for detection in detections],
-                )
-                game_piece_nt.putNumberArray(
-                    f"{class_name}_ratio",
-                    [detection["ratio"] for detection in detections],
-                )
-
+            self._sort_detections_by_distance(collected_detections)
+            self._filter_close_detections(collected_detections)
+            self._update_network_tables(collected_detections)
             sleep(0.016)
+
+    def _collect_detections(self) -> tuple[dict, int]:
+        collected_detections = {}
+        num_detections = 0
+
+        for camera in constants["CameraConstants.camera_list"]:
+            with self.data_lock:
+                detections = self.data.get(camera["name"], [])
+                for detection in detections:
+                    if detection["class"] not in collected_detections:
+                        collected_detections[detection["class"]] = []
+                    collected_detections[detection["class"]].append(detection)
+                    num_detections += 1
+
+        return collected_detections, num_detections
+
+    def _reset_network_tables(self, class_names: list):
+        for class_name in class_names:
+            game_piece_nt.putNumberArray(f"{class_name}_yaw_angles", [])
+            game_piece_nt.putStringArray(f"{class_name}_local_positions", [])
+            game_piece_nt.putStringArray(f"{class_name}_global_positions", [])
+            game_piece_nt.putNumberArray(f"{class_name}_distances", [])
+            game_piece_nt.putNumberArray(f"{class_name}_ratio", [])
+
+    def _sort_detections_by_distance(self, collected_detections: dict):
+        for class_name, detections in collected_detections.items():
+            collected_detections[class_name] = sorted(
+                detections, key=lambda x: x["distance"]
+            )
+
+    def _filter_close_detections(self, collected_detections: dict):
+        for class_name, detections in collected_detections.items():
+            if len(detections) > 1:
+                for i in range(len(detections) - 1):
+                    for j in range(i + 1, len(detections)):
+                        distance = np.linalg.norm(
+                            detections[i]["local_position"]
+                            - detections[j]["local_position"]
+                        )
+                        if (
+                            distance
+                            < constants[
+                                "ObjectDetectionConstants.combined_threshold"
+                            ]
+                        ):
+                            detections.pop(j)
+                            break
+
+    def _update_network_tables(self, collected_detections: dict):
+        for class_name, detections in collected_detections.items():
+            game_piece_nt.putNumberArray(
+                f"{class_name}_yaw_angles",
+                [detection["yaw_angle"] for detection in detections],
+            )
+            game_piece_nt.putStringArray(
+                f"{class_name}_local_positions",
+                [
+                    str(detection["local_position"].tolist())
+                    .replace("]", "")
+                    .replace("[", "")
+                    for detection in detections
+                ],
+            )
+            game_piece_nt.putStringArray(
+                f"{class_name}_global_positions",
+                [
+                    str(detection["global_position"].tolist())
+                    .replace("]", "")
+                    .replace("[", "")
+                    for detection in detections
+                ],
+            )
+            game_piece_nt.putNumberArray(
+                f"{class_name}_distances",
+                [detection["distance"] for detection in detections],
+            )
+            game_piece_nt.putNumberArray(
+                f"{class_name}_ratio",
+                [detection["ratio"] for detection in detections],
+            )
 
     @profile
     def detection_thread(self, device: SimpleDevice):
