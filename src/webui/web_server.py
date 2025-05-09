@@ -5,7 +5,9 @@ from threading import Thread
 from typing import Any, Generator, Callable
 
 import cv2
-from flask import Flask, send_from_directory, request, Response
+from flask import Flask, send_from_directory, request, Response, jsonify
+from flask_socketio import SocketIO
+import numpy as np
 
 from src.object_detection.src.constants.constants import Constants
 from src.object_detection.src.devices.utils.get_available_cameras import (
@@ -59,6 +61,7 @@ class EagleEyeInterface:
             self.log = log
 
         self.app = Flask(__name__, static_folder=current_path, static_url_path="")
+        self.socketio = SocketIO(self.app, cors_allowed_origins="*")
 
         self.cameras = detect_cameras_with_names()
         self.log(f"Detected Cameras: {self.cameras}")
@@ -81,9 +84,9 @@ class EagleEyeInterface:
         if dev_mode:
             self.run()
         else:
-            # Start Flask server in a separate thread
             self.app_thread = Thread(
-                target=self.app.run,
+                target=self.socketio.run,
+                args=(self.app,),
                 kwargs={"host": "0.0.0.0", "port": 5001},
                 daemon=True,
             )
@@ -122,6 +125,12 @@ class EagleEyeInterface:
             "background",
             lambda: send_from_directory("./static", "background.png"),
         )
+        self.app.add_url_rule(
+            "/update-sphere-position",
+            "update_sphere_position",
+            self.update_sphere_position,
+            methods=["POST"],
+        )
 
     def get_available_cameras(self) -> dict:
         """
@@ -135,9 +144,10 @@ class EagleEyeInterface:
 
     def run(self) -> None:
         """
-        Run the Flask application.
+        Run the Flask application with SocketIO.
         """
-        self.app.run(
+        self.socketio.run(
+            self.app,
             host="0.0.0.0",
             port=5001,
             debug=False,
@@ -274,6 +284,19 @@ class EagleEyeInterface:
                     time_start = time.time()
         finally:
             camera.release()
+
+    def push_sphere_position(self, position: np.ndarray) -> None:
+        """
+        Push the tracked sphere's position to the frontend via websocket.
+
+        Args:
+            position (np.ndarray): The new position as a numpy array (x, y, z).
+        """
+        if position.shape != (3,):
+            raise ValueError("Position must be a 3-element numpy array.")
+        x, y, z = map(float, position)
+        self.log(f"Pushing sphere position to frontend: x={x}, y={y}, z={z}")
+        self.socketio.emit("update_sphere_position", {"x": x, "y": y, "z": z})
 
 
 if __name__ == "__main__":

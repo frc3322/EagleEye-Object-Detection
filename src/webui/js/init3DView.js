@@ -9,6 +9,10 @@ import {
     Scene,
     Color,
     Clock,
+    Mesh,
+    MeshStandardMaterial,
+    SphereGeometry,
+    Vector3,
 } from "three";
 
 let renderer, scene, camera, directionalLight;
@@ -17,6 +21,8 @@ let gamePiecesVisible = true;
 let statsDisplay;
 let frameCount = 0;
 let lastTime = performance.now();
+
+let trackedSphere = null;
 
 function updateStats() {
     const currentTime = performance.now();
@@ -199,4 +205,21 @@ export function init3DView(modelUrl) {
         directionalLight.castShadow = shadowsEnabled;
         renderer.shadowMap.enabled = shadowsEnabled;
     });
+
+    // Add tracked sphere
+    if (!trackedSphere) {
+        const sphereGeometry = new SphereGeometry(30, 32, 32);
+        const sphereMaterial = new MeshStandardMaterial({ color: 0xff0000 });
+        trackedSphere = new Mesh(sphereGeometry, sphereMaterial);
+        trackedSphere.castShadow = true;
+        trackedSphere.receiveShadow = true;
+        trackedSphere.position.set(0, 0, 0);
+        scene.add(trackedSphere);
+    }
+}
+
+export function updateTrackedSpherePosition(x, y, z) {
+    if (trackedSphere) {
+        trackedSphere.position.set(x, y, z);
+    }
 }
