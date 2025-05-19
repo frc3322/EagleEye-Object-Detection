@@ -15,4 +15,4 @@ filelock~=3.18.0
 clearml~=1.18.0
 
 pygrabber~=0.2
-comtypes~=1.4.10
+comtypes~=1.4.11
