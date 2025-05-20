@@ -3,10 +3,10 @@ import path from "path";
 
 export default defineConfig({
     build: {
-        outDir: path.resolve(__dirname, "./webui/static"),
+        outDir: path.resolve(__dirname, "./src/webui/static"),
         emptyOutDir: false, // so Vite doesn't clear everything in static
         rollupOptions: {
-            input: path.resolve(__dirname, "./webui/js/main.js"),
+            input: path.resolve(__dirname, "./src/webui/js/main.js"),
             output: {
                 entryFileNames: "bundle.js",
                 assetFileNames: "[name].[ext]",

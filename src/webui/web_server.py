@@ -1,18 +1,20 @@
 import os
+import random
 import threading
 import time
 from threading import Thread
-from typing import Any, Generator, Callable
+from typing import Any, Callable, Generator
 
 import cv2
-from flask import Flask, send_from_directory, request, Response, jsonify
-from flask_socketio import SocketIO
 import numpy as np
+from flask import Flask, Response, request, send_from_directory
+from flask_socketio import SocketIO
 
 from src.object_detection.src.constants.constants import Constants
 from src.object_detection.src.devices.utils.get_available_cameras import (
     detect_cameras_with_names,
 )
+from src.webui.web_server_utils.serve_static_files import index, serve_js
 
 current_path = os.path.dirname(__file__)
 
@@ -20,32 +22,12 @@ with open(os.path.join(current_path, "assets", "no_image.png"), "rb") as f:
     no_image = f.read()
 
 
-def index():
-    """
-    Serve the index.html file.
-
-    Returns:
-        Response: The index.html file.
-    """
-    return send_from_directory(".", "index.html")
-
-
-def serve_js():
-    """
-    Serve the JavaScript file.
-
-    Returns:
-        Response: The JavaScript file.
-    """
-    return send_from_directory("./static", "bundle.js")
-
-
 class EagleEyeInterface:
     def __init__(
         self,
         settings_object: Constants | None = None,
         dev_mode: bool = False,
-        log: Callable = None,
+        log: Callable | None = None,
     ):
         """
         Initialize the EagleEyeInterface.
@@ -70,9 +52,7 @@ class EagleEyeInterface:
             self.frame_list[camera] = no_image
         self.available_cameras = {}
 
-        self.frame_list_lock = (
-            threading.Lock()
-        )  # Add a lock for thread-safe access to frame_list
+        self.frame_list_lock = threading.Lock()
 
         if settings_object is None:
             self.settings_object = Constants()
@@ -171,7 +151,7 @@ class EagleEyeInterface:
             Response: A success or failure message.
         """
         try:
-            settings = request.get_json()  # Extract JSON data from the request
+            settings = request.get_json()
             self.settings_object.load_config_from_json(settings)
             self.log("Settings updated successfully")
             return {"message": "Settings updated successfully"}, 200
@@ -285,7 +265,7 @@ class EagleEyeInterface:
         finally:
             camera.release()
 
-    def push_sphere_position(self, position: np.ndarray) -> None:
+    def update_sphere_position(self, position: np.ndarray) -> None:
         """
         Push the tracked sphere's position to the frontend via websocket.
 
@@ -305,5 +285,9 @@ if __name__ == "__main__":
     try:
         while True:
             time.sleep(1)
+            random_position = np.array(
+                [random.uniform(-1, 1), random.uniform(-1, 1), random.uniform(-1, 1)]
+            )
+            interface.update_sphere_position(random_position)
     except KeyboardInterrupt:
         print("Program terminated.")
