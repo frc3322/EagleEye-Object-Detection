@@ -4,6 +4,7 @@ import { setupCameraFeedHandlers } from "./feeds/cameraFeedHandlers.js";
 import { saveSettings } from "./settings/saveSettings.js";
 import { updateTrackedSpherePosition } from "./init3DView.js";
 import "../index.css";
+import io from "socket.io-client";
 
 window.onload = () => {
     populateFieldDropdown();

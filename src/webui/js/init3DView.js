@@ -11,8 +11,8 @@ import {
     Mesh,
     MeshStandardMaterial,
     SphereGeometry,
-    Vector3,
 } from "three";
+import { OrbitControls } from "OrbitControls";
 
 let renderer, scene, camera, directionalLight;
 let shadowsEnabled = true;
@@ -83,7 +83,10 @@ export function init3DView(modelUrl) {
     renderer.domElement.style.width = "100%";
     renderer.domElement.style.height = "100%";
     renderer.domElement.style.display = "block";
+    renderer.domElement.classList.add('absolute', 'top-0', 'left-0', 'w-full', 'h-full', 'rounded-inherit', '-z-10', 'block');
     container.appendChild(renderer.domElement);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
 
     scene.add(new AmbientLight(0xffffff, 0.2));
 
@@ -179,7 +182,6 @@ export function init3DView(modelUrl) {
         if (delta > interval) {
             renderer.render(scene, camera);
             updateStats();
-
             delta = delta % interval;
         }
     }

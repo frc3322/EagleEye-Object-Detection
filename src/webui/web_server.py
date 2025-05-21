@@ -21,7 +21,6 @@ current_path = os.path.dirname(__file__)
 with open(os.path.join(current_path, "assets", "no_image.png"), "rb") as f:
     no_image = f.read()
 
-
 class EagleEyeInterface:
     def __init__(
         self,

@@ -26,10 +26,8 @@
             </div>
 
             <!-- 3D View (WebGL model will load here) -->
-            <div id="view-3d" class="view">
-                <button id="toggleShadowBtn">Toggle Shadows</button>
-
-                <div id="fieldDropdown">
+            <div id="view-3d" class="w-full h-full min-w-0 rounded-[10px] overflow-hidden relative hidden z-10">
+                <div id="fieldDropdown" class="box-border flex flex-col bg-[rgb(34,34,34)] border text-[rgb(249,200,74)] max-w-[200px] mt-2.5 mb-0 mx-2.5 p-[5px] rounded-lg border-solid border-[rgb(68,68,68)] hidden z-10">
                     <label for="yearSelect">Year:</label>
                     <select id="yearSelect">
                         <option disabled selected>Select Year</option>
@@ -41,10 +39,11 @@
                         </option>
                     </select>
                 </div>
-
-                <button id="toggleGamePiecesBtn">Toggle Game Pieces</button>
-
-                <div id="statsDisplay"></div> <!-- Added stats display container -->
+                
+                <button id="toggleGamePiecesBtn" class="box-border text-[rgb(249,200,74)] cursor-pointer bg-[rgb(68,68,68)] w-[180px] block mt-2.5 mb-0 mx-2.5 px-3 py-[5px] rounded-md border-[none] hover:bg-[rgb(102,102,102)] hidden z-10">Toggle Game Pieces</button>
+                <button id="toggleShadowBtn" class="box-border text-[rgb(249,200,74)] cursor-pointer bg-[rgb(68,68,68)] w-[180px] block mt-2.5 mb-0 mx-2.5 px-3 py-[5px] rounded-md border-[none] hover:bg-[rgb(102,102,102)] hidden z-10">Toggle Shadows</button>
+                
+                <div id="statsDisplay"></div>
             </div>
 
             <!-- Settings placeholder -->

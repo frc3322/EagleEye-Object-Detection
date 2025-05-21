@@ -15,10 +15,12 @@
   "private": true,
   "dependencies": {
     "@babel/core": "^7.26.10",
-    "@tailwindcss/vite": "^4.1.4",
+    "@tailwindcss/vite": "^4.1.7",
     "babel-loader": "^10.0.0",
     "prettier": "^3.5.3",
-    "tailwindcss": "^4.1.4",
+    "socket.io": "^4.8.1",
+    "socket.io-client": "^4.8.1",
+    "tailwindcss": "^4.1.7",
     "three": "^0.175.0"
   },
   "devDependencies": {

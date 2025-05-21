@@ -1,6 +1,6 @@
 /* views.css */
 
-/* hide all “views” by default */
+/* hide all "views" by default */
 .view {
     display: none;
     width: 100%;
@@ -13,7 +13,7 @@
     display: flex;
 }
 
-/* 3D view container */
+/* 3D view container
 #view-3d {
     width: 100%;
     height: 100%;
@@ -24,11 +24,16 @@
 }
 
 #view-3d canvas {
-    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
     width: 100%;
     height: 100%;
     border-radius: inherit;
+    z-index: -1;
+    display: block;
 }
+*/
 
 /* default grid of signal boxes */
 .signal-grid {
