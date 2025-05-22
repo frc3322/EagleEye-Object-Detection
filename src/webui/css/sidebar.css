@@ -12,7 +12,8 @@
 }
 
 .sidebar li {
-    padding: 10px;
+    padding: 5px;
+    margin: 5px;
     color: #ccc;
     cursor: pointer;
     user-select: none;

@@ -1,10 +1,11 @@
-/* No‑camera message */
+/* No‑camera message
 .no-cameras-message {
     text-align: center;
     color: #777;
     font-size: 1.5rem;
     margin-top: 20px;
 }
+*/
 
 /* Camera list/grid */
 .camera-list {

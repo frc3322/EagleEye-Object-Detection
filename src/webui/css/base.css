@@ -1,4 +1,4 @@
-/* Global base styles */
+/* Global base styles
 html,
 body {
     width: 100%;
@@ -7,11 +7,13 @@ body {
     background: url("../assets/background.png") no-repeat center center fixed;
     background-size: cover;
 }
+*/
 
-/* Stats display (small, self‑contained) */
+/* Stats display (small, self‑contained)
 #statsDisplay {
     font-family: Arial, sans-serif;
     font-weight: bold;
     text-shadow: 1px 1px 2px #000;
 }
+*/
 

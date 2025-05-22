@@ -1,6 +1,6 @@
 /* views.css */
 
-/* hide all "views" by default */
+/* hide all "views" by default
 .view {
     display: none;
     width: 100%;
@@ -8,10 +8,11 @@
     flex-direction: column;
 }
 
-/* only the active one shows */
+/* only the active one shows
 .view.active {
     display: flex;
 }
+*/
 
 /* 3D view container
 #view-3d {

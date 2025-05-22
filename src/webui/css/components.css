@@ -1,4 +1,4 @@
-/* Feed controls & buttons */
+/* Feed controls & buttons
 .feed-controls {
     display: flex;
     justify-content: center;
@@ -24,8 +24,9 @@
 .feed-btn:active {
     background-color: #555;
 }
+*/
 
-/* Placeholder view */
+/* Placeholder view
 .placeholder-view {
     flex: 1;
     color: #ddd;
@@ -40,4 +41,4 @@
     justify-content: center;
     align-items: center;
 }
-
+*/

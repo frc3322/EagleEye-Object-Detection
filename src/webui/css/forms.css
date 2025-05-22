@@ -1,4 +1,4 @@
-/* Settings form */
+/* Settings form
 .settings-form {
     color: #ddd;
     background-color: #111;
@@ -8,6 +8,7 @@
     max-width: 400px;
     margin: auto;
 }
+
 
 .settings-form h2 {
     text-align: center;
@@ -64,4 +65,5 @@
 .settings-form button:hover {
     background-color: #666;
 }
+*/
 
