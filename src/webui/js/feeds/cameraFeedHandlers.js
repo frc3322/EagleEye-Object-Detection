@@ -1,9 +1,8 @@
 export function setupCameraFeedHandlers() {
-    const addFeedModal = document.getElementById("addFeedModal");
+    const addFeedBackgroundDiv = document.getElementById("addFeedBackgroundDiv");
     const cameraSelect = document.getElementById("cameraSelect");
     const saveFeedBtn = document.getElementById("saveFeedBtn");
     const cancelFeedBtn = document.getElementById("cancelFeedBtn");
-    // Removed rotationInput reference
 
     document.getElementById("addFeedBtn").addEventListener("click", () => {
         fetch("/get-available-cameras", {
@@ -27,19 +26,20 @@ export function setupCameraFeedHandlers() {
                 console.error("Error fetching cameras:", error);
             });
 
-        addFeedModal.style.display = "flex";
+        addFeedBackgroundDiv.classList.remove("hidden");
+        addFeedBackgroundDiv.style.display = "flex";
+        document.body.classList.add("overflow-hidden");
     });
 
     cancelFeedBtn.addEventListener("click", () => {
-        addFeedModal.style.display = "none";
+        addFeedBackgroundDiv.classList.add("hidden");
+        addFeedBackgroundDiv.style.display = "none";
+        document.body.classList.remove("overflow-hidden");
     });
 
-    // Function to update grid layout based on number of cameras
     function updateGridLayout() {
         const cameraList = document.getElementById("cameraList");
         const cameraCount = cameraList.children.length;
-
-        // Ensure 2 cameras always result in 2 columns and 1 row
         let columns;
         if (cameraCount === 2) {
             columns = 2;
@@ -52,8 +52,6 @@ export function setupCameraFeedHandlers() {
         } else {
             columns = 4;
         }
-
-        // Update grid styles
         cameraList.style.gridTemplateColumns = `repeat(${columns}, 1fr)`;
     }
 
@@ -63,64 +61,43 @@ export function setupCameraFeedHandlers() {
             alert("Please select a camera.");
             return;
         }
-
         const selectedCameraName =
             cameraSelect.options[cameraSelect.selectedIndex].textContent;
-
-        // Create a camera box with selected camera name
         const cameraBox = document.createElement("div");
         cameraBox.className = "camera-box";
-        cameraBox.textContent = `${selectedCameraName}`; // Removed rotation text
-
-        // Create video view
+        cameraBox.textContent = `${selectedCameraName}`;
         const cameraView = document.createElement("img");
         cameraView.className = "camera-view";
-
-        // Replace spaces with underscores in the camera name for the video URL
         cameraView.src = `/feed/${selectedCameraName.replace(/ /g, "_")}`;
-
         cameraBox.appendChild(cameraView);
-
-        console.log(`Reading camera stream at: ${cameraView.src}`);
-
-        // Add X button for individual camera removal
         const removeButton = document.createElement("button");
         removeButton.className = "camera-remove-btn";
         removeButton.textContent = "×";
         removeButton.addEventListener("click", function () {
             cameraBox.remove();
-
-            // Show "No Cameras Available" message if no cameras are left
             const cameraList = document.getElementById("cameraList");
             if (cameraList.children.length === 0) {
                 document.getElementById("noCamerasMessage").style.display =
                     "block";
             } else {
-                // Update grid layout after removing a camera
                 updateGridLayout();
             }
         });
-
         cameraBox.appendChild(removeButton);
-
-        // Add the camera box to the camera list
         const cameraList = document.getElementById("cameraList");
         cameraList.appendChild(cameraBox);
-
-        // Update the grid layout
         updateGridLayout();
-
-        // Hide the "No Cameras Available" message
         document.getElementById("noCamerasMessage").style.display = "none";
-
-        console.log("Selected Camera:", selectedCamera);
-
-        addFeedModal.style.display = "none";
+        addFeedBackgroundDiv.classList.add("hidden");
+        addFeedBackgroundDiv.style.display = "none";
+        document.body.classList.remove("overflow-hidden");
     });
 
     window.addEventListener("click", (event) => {
-        if (event.target === addFeedModal) {
-            addFeedModal.style.display = "none";
+        if (event.target === addFeedBackgroundDiv) {
+            addFeedBackgroundDiv.classList.add("hidden");
+            addFeedBackgroundDiv.style.display = "none";
+            document.body.classList.remove("overflow-hidden");
         }
     });
 }

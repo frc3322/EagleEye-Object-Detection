@@ -1,6 +1,6 @@
 import { defineConfig } from "vite";
 import path from "path";
-import tailwindcss from '@tailwindcss/vite'
+import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
     build: {
@@ -39,5 +39,10 @@ export default defineConfig({
             ),
         },
         extensions: [".js"],
-    }
+    },
+
+    esbuild: {
+        minify: true,
+        legalComments: 'none',
+    },
 });

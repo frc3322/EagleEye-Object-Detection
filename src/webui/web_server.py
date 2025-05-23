@@ -110,6 +110,17 @@ class EagleEyeInterface:
             self.update_sphere_position,
             methods=["POST"],
         )
+        self.app.add_url_rule(
+            "/frc2025r2.json",
+            "frc2025r2",
+            lambda: send_from_directory(os.path.join("../", "apriltags", "utils"), "frc2025r2.json"),
+        )
+        self.app.add_url_rule(
+            "/src/webui/assets/apriltags/<path:filename>",
+            "apriltags_png",
+            lambda filename: send_from_directory(os.path.join(current_path, "assets", "apriltags"), filename),
+        )
+        
 
     def get_available_cameras(self) -> dict:
         """
@@ -279,14 +290,10 @@ class EagleEyeInterface:
 
 
 if __name__ == "__main__":
-    interface = EagleEyeInterface(dev_mode=True)
+    interface = EagleEyeInterface(dev_mode=False)
 
     try:
         while True:
             time.sleep(1)
-            random_position = np.array(
-                [random.uniform(-1, 1), random.uniform(-1, 1), random.uniform(-1, 1)]
-            )
-            interface.update_sphere_position(random_position)
     except KeyboardInterrupt:
         print("Program terminated.")

@@ -118,6 +118,8 @@
                                         <input
                                             type="checkbox"
                                             id="logCheckbox"
+                                            autocomplete="off"
+                                            data-form-type="other"
                                         />
                                     </label>
                                     <label>
@@ -126,6 +128,8 @@
                                             type="checkbox"
                                             id="printTerminalCheckbox"
                                             checked
+                                            autocomplete="off"
+                                            data-form-type="other"
                                         />
                                     </label>
                                     <label>
@@ -133,6 +137,8 @@
                                         <input
                                             type="checkbox"
                                             id="detectionLoggingCheckbox"
+                                            autocomplete="off"
+                                            data-form-type="other"
                                         />
                                     </label>
                                     <label>
@@ -141,6 +147,8 @@
                                             type="checkbox"
                                             id="simulationModeCheckbox"
                                             checked
+                                            autocomplete="off"
+                                            data-form-type="other"
                                         />
                                     </label>
                                 </fieldset>
@@ -152,6 +160,8 @@
                                             type="text"
                                             id="serverAddressInput"
                                             value="10.0.0.62"
+                                            autocomplete="off"
+                                            data-form-type="other"
                                         />
                                     </label>
                                     <label>
@@ -160,6 +170,8 @@
                                             type="text"
                                             id="robotPositionKeyInput"
                                             value="robot_position"
+                                            autocomplete="off"
+                                            data-form-type="other"
                                         />
                                     </label>
                                     <label>
@@ -168,6 +180,8 @@
                                             type="text"
                                             id="robotRotationKeyInput"
                                             value="robot_rotation"
+                                            autocomplete="off"
+                                            data-form-type="other"
                                         />
                                     </label>
                                 </fieldset>
@@ -179,6 +193,8 @@
                                             type="number"
                                             id="inputSizeInput"
                                             value="320"
+                                            autocomplete="off"
+                                            data-form-type="other"
                                         />
                                     </label>
                                     <label>
@@ -188,6 +204,8 @@
                                             id="confidenceThresholdInput"
                                             step="0.01"
                                             value="0.5"
+                                            autocomplete="off"
+                                            data-form-type="other"
                                         />
                                     </label>
                                     <label>
@@ -199,6 +217,8 @@
                                             id="combinedThresholdInput"
                                             step="0.01"
                                             value="0.25"
+                                            autocomplete="off"
+                                            data-form-type="other"
                                         />
                                     </label>
                                     <label>
@@ -207,6 +227,8 @@
                                             type="number"
                                             id="maxDistanceInput"
                                             value="15"
+                                            autocomplete="off"
+                                            data-form-type="other"
                                         />
                                     </label>
                                 </fieldset>
@@ -256,18 +278,18 @@
         </div>
 
         <!-- Add Feed Modal -->
-        <div id="addFeedModal" class="modal">
-            <div class="modal-content">
-                <h2>Add Feed Configuration</h2>
-                <form id="addFeedForm">
+        <div id="addFeedBackgroundDiv" class="z-[1000] bg-[rgba(0,0,0,0.8)] justify-center items-center w-full h-full hidden fixed left-0 top-0">
+            <div class="feed-content text-[rgb(249,200,74)] text-center bg-[rgb(17,17,17)] w-[400px] shadow-[rgba(0,0,0,0.6)_0px_4px_15px] p-5 rounded-lg">
+                <h2 class="mb-5">Add Feed Configuration</h2>
+                <form id="addFeedForm" class="flex-col gap-[15px] flex">
                     <label for="cameraSelect">Select Camera:</label>
-                    <select id="cameraSelect">
+                    <select id="cameraSelect" class="text-[rgb(249,200,74)] cursor-pointer bg-[rgb(34,34,34)] border text-base p-2.5 rounded-md border-solid border-[rgb(68,68,68)]">
                         <option disabled selected>Select a camera</option>
                     </select>
                     <!-- Removed rotation input and label -->
-                    <div class="button-container">
-                        <button type="button" id="saveFeedBtn">Save</button>
-                        <button type="button" id="cancelFeedBtn">Cancel</button>
+                    <div class="button-container justify-center items-center gap-2.5 flex mt-2.5">
+                        <button type="button" id="saveFeedBtn" class="text-[rgb(249,200,74)] cursor-pointer bg-[rgb(34,34,34)] border text-base text-center flex-1 p-2.5 rounded-md border-solid border-[rgb(68,68,68)] hover:bg-[rgb(68,68,68)]">Save</button>
+                        <button type="button" id="cancelFeedBtn" class="text-[rgb(249,200,74)] cursor-pointer bg-[rgb(34,34,34)] border text-base text-center flex-1 p-2.5 rounded-md border-solid border-[rgb(68,68,68)] hover:bg-[rgb(68,68,68)]">Cancel</button>
                     </div>
                 </form>
             </div>
