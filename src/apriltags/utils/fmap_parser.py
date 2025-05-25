@@ -29,8 +29,6 @@ class Apriltag:
         self.size = size
         self.transform = transform
         self.unique = unique
-        
-    
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert the Apriltag object to a dictionary."""

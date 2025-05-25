@@ -1,12 +1,13 @@
 import { defineConfig } from "vite";
 import path from "path";
+import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
     build: {
-        outDir: path.resolve(__dirname, "./webui/static"),
+        outDir: path.resolve(__dirname, "./src/webui/static"),
         emptyOutDir: false, // so Vite doesn't clear everything in static
         rollupOptions: {
-            input: path.resolve(__dirname, "./webui/js/main.js"),
+            input: path.resolve(__dirname, "./src/webui/js/main.js"),
             output: {
                 entryFileNames: "bundle.js",
                 assetFileNames: "[name].[ext]",
@@ -17,6 +18,10 @@ export default defineConfig({
         sourcemap: true,
         minify: "esbuild",
     },
+
+    plugins: [
+        tailwindcss(),
+    ],
 
     resolve: {
         alias: {
@@ -34,5 +39,10 @@ export default defineConfig({
             ),
         },
         extensions: [".js"],
-    }
+    },
+
+    esbuild: {
+        minify: true,
+        legalComments: 'none',
+    },
 });

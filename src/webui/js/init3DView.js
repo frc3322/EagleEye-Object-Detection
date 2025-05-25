@@ -11,8 +11,13 @@ import {
     Mesh,
     MeshStandardMaterial,
     SphereGeometry,
+    PlaneGeometry,
+    TextureLoader,
+    Matrix4,
+    NearestFilter,
     Vector3,
 } from "three";
+import { OrbitControls } from "OrbitControls";
 
 let renderer, scene, camera, directionalLight;
 let shadowsEnabled = true;
@@ -83,7 +88,10 @@ export function init3DView(modelUrl) {
     renderer.domElement.style.width = "100%";
     renderer.domElement.style.height = "100%";
     renderer.domElement.style.display = "block";
+    renderer.domElement.classList.add('absolute', 'top-0', 'left-0', 'w-full', 'h-full', 'rounded-inherit', '-z-10', 'block');
     container.appendChild(renderer.domElement);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
 
     scene.add(new AmbientLight(0xffffff, 0.2));
 
@@ -179,7 +187,6 @@ export function init3DView(modelUrl) {
         if (delta > interval) {
             renderer.render(scene, camera);
             updateStats();
-
             delta = delta % interval;
         }
     }
@@ -213,6 +220,59 @@ export function init3DView(modelUrl) {
         trackedSphere.position.set(0, 0, 0);
         scene.add(trackedSphere);
     }
+
+    // Add AprilTag PNGs as planes at fiducial transforms
+    fetch("/frc2025r2.json")
+        .then((response) => response.json())
+        .then((json) => {
+            const textureLoader = new TextureLoader();
+            json.fiducials.forEach((fiducial) => {
+                const tagId = fiducial.id;
+                const pngName = `tag36_11_${String(tagId).padStart(5, "0")}.png`;
+                const pngPath = `/src/webui/assets/apriltags/${pngName}`;
+                textureLoader.load(pngPath, (texture) => {
+                    // Configure texture for crisp pixel art
+                    texture.magFilter = NearestFilter;
+                    texture.minFilter = NearestFilter;
+                    texture.generateMipmaps = false;
+                    
+                    const planeGeometry = new PlaneGeometry(fiducial.size, fiducial.size);
+                    const planeMaterial = new MeshStandardMaterial({ 
+                        map: texture,
+                    });
+                    const plane = new Mesh(planeGeometry, planeMaterial);
+                    // Apply 4x4 transform from JSON
+                    const t = fiducial.transform;
+                    // Three.js uses column-major, so set matrix directly
+                    const matrix = new Matrix4();
+                    matrix.set(
+                        t[0], t[1], t[2], t[3] * 1000,
+                        t[4], t[5], t[6], t[7] * 1000,
+                        t[8], t[9], t[10], t[11] * 1000,
+                        t[12], t[13], t[14], t[15]
+                    );
+
+                    const rotationYMatrix = new Matrix4();
+                    rotationYMatrix.makeRotationY(Math.PI / 2);
+                    const rotationXMatrix = new Matrix4();
+                    rotationXMatrix.makeRotationX(-Math.PI / 2);
+                    matrix.premultiply(rotationXMatrix);
+                    matrix.multiply(rotationYMatrix);
+
+                    plane.applyMatrix4(matrix);
+
+                    // Move plane 1 unit along its world normal
+                    const normal = new Vector3();
+                    matrix.extractBasis(new Vector3(), new Vector3(), normal);
+                    normal.normalize();
+                    plane.position.add(normal);
+                    
+                    plane.castShadow = true;
+                    plane.receiveShadow = true;
+                    scene.add(plane);
+                });
+            });
+        });
 }
 
 export function updateTrackedSpherePosition(x, y, z) {
