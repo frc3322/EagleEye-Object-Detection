@@ -1,5 +1,4 @@
 import os
-import random
 import threading
 import time
 from threading import Thread
@@ -20,6 +19,7 @@ current_path = os.path.dirname(__file__)
 
 with open(os.path.join(current_path, "assets", "no_image.png"), "rb") as f:
     no_image = f.read()
+
 
 class EagleEyeInterface:
     def __init__(
@@ -42,7 +42,15 @@ class EagleEyeInterface:
             self.log = log
 
         self.app = Flask(__name__, static_folder=current_path, static_url_path="")
-        self.socketio = SocketIO(self.app, cors_allowed_origins="*")
+        self.socketio = SocketIO(
+            self.app,
+            cors_allowed_origins="*",
+            async_mode="threading",
+            ping_timeout=60,
+            ping_interval=25,
+            engineio_logger=False,
+            socketio_logger=False,
+        )
 
         self.cameras = detect_cameras_with_names()
         self.log(f"Detected Cameras: {self.cameras}")
@@ -107,20 +115,23 @@ class EagleEyeInterface:
         self.app.add_url_rule(
             "/update-sphere-position",
             "update_sphere_position",
-            self.update_sphere_position,
+            self.handle_sphere_position_request,
             methods=["POST"],
         )
         self.app.add_url_rule(
             "/frc2025r2.json",
             "frc2025r2",
-            lambda: send_from_directory(os.path.join("../", "apriltags", "utils"), "frc2025r2.json"),
+            lambda: send_from_directory(
+                os.path.join("../", "apriltags", "utils"), "frc2025r2.json"
+            ),
         )
         self.app.add_url_rule(
             "/src/webui/assets/apriltags/<path:filename>",
             "apriltags_png",
-            lambda filename: send_from_directory(os.path.join(current_path, "assets", "apriltags"), filename),
+            lambda filename: send_from_directory(
+                os.path.join(current_path, "assets", "apriltags"), filename
+            ),
         )
-        
 
     def get_available_cameras(self) -> dict:
         """
@@ -275,18 +286,39 @@ class EagleEyeInterface:
         finally:
             camera.release()
 
-    def update_sphere_position(self, position: np.ndarray) -> None:
+    def handle_sphere_position_request(self) -> tuple[dict, int]:
         """
-        Push the tracked sphere's position to the frontend via websocket.
+        Handle HTTP POST request to update sphere position.
+
+        Returns:
+            Response: A success or failure message.
+        """
+        try:
+            data = request.get_json()
+            if "transform_matrix" in data:
+                transform_matrix = np.array(data["transform_matrix"])
+                self.update_sphere_position(transform_matrix)
+            else:
+                return {"message": "Missing transform_matrix in request"}, 400
+            return {"message": "Sphere position updated successfully"}, 200
+        except Exception as e:
+            self.log("Error updating sphere position:", e)
+            return {"message": "Failed to update sphere position"}, 500
+
+    def update_sphere_position(self, transformation_matrix: np.ndarray) -> None:
+        """
+        Push the tracked sphere's transformation matrix to the frontend via websocket.
 
         Args:
-            position (np.ndarray): The new position as a numpy array (x, y, z).
+            transformation_matrix (np.ndarray): The new transformation matrix as a 4x4 numpy array.
         """
-        if position.shape != (3,):
-            raise ValueError("Position must be a 3-element numpy array.")
-        x, y, z = map(float, position)
-        self.log(f"Pushing sphere position to frontend: x={x}, y={y}, z={z}")
-        self.socketio.emit("update_sphere_position", {"x": x, "y": y, "z": z})
+        if transformation_matrix.shape != (4, 4):
+            raise ValueError("Transformation matrix must be a 4x4 numpy array.")
+
+        # Convert matrix to list for JSON serialization
+        matrix_list = transformation_matrix.tolist()
+        self.socketio.emit("update_sphere_position", {"transform_matrix": matrix_list})
+        self.socketio.sleep(0)
 
 
 if __name__ == "__main__":
@@ -294,6 +326,16 @@ if __name__ == "__main__":
 
     try:
         while True:
+            # Example 4x4 transformation matrix with position and rotation
+            transform_matrix = np.array(
+                [
+                    [1.0, 0.0, 0.0, 16.96816403],
+                    [0.0, 1.0, 0.0, 6.57341747],
+                    [0.0, 0.0, 1.0, 0.66152486],
+                    [0.0, 0.0, 0.0, 1.0],
+                ]
+            )
+            interface.update_sphere_position(transform_matrix)
             time.sleep(1)
     except KeyboardInterrupt:
         print("Program terminated.")

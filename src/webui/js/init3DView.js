@@ -10,12 +10,16 @@ import {
     Clock,
     Mesh,
     MeshStandardMaterial,
-    SphereGeometry,
     PlaneGeometry,
     TextureLoader,
     Matrix4,
     NearestFilter,
     Vector3,
+    Quaternion,
+    BufferGeometry,
+    BufferAttribute,
+    LineSegments,
+    LineBasicMaterial,
 } from "three";
 import { OrbitControls } from "OrbitControls";
 
@@ -26,7 +30,7 @@ let statsDisplay;
 let frameCount = 0;
 let lastTime = performance.now();
 
-let trackedSphere = null;
+let trackedCamera = null;
 
 function updateStats() {
     const currentTime = performance.now();
@@ -210,15 +214,44 @@ export function init3DView(modelUrl) {
         renderer.shadowMap.enabled = shadowsEnabled;
     });
 
-    // Add tracked sphere
-    if (!trackedSphere) {
-        const sphereGeometry = new SphereGeometry(30, 32, 32);
-        const sphereMaterial = new MeshStandardMaterial({ color: 0xff0000 });
-        trackedSphere = new Mesh(sphereGeometry, sphereMaterial);
-        trackedSphere.castShadow = true;
-        trackedSphere.receiveShadow = true;
-        trackedSphere.position.set(0, 0, 0);
-        scene.add(trackedSphere);
+    // Add tracked camera wireframe
+    if (!trackedCamera) {
+        const cameraGeometry = new BufferGeometry();
+        
+        // Define camera wireframe vertices
+        const size = 300;
+        const depth = 600;
+        
+        // Front rectangle corners
+        const frontTopLeft = [-size, size, 0];
+        const frontTopRight = [size, size, 0];
+        const frontBottomRight = [size, -size, 0];
+        const frontBottomLeft = [-size, -size, 0];
+        
+        // Back point (camera origin)
+        const backPoint = [0, 0, -depth];
+        
+        // Create vertices array for line segments
+        const vertices = new Float32Array([
+            // Front rectangle (4 lines)
+            ...frontTopLeft, ...frontTopRight,
+            ...frontTopRight, ...frontBottomRight,
+            ...frontBottomRight, ...frontBottomLeft,
+            ...frontBottomLeft, ...frontTopLeft,
+            
+            // Lines from corners to back point (4 lines)
+            ...frontTopLeft, ...backPoint,
+            ...frontTopRight, ...backPoint,
+            ...frontBottomRight, ...backPoint,
+            ...frontBottomLeft, ...backPoint,
+        ]);
+        
+        cameraGeometry.setAttribute('position', new BufferAttribute(vertices, 3));
+        
+        const cameraMaterial = new LineBasicMaterial({ color: 0xff0000, linewidth: 2 });
+        trackedCamera = new LineSegments(cameraGeometry, cameraMaterial);
+        trackedCamera.position.set(0, 0, 0);
+        scene.add(trackedCamera);
     }
 
     // Add AprilTag PNGs as planes at fiducial transforms
@@ -275,8 +308,25 @@ export function init3DView(modelUrl) {
         });
 }
 
-export function updateTrackedSpherePosition(x, y, z) {
-    if (trackedSphere) {
-        trackedSphere.position.set(x, y, z);
+export function updateTrackedCameraTransform(transformMatrix) {
+    if (trackedCamera) {
+        const matrix = new Matrix4();
+        matrix.set(
+            transformMatrix[0][0], transformMatrix[0][1], transformMatrix[0][2], transformMatrix[0][3],
+            transformMatrix[1][0], transformMatrix[1][1], transformMatrix[1][2], transformMatrix[1][3],
+            transformMatrix[2][0], transformMatrix[2][1], transformMatrix[2][2], transformMatrix[2][3],
+            transformMatrix[3][0], transformMatrix[3][1], transformMatrix[3][2], transformMatrix[3][3]
+        );
+        
+        trackedCamera.matrixAutoUpdate = false;
+        trackedCamera.matrix.copy(matrix);
+        trackedCamera.matrixWorldNeedsUpdate = true;
+        
+        // Force immediate re-render when transformation updates
+        if (renderer && scene && camera) {
+            renderer.render(scene, camera);
+        }
+    } else {
+        console.warn("Tracked camera not initialized yet");
     }
 }
